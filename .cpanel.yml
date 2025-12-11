@@ -1,19 +1,4 @@
+---
 deployment:
   tasks:
-    # 1) Set where your website files should live (document root of subdomain)
-    - export DEPLOYPATH=/home/cricle/jobs-lounge
-
-    # 2) Optional: clear old files
-    - /bin/rm -rf $DEPLOYPATH/*
-
-    # 3) Install dependencies
-    - /usr/local/bin/npm install
-
-    # 4) Build Next.js app
-    - /usr/local/bin/npm run build
-
-    # 5) Export static files (Next export)
-    - /usr/local/bin/npm run export
-
-    # 6) Copy exported site (out/) to your subdomain folder
-    - /bin/cp -R out/* $DEPLOYPATH
+    - echo "Hello from cPanel deploy"
