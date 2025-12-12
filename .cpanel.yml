@@ -12,3 +12,4 @@ deployment:
 
     # Export static site to ./out
     - /usr/local/bin/npm run export
+  
