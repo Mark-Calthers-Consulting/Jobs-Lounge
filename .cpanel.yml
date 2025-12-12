@@ -1,4 +1,14 @@
 ---
 deployment:
   tasks:
-    - echo "Hello from cPanel deploy"
+    - export PROJECT_ROOT=/home/cricle/Jobs-Lounge
+    - cd $PROJECT_ROOT
+
+    # Install dependencies (first deploy may take a bit)
+    - /usr/local/bin/npm install
+
+    # Build Next.js app
+    - /usr/local/bin/npm run build
+
+    # Export static site to ./out
+    - /usr/local/bin/npm run export
