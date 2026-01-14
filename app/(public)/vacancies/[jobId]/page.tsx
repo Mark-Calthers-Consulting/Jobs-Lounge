@@ -1,6 +1,6 @@
 import { FaFacebook } from 'react-icons/fa'
-import type { Job } from '../../../types/types'
-import CopyLink from '../../../components/CopyLink'
+import type { Job } from '../../../../types/types'
+import CopyLink from '../../../../components/CopyLink'
 import { FaLocationDot, FaXTwitter } from "react-icons/fa6";
 import { MdOutlineWorkOutline, MdWorkspacePremium } from "react-icons/md";
 import { BsLinkedin } from "react-icons/bs";
