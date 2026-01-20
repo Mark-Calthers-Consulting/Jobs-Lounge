@@ -3,19 +3,12 @@ import { useEffect, useState } from "react"
 import type { Job } from "@/types/types"
 import Link from "next/link"
 import JobFilters from "@/components/JobFilters"
+import { useVacancies } from "@/hooks/useVacancies"
 
 const Vacancies: React.FC = () => {
-  const [jobs, setJobs] = useState<Job[]>([])
-  const getAllJobs = async () => {
-    const data = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs`)
-    const vacancies = await data.json()
-    setJobs(vacancies.data)
-    console.log(vacancies)
-  }
 
-  useEffect(() => {
-    getAllJobs()
-  }, [])
+  const { data = [], isLoading, error, isError } = useVacancies()
+
   return (
     <div>
       <section className="px-12 py-4 mb-8 bg-[#607E98] flex items-center justify-between">
@@ -28,8 +21,10 @@ const Vacancies: React.FC = () => {
           <JobFilters />
         </section>
         <section className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 content-start">
-          {jobs.map((job: Job, id) => (
-            <Link key={job._id} href={`${process.env.NEXT_PUBLIC_ORIGIN}/vacancies/${job._id}`}>
+          {isLoading && <p className="col-span-full">Loading jobs...</p>}
+          {isError && <p className="col-span-full">Could not load jobs.</p>}
+          {data.map((job: Job) => (
+            <Link key={job._id} href={`/vacancies/${job._id}`}>
               <div className="shadow p-5 rounded cursor-pointer">
                 <p className="text-[#959595] text-sm">{job.company.name}</p>
                 <h3 className="font-semibold ">{job.title}</h3>

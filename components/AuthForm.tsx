@@ -1,5 +1,7 @@
 'use client'
+import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { toast } from "sonner"
 
 type formMode = 'login' | 'register'
 type formValues = {
@@ -15,6 +17,8 @@ const AuthForm: React.FC = () => {
         password: '',
         name: ''
     })
+
+    const router = useRouter();
 
     const changeMode = () => {
         if (mode === 'login') {
@@ -34,6 +38,7 @@ const AuthForm: React.FC = () => {
     };
 
     const login = async (loginData: formValues) => {
+        const toastId = toast.loading('Logging in...');
         try {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/login`, {
                 method: 'POST',
@@ -48,14 +53,17 @@ const AuthForm: React.FC = () => {
             if (!res.ok) {
                 throw new Error(result.message || 'Request failed');
             }
-
+            toast.success('Login successful', { id: toastId });
+            router.replace('/dashboard')
         } catch (error) {
             console.log(error)
+            toast.error((error as Error).message || 'Something went wrong', { id: toastId });
         }
     }
 
 
     const register = async (authData: formValues) => {
+        const toastId = toast.loading('Logging in...');
         try {
 
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/register`, {
@@ -70,16 +78,17 @@ const AuthForm: React.FC = () => {
             if (!res.ok) {
                 throw new Error(result.message || 'Request failed');
             }
-
+            toast.success('Login successful', { id: toastId });
+            router.replace('/dashboard')
         } catch (error) {
             console.log(error)
+            toast.error((error as Error).message || 'Something went wrong', { id: toastId });
         }
     }
 
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
         if (mode === 'login') {
             const loginData = {
                 email: authData.email,
