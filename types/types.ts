@@ -36,3 +36,14 @@ export type Job = {
   updatedAt: string // ISO date string
   __v: number
 }
+
+export type LoginPayload = {
+  email: string
+  password: string
+}
+
+export type RegisterPayload = {
+  email: string
+  password: string
+  name?: string
+}

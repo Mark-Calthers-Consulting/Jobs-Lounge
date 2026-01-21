@@ -1,4 +1,5 @@
 'use client'
+import { useLogin, useRegister } from "@/hooks/useAuth"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -18,6 +19,9 @@ const AuthForm: React.FC = () => {
         name: ''
     })
 
+    const loginMutation = useLogin()
+    const registerMutation = useRegister()
+
     const router = useRouter();
 
     const changeMode = () => {
@@ -35,68 +39,33 @@ const AuthForm: React.FC = () => {
             ...prev,
             [name]: value,
         }));
-    };
-
-    const login = async (loginData: formValues) => {
-        const toastId = toast.loading('Logging in...');
-        try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/login`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(loginData)
-            })
-            const result = await res.json()
-            console.log(result)
-
-            if (!res.ok) {
-                throw new Error(result.message || 'Request failed');
-            }
-            toast.success('Login successful', { id: toastId });
-            router.replace('/dashboard')
-        } catch (error) {
-            console.log(error)
-            toast.error((error as Error).message || 'Something went wrong', { id: toastId });
-        }
     }
 
-
-    const register = async (authData: formValues) => {
-        const toastId = toast.loading('Logging in...');
-        try {
-
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/register`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(authData)
-            })
-            const result = await res.json()
-            console.log(result)
-            if (!res.ok) {
-                throw new Error(result.message || 'Request failed');
-            }
-            toast.success('Login successful', { id: toastId });
-            router.replace('/dashboard')
-        } catch (error) {
-            console.log(error)
-            toast.error((error as Error).message || 'Something went wrong', { id: toastId });
-        }
-    }
-
-
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (mode === 'login') {
-            const loginData = {
-                email: authData.email,
-                password: authData.password,
-            };
-            login(loginData);
-        } else {
-            register(authData);
+        const toastId = toast.loading(
+            mode === 'login' ? 'Logging in...' : 'Creating account...'
+        )
+        try {
+            if (mode === 'login') {
+                await loginMutation.mutateAsync({
+                    email: authData.email,
+                    password: authData.password,
+                })
+            } else {
+                await registerMutation.mutateAsync(
+                    authData
+                )
+            }
+
+            toast.success('Success!', { id: toastId })
+            router.replace('/dashboard')
+
+        } catch (error) {
+            toast.error(
+                (error as Error).message || "Something went wrong",
+                { id: toastId }
+            )
         }
     };
 
