@@ -15,7 +15,7 @@ console.log(error)
 
     return (
         <div>
-            <h1>Welcome back, {data.name}</h1>
+            <h1 className='text-3xl'>Welcome back, {data.name}</h1>
 
         </div>
     )

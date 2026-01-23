@@ -4,6 +4,8 @@ import CopyLink from '../../../../components/CopyLink'
 import { FaLocationDot, FaXTwitter } from "react-icons/fa6";
 import { MdOutlineWorkOutline, MdWorkspacePremium } from "react-icons/md";
 import { BsLinkedin } from "react-icons/bs";
+import { useUser } from '@/hooks/useAuth';
+import JobActions from './JobActions';
 
 type JobPageProps = {
     params: Promise<{
@@ -99,8 +101,9 @@ const JobPage = async ({ params }: JobPageProps) => {
                                 <span className="text-gray-600">Type:</span> {job.jobType}
                             </span>
                         </div>
-
                     </section>
+
+                    <JobActions jobId={jobId} />
 
                     <section className='my-5 space-y-2'>
                         <a

@@ -1,6 +1,5 @@
 import { LoginPayload, RegisterPayload } from "@/types/types";
 
-
 export const fetchUser = async () => {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/me`, {
         method: 'GET',
