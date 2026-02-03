@@ -49,7 +49,7 @@ const DashboardSidebar = () => {
             {/* 1. Logo Area */}
             <div className="h-20 flex items-center px-8">
                  <Link href="/" className="text-2xl font-bold tracking-tight text-gray-900">
-                    Job<span className="text-blue-600">Lounge</span>
+                    JobsLounge
                 </Link>
             </div>
 

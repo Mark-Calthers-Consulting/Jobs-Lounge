@@ -1,11 +1,12 @@
 'use client'
-import { useUser } from '@/hooks/useAuth'
+import { useUser } from '@/hooks/useUsers'
 import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
 
 const Navbar: React.FC = () => {
   const { data: user, isLoading } = useUser()
+  
   const isAuthed = !!user
   return (
     <div className='flex justify-between items-center px-20 py-4'>

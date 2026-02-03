@@ -8,7 +8,7 @@ export const fetchVacancies = async () => {
 }
 
 export const saveJob = async (jobId: String) => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs/${jobId}/save`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/${jobId}/save`, {
         method: 'POST',
         credentials: 'include',
         body: JSON.stringify(jobId)
@@ -23,7 +23,7 @@ export const saveJob = async (jobId: String) => {
 }
 
 export const unsaveJob = async (jobId: String) => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs/${jobId}/save`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/${jobId}/save`, {
         method:'DELETE',
         credentials: 'include',
         body: JSON.stringify(jobId)

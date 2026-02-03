@@ -2,10 +2,10 @@
 
 import Link from "next/link"
 import { useState } from "react"
-import { useUser } from "@/hooks/useAuth"
 import { useSaveJob, useUnsaveJob } from "@/hooks/useVacancies"
 import { BsBookmark, BsBookmarkFill } from "react-icons/bs"
 import { FiLogIn, FiSend } from "react-icons/fi"
+import { useUser } from "@/hooks/useUsers"
 
 export default function JobActions({ jobId }: { jobId: string }) {
   const { data: user, isLoading } = useUser()
@@ -25,7 +25,7 @@ export default function JobActions({ jobId }: { jobId: string }) {
       unsave.mutate(jobId)
     }
   }
-
+  
   if (isLoading) return null
 
   return (

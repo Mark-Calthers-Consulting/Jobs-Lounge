@@ -4,8 +4,8 @@ import CopyLink from '../../../../components/CopyLink'
 import { FaLocationDot, FaXTwitter } from "react-icons/fa6";
 import { MdOutlineWorkOutline, MdWorkspacePremium } from "react-icons/md";
 import { BsLinkedin } from "react-icons/bs";
-import { useUser } from '@/hooks/useAuth';
 import JobActions from './JobActions';
+import { useUser } from '@/hooks/useUsers';
 
 type JobPageProps = {
     params: Promise<{
