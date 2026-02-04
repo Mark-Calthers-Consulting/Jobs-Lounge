@@ -1,9 +1,10 @@
 import React from 'react'
+import SettingsClient from './SettingsClient'
 
 const Settings = () => {
   return (
     <div>
-      <h1>Settings</h1>
+      <SettingsClient />
     </div>
   )
 }

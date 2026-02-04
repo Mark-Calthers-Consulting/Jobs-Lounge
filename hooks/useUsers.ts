@@ -2,6 +2,10 @@ import { fetchUser } from "@/api/auth"
 import { getSavedJobs } from "@/api/users"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
+type Options = {
+    enabled?: boolean;
+};
+
 export const useUser = () => {
     return useQuery({
         queryKey: ['me'],
@@ -9,9 +13,10 @@ export const useUser = () => {
     })
 }
 
-export const useGetSavedJobs = () => {
+export const useGetSavedJobs = (options: Options) => {
     return useQuery({
         queryKey: ['savedJobs'],
-        queryFn: getSavedJobs
+        queryFn: getSavedJobs,
+        enabled: options?.enabled
     })
 }
