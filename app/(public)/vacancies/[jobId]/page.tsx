@@ -1,5 +1,5 @@
 import { FaFacebook } from 'react-icons/fa'
-import type { Job } from '../../../../types/types'
+import type { Job, JobPageProps } from '../../../../types/types'
 import CopyLink from '../../../../components/CopyLink'
 import { FaLocationDot, FaXTwitter } from "react-icons/fa6";
 import { MdOutlineWorkOutline, MdWorkspacePremium } from "react-icons/md";
@@ -7,11 +7,6 @@ import { BsLinkedin } from "react-icons/bs";
 import JobActions from './JobActions';
 import { useUser } from '@/hooks/useUsers';
 
-type JobPageProps = {
-    params: Promise<{
-        jobId: string
-    }>
-}
 
 const getSingleJob = async (id: string): Promise<Job> => {
     const res = await fetch(

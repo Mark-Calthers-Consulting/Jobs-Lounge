@@ -22,18 +22,25 @@ const DashboardClient: React.FC = () => {
             <h1 className='text-3xl'>Welcome back, {userQuery.data.name}!</h1>
             <p>Here's what's happening with your job search today. </p>
             <Link href={'/vacancies'}><button className='p-2 rounded shadow'>Go to Vacancies</button></Link>
-            <section className='flex gap-2'>
-                <div className="rounded shadow p-5">
-                    <h5>Saved Jobs</h5>
-                    <p>{savedJobsQuery?.data?.length}</p>
+
+            <section>
+                <div className="ring-1 ring-red-400 p-5 my-4 rounded">
+                    <h2>Complete your profile</h2>
                 </div>
-                <div className="rounded shadow p-5">
+            </section>
+
+            <section className='flex gap-2 grid grid-cols-1 md:grid-cols-3'>
+                <div className="rounded bg-white shadow p-5">
+                    <h5>Saved Jobs</h5>
+                    <p className='text-2xl font-semibold'>{savedJobsQuery?.data?.length}</p>
+                </div>
+                <div className="rounded bg-white shadow p-5">
                     <h5>Jobs Applied</h5>
-                    <p>12</p>
+                    <p className='text-2xl font-semibold'>12</p>
                 </div>
-                <div className="rounded shadow p-5">
+                <div className="rounded bg-white shadow p-5">
                     <h5>Saved Jobs</h5>
-                    <p>12</p>
+                    <p className='text-2xl font-semibold'>12</p>
                 </div>
             </section>
             <section>
@@ -56,7 +63,7 @@ const DashboardClient: React.FC = () => {
             <section>
                 <h2>Recommended Opportunities</h2>
                 <div className="">
-                    
+
                 </div>
             </section>
         </div>

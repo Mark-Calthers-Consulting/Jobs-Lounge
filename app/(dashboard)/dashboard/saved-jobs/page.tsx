@@ -4,7 +4,7 @@ import { useGetSavedJobs } from '@/hooks/useUsers'
 import React from 'react'
 
 const SavedJobs = () => {
-  const { data, isLoading, error, isError } = useGetSavedJobs()
+  const { data, isLoading, error, isError } = useGetSavedJobs({enabled:true})
 
   if (isLoading) {
     return <h1>Loading</h1>

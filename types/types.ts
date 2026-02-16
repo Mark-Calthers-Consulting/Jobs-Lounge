@@ -2,7 +2,9 @@ export type Job = {
   _id: string
   title: string
   description: string
+  category: string
   location: string
+  workMode: string
   jobType: string
   level: string
 
@@ -23,9 +25,10 @@ export type Job = {
     name: string
   }
 
-  responsibilities: string[] 
-  benefits:string[]
+  responsibilities: string[]
+  benefits: string[]
   requirements: string[]
+  experience: number
 
   applyLink: string
   deadline: string // ISO date string
@@ -46,4 +49,10 @@ export type RegisterPayload = {
   email: string
   password: string
   name?: string
+}
+
+export type JobPageProps = {
+  params: Promise<{
+    jobId: string
+  }>
 }

@@ -8,7 +8,8 @@ type formMode = 'login' | 'register'
 type formValues = {
     email: string,
     password: string,
-    name?: string
+    name?: string,
+    phoneNumber?: string
 }
 
 const AuthForm: React.FC = () => {
@@ -16,7 +17,8 @@ const AuthForm: React.FC = () => {
     const [authData, setAuthData] = useState<formValues>({
         email: '',
         password: '',
-        name: ''
+        name: '',
+        phoneNumber: ''
     })
 
     const loginMutation = useLogin()
@@ -78,19 +80,23 @@ const AuthForm: React.FC = () => {
                     <form onSubmit={handleSubmit}>
                         <label htmlFor="" className="flex flex-col">
                             Email Address
-                            <input onChange={handleChange} name="email" className="p-2 my-2 shadow rounded outline-none" type="email" placeholder="E-mail" />
+                            <input onChange={handleChange} name="email" className="px-4 py-2 my-2 ring-1 ring-gray-100 shadow  rounded outline-none" type="email" placeholder="E-mail" />
                         </label>
                         <label htmlFor="" className="flex flex-col">
                             Password
-                            <input onChange={handleChange} name="password" className="p-2 my-2 shadow rounded outline-none" type="password" placeholder="Password" />
+                            <input onChange={handleChange} name="password" className="px-4 py-2 my-2 ring-1 ring-gray-100 shadow rounded outline-none" type="password" placeholder="Password" />
                         </label>
-                        <button type="submit" className="w-full p-2 cursor-pointer text-white bg-[#003B6D]">SIGN IN</button>
+                        <button type="submit" className="w-full p-3 my-4 rounded cursor-pointer text-white bg-[#003B6D]">SIGN IN</button>
                     </form>
                     :
                     <form onSubmit={handleSubmit}>
                         <div className="flex flex-col">
                             <label htmlFor="">Name</label>
                             <input onChange={handleChange} type="text" name="name" className="py-2 px-3 my-2 shadow rounded outline-none" placeholder="Full Name" />
+                        </div>
+                        <div className="flex flex-col">
+                            <label htmlFor="">Phone Number</label>
+                            <input onChange={handleChange} type="text" name="telephone" className="py-2 px-3 my-2 shadow rounded outline-none" placeholder="Full Name" />
                         </div>
                         <div className="flex flex-col">
                             <label htmlFor="" className="">Email Address</label>
