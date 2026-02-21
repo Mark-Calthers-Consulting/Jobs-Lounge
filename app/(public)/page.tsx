@@ -4,6 +4,7 @@ import { MdOutlineAssignment } from "react-icons/md";
 import { FaCloudArrowUp } from "react-icons/fa6";
 import { PiExam } from "react-icons/pi";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
+import { LuUserRound } from "react-icons/lu";
 
 
 
@@ -27,7 +28,7 @@ export default function Home() {
       </div>
 
       <section className="w-full text-center">
-        <p className="bg-[#161C2D] text-white ">Enthusiastic about experiencing the comprehensive offerings of Jobs Lounge? Watch our video <span className="underline">here</span></p>
+        <p className="bg-[#161C2D] py-3 text-white ">Enthusiastic about experiencing the comprehensive offerings of Jobs Lounge? Watch our video <Link target="_blank" href='https://www.youtube.com/@mcchrtv'><span className="underline cursor-pointer">here</span></Link></p>
       </section>
 
       <section className="px-12 py-12">
@@ -71,7 +72,7 @@ export default function Home() {
             <p className="w-8/12 ml-auto leading-8">At Jobs Lounge, our mission is to revolutionize the job search experience by providing a user-friendly platform that seamlessly connects job seekers with employers.</p>
           </div>
         </div>
-          <div className="relative flex flex-row-reverse">
+        <div className="relative flex flex-row-reverse">
           <div className="w-1/2">
             <Image src='/mission.webp' fill sizes="50vw" priority className="z-100 object-contain object-right" alt="mission icon" />
           </div>
@@ -80,6 +81,109 @@ export default function Home() {
             <h2 className="text-4xl font-black">OUR VISION</h2>
             <p className="w-8/12 mr-auto leading-8">To be the leading online job portal, connecting individuals with meaningful employment opportunities and empowering organizations to build their dream teams, while fostering a dynamic and inclusive global workforce.</p>
           </div>
+        </div>
+      </section>
+
+      <section className="px-12 py-12 bg-[#3C3CC6] my-6 text-center w-[80%] mx-auto rounded-2xl">
+        <h2 className="text-white font-black text-5xl">FAQ's</h2>
+        <p className="text-white my-3 text-2xl">Frequently Asked Questions</p>
+
+        <div className="text-left max-w-6xl mx-auto grid grid-cols-1 gap-3 md:grid-cols-2">
+          <details className="group bg-white p-6 mb-4 max-w-xl h-max" open>
+            <summary className="flex justify-between items-center cursor-pointer list-none:hidden focus:outline-none text-slate-800 font-semibold">
+              <span>How do I create an account on MCC Job Lounge?</span>
+              <span className="flex items-center justify-center w-8 h-8 shrink-0 ml-4 bg-blue-600 text-white text-xl font-normal group-open:bg-blue-600 group-open:text-white">
+                <span className="block group-open:hidden">+</span>
+                <span className="hidden group-open:block">&minus;</span>
+              </span>
+            </summary>
+
+            <p className="mt-4 text-slate-500 text-sm leading-relaxed pr-10">
+              All you need to do is sign up on the website or mobile app
+            </p>
+          </details>
+
+          <details className="group bg-white p-6 mb-4 max-w-xl h-max" open>
+            <summary className="flex justify-between items-center cursor-pointer list-none:hidden focus:outline-none text-slate-800 font-semibold">
+              <span>Can I apply for multiple positions at the same time?</span>
+              <span className="flex items-center justify-center w-8 h-8 shrink-0 ml-4 bg-blue-600 text-white text-xl font-normal group-open:bg-blue-600 group-open:text-white">
+                <span className="block group-open:hidden">+</span>
+                <span className="hidden group-open:block">&minus;</span>
+              </span>
+            </summary>
+
+            <p className="mt-4 text-slate-500 text-sm leading-relaxed pr-10">
+              Yes, you are welcome to apply for multiple roles that match your skills and experience. However, we recommend focusing your applications on the positions that best align with your primary career goals.
+            </p>
+          </details>
+
+          <details className="group bg-white p-6 mb-4 max-w-xl h-max" open>
+            <summary className="flex justify-between items-center cursor-pointer list-none:hidden focus:outline-none text-slate-800 font-semibold">
+              <span>What happens after I submit my application?</span>
+              <span className="flex items-center justify-center w-8 h-8 shrink-0 ml-4 bg-blue-600 text-white text-xl font-normal group-open:bg-blue-600 group-open:text-white">
+                <span className="block group-open:hidden">+</span>
+                <span className="hidden group-open:block">&minus;</span>
+              </span>
+            </summary>
+
+            <p className="mt-4 text-slate-500 text-sm leading-relaxed pr-10">
+              Once submitted, your profile and resume will be reviewed by our recruitment team. If your qualifications match our requirements, we will reach out to you via email to schedule the next steps, which may include an initial screening call or an online assessment.
+            </p>
+          </details>
+
+          <details className="group bg-white p-6 mb-4 max-w-xl h-max" open>
+            <summary className="flex justify-between items-center cursor-pointer list-none:hidden focus:outline-none text-slate-800 font-semibold">
+              <span>How can I get notified about new job openings at MCC?</span>
+              <span className="flex items-center justify-center w-8 h-8 shrink-0 ml-4 bg-blue-600 text-white text-xl font-normal group-open:bg-blue-600 group-open:text-white">
+                <span className="block group-open:hidden">+</span>
+                <span className="hidden group-open:block">&minus;</span>
+              </span>
+            </summary>
+
+            <p className="mt-4 text-slate-500 text-sm leading-relaxed pr-10">
+              To stay updated on the latest opportunities, you can set up "Job Alerts" in your profile settings and we will email you as soon as a matching position is posted.
+            </p>
+          </details>
+
+          <details className="group bg-white p-6 mb-4 max-w-xl h-max" open>
+            <summary className="flex justify-between items-center cursor-pointer list-none:hidden focus:outline-none text-slate-800 font-semibold">
+              <span>Can I update my resume or cover letter after applying for a role?</span>
+              <span className="flex items-center justify-center w-8 h-8 shrink-0 ml-4 bg-blue-600 text-white text-xl font-normal group-open:bg-blue-600 group-open:text-white">
+                <span className="block group-open:hidden">+</span>
+                <span className="hidden group-open:block">&minus;</span>
+              </span>
+            </summary>
+
+            <p className="mt-4 text-slate-500 text-sm leading-relaxed pr-10">
+              You can update your master profile and resume at any time in your Account Settings. However, changes made after you have already submitted an application for a specific role may not reflect on that specific application.
+            </p>
+          </details>
+
+          <details className="group bg-white p-6 mb-4 max-w-xl h-max" open>
+            <summary className="flex justify-between items-center cursor-pointer list-none:hidden focus:outline-none text-slate-800 font-semibold">
+              <span>How long does the hiring process typically take?</span>
+              <span className="flex items-center justify-center w-8 h-8 shrink-0 ml-4 bg-blue-600 text-white text-xl font-normal group-open:bg-blue-600 group-open:text-white">
+                <span className="block group-open:hidden">+</span>
+                <span className="hidden group-open:block">&minus;</span>
+              </span>
+            </summary>
+
+            <p className="mt-4 text-slate-500 text-sm leading-relaxed pr-10">
+              We strive to move quickly, but the process usually takes between 2 to 4 weeks from the application closing date to the final offer, depending on the seniority of the role and the number of interview stages.
+            </p>
+          </details>
+        </div>
+      </section>
+
+      <section className="text-center">
+        <Image width={70} height={70} className="mx-auto" src='/logo.svg' alt='logo' />
+        <h2 className="text-3xl font-semiboldbold my-7">Be the first to know about new <br /> opportunities at MCC</h2>
+        <div className="border flex">
+          <div className="flex mx-auto relative border border-red-400 w-max">
+            <LuUserRound color="#7E7E7E" className="absolute left-2 top-1/2 -translate-y-1/2" />
+            <input className="border border-[#7E7E7E] rounded-full px-8 py-2 w-72" placeholder="Enter your email" type="text" />  
+          </div>
+          <button className="bg-[#3C3CC6]">Get Alerts</button>
         </div>
       </section>
     </div>

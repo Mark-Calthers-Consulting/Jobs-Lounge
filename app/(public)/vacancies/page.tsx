@@ -11,7 +11,7 @@ const Vacancies: React.FC = () => {
 
   return (
     <div>
-      <section className="px-12 py-4 mb-8 bg-[#607E98] flex items-center justify-between">
+      <section className="px-12 py-4 mb-8 bg-[#003B6D] flex items-center justify-between">
         <p className="text-white">Find Jobs</p>
         <input type="text" className="bg-white rounded px-4 py-2 outline-none" placeholder="Search Jobs" />
         <p className="text-white">Home <span className="fontbo">/ Vacancies</span></p>
