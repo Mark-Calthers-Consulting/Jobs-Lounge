@@ -12,20 +12,25 @@ export default function Home() {
   return (
     <div className="flex-1">
 
-      <div className="flex flex-col items-center md:flex-row px-12">
-        <section className="w-full md:w-1/2 space-y-6">
-          <h1 className="text-[#003B6D] text-4xl md:text-6xl font-bold">Find your dream job<br />  in seconds.</h1>
-          <p className="text-lg max-w-md">Our platform connects you with highly qualified job seekers across industries, helping you build your team with ease.</p>
-          <Link href='/vacancies' className="bg-[#003B6D] text-white px-6 py-3 rounded-md font-medium hover:bg-blue-800 transition">
-            <button>Explore Vacancies</button>
-          </Link>
-        </section>
-        <section className="w-full max-w- borde md:w-1/2 relative h-[400px] md:h-[500px] overflow-hidden">
-          <Image src='/hero.webp' fill sizes="50vw" priority className="z-100 object-contain object-right" alt="standing woman" />
+      <section className="relative">
+        <div className="flex flex-col items-center md:flex-row px-12">
+          <section className="w-full md:w-1/2 space-y-6">
+            <h1 className="text-[#003B6D] text-4xl md:text-6xl font-bold">Find your dream job<br />  in seconds.</h1>
+            <p className="text-lg max-w-md">Our platform connects you with highly qualified job seekers across industries, helping you build your team with ease.</p>
+            <Link
+              href={"/vacancies"}
+              className="inline-block bg-[#003B6D] text-white px-6 py-3 cursor-pointer font-medium hover:bg-blue-800 transition"
+            >
+              Explore Vacancies
+            </Link>
+          </section>
+          <section className="w-full relative borde md:w-1/2  h-[400px] md:h-[500px] overflow-x-hidden">
+            <Image src='/hero.webp' fill sizes="50vw" priority className="z-100 object-contain object-right" alt="standing woman" />
 
-          <Image src='/bgcircles.png' height={20} width={20} sizes="50vw" className="absolute -translate-y-1/2 w-100 opacity-20 top-1/2 -right-30" alt="circles" />
-        </section>
-      </div>
+            <Image src='/bgcircles.png' height={20} width={20} sizes="50vw" className="absolute z-50 -translate-y-1/2 w-100 right-0 opacity-20 top-1/2" alt="circles" />
+          </section>
+        </div>
+      </section>
 
       <section className="w-full text-center">
         <p className="bg-[#161C2D] py-3 text-white ">Enthusiastic about experiencing the comprehensive offerings of Jobs Lounge? Watch our video <Link target="_blank" href='https://www.youtube.com/@mcchrtv'><span className="underline cursor-pointer">here</span></Link></p>
@@ -61,25 +66,41 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="px-12">
-        <div className="relative flex">
-          <div className="w-1/2">
-            <Image src='/mission.webp' fill sizes="50vw" priority className="z-100 object-contain object-left" alt="mission icon" />
+      <section className="borde py-12 px-12 space-y-12">
+        <div className="relative flex flex-col-reverse sm:flex-row ">
+          <div className="w-full sm:w-1/2 h-72">
+            {/* <Image src='/mission.webp' fill sizes="50vw" priority className="z-100 object-contain object-left" alt="mission icon" /> */}
+            <Image
+              src="/mission.webp"
+              width={600}
+              height={400}
+              className="object-contain object-left w-full h-full"
+              alt="mission icon"
+              priority
+            />
           </div>
-          <div className="w-1/2 text-right space-y-4 border">
-            <h6>Driving Positive Transformation</h6>
-            <h2 className="text-4xl font-black">OUR MISSION</h2>
-            <p className="w-8/12 ml-auto leading-8">At Jobs Lounge, our mission is to revolutionize the job search experience by providing a user-friendly platform that seamlessly connects job seekers with employers.</p>
+          <div className="w-full sm:w-1/2 text-center sm:text-right space-y-4 borde">
+            <h6 className="text-[#335F84]">Driving Positive Transformation</h6>
+            <h2 className="text-4xl font-black text-[#003B6D]">OUR MISSION</h2>
+            <p className="md:w-8/12 ml-auto leading-8 font-semibold text-[#335F84]">At Jobs Lounge, our mission is to revolutionize the job search experience by providing a user-friendly platform that seamlessly connects job seekers with employers.</p>
           </div>
         </div>
-        <div className="relative flex flex-row-reverse">
-          <div className="w-1/2">
-            <Image src='/mission.webp' fill sizes="50vw" priority className="z-100 object-contain object-right" alt="mission icon" />
+
+        <div className="relative flex flex-col-reverse sm:flex-row-reverse">
+          <div className="w-full sm:w-1/2 h-72">
+            <Image
+              src="/vision.webp"
+              width={600}
+              height={400}
+              className="object-contain object-right w-full h-full"
+              alt="mission icon"
+              priority
+            />
           </div>
-          <div className="w-1/2 text-left space-y-4 border">
-            <h6>Picturing Tomorrow, Today</h6>
-            <h2 className="text-4xl font-black">OUR VISION</h2>
-            <p className="w-8/12 mr-auto leading-8">To be the leading online job portal, connecting individuals with meaningful employment opportunities and empowering organizations to build their dream teams, while fostering a dynamic and inclusive global workforce.</p>
+          <div className="w-full sm:w-1/2 text-center sm:text-left space-y-4 borde">
+            <h6 className="text-[#335F84]">Picturing Tomorrow, Today</h6>
+            <h2 className="text-4xl font-black text-[#003B6D]">OUR VISION</h2>
+            <p className="md:w-8/12 mr-auto leading-8 font-semibold text-[#335F84]">To be the leading online job portal, connecting individuals with meaningful employment opportunities and empowering organizations to build their dream teams, while fostering a dynamic and inclusive global workforce.</p>
           </div>
         </div>
       </section>
@@ -103,7 +124,7 @@ export default function Home() {
             </p>
           </details>
 
-          <details className="group bg-white p-6 mb-4 max-w-xl h-max" open>
+          <details className="group bg-white p-6 mb-4 max-w-xl h-max" >
             <summary className="flex justify-between items-center cursor-pointer list-none:hidden focus:outline-none text-slate-800 font-semibold">
               <span>Can I apply for multiple positions at the same time?</span>
               <span className="flex items-center justify-center w-8 h-8 shrink-0 ml-4 bg-blue-600 text-white text-xl font-normal group-open:bg-blue-600 group-open:text-white">
@@ -117,7 +138,7 @@ export default function Home() {
             </p>
           </details>
 
-          <details className="group bg-white p-6 mb-4 max-w-xl h-max" open>
+          <details className="group bg-white p-6 mb-4 max-w-xl h-max" >
             <summary className="flex justify-between items-center cursor-pointer list-none:hidden focus:outline-none text-slate-800 font-semibold">
               <span>What happens after I submit my application?</span>
               <span className="flex items-center justify-center w-8 h-8 shrink-0 ml-4 bg-blue-600 text-white text-xl font-normal group-open:bg-blue-600 group-open:text-white">
@@ -131,7 +152,7 @@ export default function Home() {
             </p>
           </details>
 
-          <details className="group bg-white p-6 mb-4 max-w-xl h-max" open>
+          <details className="group bg-white p-6 mb-4 max-w-xl h-max" >
             <summary className="flex justify-between items-center cursor-pointer list-none:hidden focus:outline-none text-slate-800 font-semibold">
               <span>How can I get notified about new job openings at MCC?</span>
               <span className="flex items-center justify-center w-8 h-8 shrink-0 ml-4 bg-blue-600 text-white text-xl font-normal group-open:bg-blue-600 group-open:text-white">
@@ -145,7 +166,7 @@ export default function Home() {
             </p>
           </details>
 
-          <details className="group bg-white p-6 mb-4 max-w-xl h-max" open>
+          <details className="group bg-white p-6 mb-4 max-w-xl h-max" >
             <summary className="flex justify-between items-center cursor-pointer list-none:hidden focus:outline-none text-slate-800 font-semibold">
               <span>Can I update my resume or cover letter after applying for a role?</span>
               <span className="flex items-center justify-center w-8 h-8 shrink-0 ml-4 bg-blue-600 text-white text-xl font-normal group-open:bg-blue-600 group-open:text-white">
@@ -159,7 +180,7 @@ export default function Home() {
             </p>
           </details>
 
-          <details className="group bg-white p-6 mb-4 max-w-xl h-max" open>
+          <details className="group bg-white p-6 mb-4 max-w-xl h-max" >
             <summary className="flex justify-between items-center cursor-pointer list-none:hidden focus:outline-none text-slate-800 font-semibold">
               <span>How long does the hiring process typically take?</span>
               <span className="flex items-center justify-center w-8 h-8 shrink-0 ml-4 bg-blue-600 text-white text-xl font-normal group-open:bg-blue-600 group-open:text-white">
@@ -175,15 +196,15 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="text-center">
+      <section className="text-center my-6 py-12">
         <Image width={70} height={70} className="mx-auto" src='/logo.svg' alt='logo' />
-        <h2 className="text-3xl font-semiboldbold my-7">Be the first to know about new <br /> opportunities at MCC</h2>
-        <div className="border flex">
-          <div className="flex mx-auto relative border border-red-400 w-max">
+        <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold my-7 text-[#003B6D]">Be the first to know about new <br /> opportunities at MCC</h2>
+        <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
+          <div className="flex relative w-max">
             <LuUserRound color="#7E7E7E" className="absolute left-2 top-1/2 -translate-y-1/2" />
-            <input className="border border-[#7E7E7E] rounded-full px-8 py-2 w-72" placeholder="Enter your email" type="text" />  
+            <input className="border border-[#7E7E7E] rounded-full px-8 py-2 w-72" placeholder="Enter your email" type="text" />
           </div>
-          <button className="bg-[#3C3CC6]">Get Alerts</button>
+          <button className="bg-[#3C3CC6] text-white rounded-full w-48 sm:w-max py-2 px-4 cursor-pointer">Get Alerts</button>
         </div>
       </section>
     </div>
