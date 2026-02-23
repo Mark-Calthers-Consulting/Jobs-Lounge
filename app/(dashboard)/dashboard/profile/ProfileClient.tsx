@@ -12,7 +12,7 @@ const ProfileClient: React.FC = () => {
                 <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                     <div className="">
                         <h4>Full Name</h4>
-                        <p className='bg-gray-200 rounded px-4 py-2'>Yinka Adebayo</p>
+                        <p className='bg-gray-200 rounded px-4 py-2'>Yinka Junaid</p>
                     </div>
                     <div className="">
                         <h4>Email Address</h4>

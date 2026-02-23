@@ -20,7 +20,7 @@ const DashboardSidebar = () => {
         document.cookie = "authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;"
 
         // Redirect to login
-        router.push("/auth/login")
+        router.push("/auth")
     }
 
     const menuItems = [
