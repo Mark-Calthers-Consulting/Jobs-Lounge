@@ -1,0 +1,77 @@
+'use client'
+import { useLogin, useRegister } from "@/hooks/useAuth"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
+import { toast } from "sonner"
+
+type formMode = 'login' | 'register'
+type formValues = {
+    email: string,
+    password: string,
+    name?: string,
+    phoneNumber?: string
+}
+
+const AdminAuthForm: React.FC = () => {
+    const [authData, setAuthData] = useState<formValues>({
+        email: '',
+        password: '',
+    })
+
+    const loginMutation = useLogin()
+
+    const router = useRouter();
+        const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        console.log(name, value)
+        setAuthData(prev => ({
+            ...prev,
+            [name]: value,
+        }));
+    }
+
+
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const toastId = toast.loading('Logging in...')
+        try {
+           const data = await loginMutation.mutateAsync({
+                email: authData.email,
+                password: authData.password,
+            })
+
+            console.log(data)
+
+
+            toast.success('Success!', { id: toastId })
+            router.replace('/admin-center')
+
+        } catch (error) {
+            toast.error(
+                (error as Error).message || "Something went wrong",
+                { id: toastId }
+            )
+        }
+    };
+
+    return (
+        <div className="space-y-4">
+            <h2 className="text-[#003B6D] text-xl lg:text-2xl font-bold">Jobs Lounge Admin Panel</h2>
+            <p>Sign in to access the Jobs Lounge administration dashboard and manage the platform.</p>
+            <form onSubmit={handleSubmit}>
+                <label htmlFor="" className="flex flex-col">
+                    Email Address
+                    <input onChange={handleChange} name="email" className="px-4 py-2 my-2 ring-1 ring-gray-100 shadow  rounded outline-none" type="email" placeholder="E-mail" />
+                </label>
+                <label htmlFor="" className="flex flex-col">
+                    Password
+                    <input onChange={handleChange} name="password" className="px-4 py-2 my-2 ring-1 ring-gray-100 shadow rounded outline-none" type="password" placeholder="Password" />
+                </label>
+                <button type="submit" className="w-full p-3 my-4 rounded cursor-pointer text-white bg-[#003B6D]">SIGN IN</button>
+            </form>
+        </div>
+    )
+}
+
+export default AdminAuthForm
