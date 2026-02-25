@@ -19,7 +19,7 @@ const DashboardClient: React.FC = () => {
 
     return (
         <div>
-            <h1 className='text-3xl'>Welcome back, {userQuery.data.name}!</h1>
+            <h1 className='text-3xl'>Welcome back, {userQuery?.data.name}!</h1>
             <p>Here's what's happening with your job search today. </p>
             <Link href={'/vacancies'}><button className='p-2 rounded shadow'>Go to Vacancies</button></Link>
 

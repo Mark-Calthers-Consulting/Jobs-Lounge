@@ -1,5 +1,7 @@
 'use client'
 import { useLogin, useRegister } from "@/hooks/useAuth"
+import Image from "next/image"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -21,7 +23,7 @@ const AdminAuthForm: React.FC = () => {
     const loginMutation = useLogin()
 
     const router = useRouter();
-        const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         console.log(name, value)
         setAuthData(prev => ({
@@ -36,12 +38,19 @@ const AdminAuthForm: React.FC = () => {
         e.preventDefault();
         const toastId = toast.loading('Logging in...')
         try {
-           const data = await loginMutation.mutateAsync({
+            const data = await loginMutation.mutateAsync({
                 email: authData.email,
                 password: authData.password,
             })
 
             console.log(data)
+            console.log(data.role === 'user')
+
+            if (data.role !== 'admin' && data.role !== 'super-admin') {
+                toast.error('Access denied. Not an admin account.', { id: toastId })
+                router.replace('/auth')
+                return
+            }
 
 
             toast.success('Success!', { id: toastId })
@@ -57,7 +66,8 @@ const AdminAuthForm: React.FC = () => {
 
     return (
         <div className="space-y-4">
-            <h2 className="text-[#003B6D] text-xl lg:text-2xl font-bold">Jobs Lounge Admin Panel</h2>
+            <Link href='/'><Image width={70} height={70} src='/logo.svg' alt='logo' /></Link>
+            <h2 className="text-[#003B6D] text-2xl font-bold">Jobs Lounge Admin Panel</h2>
             <p>Sign in to access the Jobs Lounge administration dashboard and manage the platform.</p>
             <form onSubmit={handleSubmit}>
                 <label htmlFor="" className="flex flex-col">
