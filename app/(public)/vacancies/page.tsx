@@ -1,5 +1,4 @@
 'use client'
-import { useEffect, useState } from "react"
 import type { Job } from "@/types/types"
 import Link from "next/link"
 import JobFilters from "@/components/JobFilters"
@@ -8,6 +7,7 @@ import { useVacancies } from "@/hooks/useVacancies"
 const Vacancies: React.FC = () => {
 
   const { data = [], isLoading, error, isError } = useVacancies()
+  console.log(data)
 
   return (
     <div>

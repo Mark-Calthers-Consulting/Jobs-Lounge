@@ -37,7 +37,7 @@ const Navbar: React.FC = () => {
         }
       </button>
       {isMenuOpen && (
-        <div className='absolute md:hidden top-full px-6 py-4 right-0 shadow flex flex-col gap-4 z-200'>
+        <div className='absolute md:hidden top-full px-6 bg-white rounded py-4 right-2 ring-1 ring-gray-300 shadow flex flex-col gap-4 z-200'>
             <Link href={'/'} className={pathname === "/" ? "text-[#1b1f87a0] font-bold" : ""}>Home</Link>
             <Link href={'/vacancies'} className={pathname === "/vacancies" ? "text-[#1b1f87a0] font-bold" : ""}>Vacancies</Link>
             <Link href={'/contact'} className={pathname === "/contact" ? "text-[#1b1f87a0] font-bold" : ""}>Contact</Link>
