@@ -1,33 +1,18 @@
+import DashboardJobsTable from "@/components/DashboardJobsTable"
+import DashboardStats from "@/components/DashboardStats"
 import JobsTable from "@/components/JobsTable"
 
-const AdminPanel: React.FC = () => {
+const AdminDashboard: React.FC = () => {
     return (
         <div className="">
-            <div className="">Welcome Back, Admin</div>
-            <p>Here's what's happening on Jobs Lounge today.</p>
-            <div className="flex">
-                <div className="p-5 ring-1 ring-gray-200 rounded shadow">
-                    <h6>Total Jobs</h6>
-                    <p className="font-semibold text-2xl">5</p>
-                </div>
-                <div className="p-5 ring-1 ring-gray-200 rounded shadow">
-                    <h6>Active Jobs</h6>
-                    <p className="font-semibold text-2xl">5</p>
-                </div>
-                <div className="p-5 ring-1 ring-gray-200 rounded shadow">
-                    <h6>Total Applications</h6>
-                    <p className="font-semibold text-2xl">5</p>
-                </div>
-                <div className="p-5 ring-1 ring-gray-200 rounded shadow">
-                    <h6>Total Users</h6>
-                    <p className="font-semibold text-2xl">5</p>
-                </div>
-            </div>
+            <h1 className="font-bold text-2xl">Welcome Back, Admin</h1>
+            <p className="my-3">Here's what's happening on Jobs Lounge today.</p>
+            <DashboardStats />
             <div className="">
-                <JobsTable />
+                <DashboardJobsTable />
             </div>
         </div>
     )
 }
 
-export default AdminPanel
+export default AdminDashboard
