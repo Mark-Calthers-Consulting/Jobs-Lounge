@@ -56,3 +56,7 @@ export type JobPageProps = {
     jobId: string
   }>
 }
+
+export type applyPayload = {
+  jobId: string
+}

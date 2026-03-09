@@ -6,8 +6,8 @@ export const fetchUser = async () => {
         credentials: 'include',
     })
 
-     if (res.status === 401) return null
-     
+    if (res.status === 401) return null
+
     const result = await res.json()
 
     if (!res.ok) {
@@ -25,6 +25,21 @@ export const loginUser = async (data: LoginPayload) => {
         },
         credentials: 'include',
         body: JSON.stringify(data)
+    })
+
+    const result = await res.json()
+
+    if (!res.ok) {
+        throw new Error(result.message || 'Request failed');
+    }
+
+    return result.data
+}
+
+export const logoutUser = async () => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
     })
 
     const result = await res.json()

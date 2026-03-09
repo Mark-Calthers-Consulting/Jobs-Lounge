@@ -10,7 +10,7 @@ export const fetchAdminDashboard = async () => {
     }
 
     const dashboard = await res.json()
-    return dashboard.data
+    return dashboard.data 
 }
 
 export const fetchAdminJobs = async () => {

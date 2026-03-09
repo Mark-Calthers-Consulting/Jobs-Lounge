@@ -1,5 +1,6 @@
 "use client"
 
+import { useLogout } from "@/hooks/useAuth"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
@@ -15,12 +16,13 @@ const DashboardSidebar = () => {
     const pathname = usePathname()
     const router = useRouter()
 
-    const handleLogout = () => {
-        // Remove cookie using native JS (Set expiry to the past)
-        document.cookie = "authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;"
+      const logoutMutation = useLogout()
 
-        // Redirect to login
-        router.push("/auth")
+    const handleLogout = async () => {
+        // document.cookie = "authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;"
+
+        await logoutMutation.mutateAsync()
+        router.push("/admin-center/login")
     }
 
     const menuItems = [
@@ -70,8 +72,8 @@ const DashboardSidebar = () => {
                             key={item.href}
                             href={item.href}
                             className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${isActive
-                                    ? "bg-blue-50 text-blue-700 shadow-sm"
-                                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                                ? "bg-blue-50 text-blue-700 shadow-sm"
+                                : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                                 }`}
                         >
                             <span className={isActive ? "text-blue-600" : "text-gray-400"}>

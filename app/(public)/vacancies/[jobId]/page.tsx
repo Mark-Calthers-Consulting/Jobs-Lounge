@@ -35,7 +35,7 @@ const JobPage = async ({ params }: JobPageProps) => {
         <section>
             <section className='bg-[#333] h-24 w-full' />
 
-            <section className='flex pt-8 px-12 border'>
+            <section className='max-w-7xl mx-auto flex flex-col md:flex-row pt-8 px-12 '>
                 <div className="">
                     <section className=''>
                         <h1 className='text-4xl font-bold'>{job.title}</h1>
@@ -75,7 +75,7 @@ const JobPage = async ({ params }: JobPageProps) => {
                         </div>
                     </section>
                 </div>
-                <div className="flex-1">
+                <div className="">
                     <section className='shadow rounded p-4 space-y-2 text-sm'>
                         <h5 className='text-center'>Job Overview</h5>
                         <div className="flex items-center gap-2">

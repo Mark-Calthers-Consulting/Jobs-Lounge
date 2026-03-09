@@ -1,15 +1,19 @@
-import { fetchUser, loginUser, registerUser } from "@/api/auth"
+import { fetchUser, loginUser, logoutUser, registerUser } from "@/api/auth"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-
-
 export const useLogin = () => {
-    const qc = useQueryClient()
+    // const qc = useQueryClient()
     return useMutation({
         mutationFn: loginUser,
         // onSuccess: () => {
         //     qc.invalidateQueries({ queryKey: ["me"] })
         // },
+    })
+}
+
+export const useLogout = () => {
+    return useMutation({
+        mutationFn: logoutUser
     })
 }
 
