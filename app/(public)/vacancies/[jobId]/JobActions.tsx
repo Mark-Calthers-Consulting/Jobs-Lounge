@@ -6,15 +6,40 @@ import { useSaveJob, useUnsaveJob } from "@/hooks/useVacancies"
 import { BsBookmark, BsBookmarkFill } from "react-icons/bs"
 import { FiLogIn, FiSend } from "react-icons/fi"
 import { useUser } from "@/hooks/useUsers"
+import Modal from "@/components/Modal"
+import { useApplyToJob } from "@/hooks/useApplications"
+import { toast } from "sonner"
 
-export default function JobActions({ jobId }: { jobId: string }) {
+export default function JobActions({ jobId, jobTitle }: { jobId: string, jobTitle: string }) {
+  const [isOpen, setIsOpen] = useState(false)
+
   const { data: user, isLoading } = useUser()
   const save = useSaveJob()
   const unsave = useUnsaveJob()
+  const applyMutation = useApplyToJob()
+
+  const handleApply = async () => {
+    try {
+      await applyMutation.mutateAsync({ jobId })
+      toast.success("Application submitted successfully!")
+    } catch (error:any) {
+      if(error?.messsage == 'You already applied' ){
+
+      }
+      toast.error("Failed to apply to job")
+      console.log(error)
+    }
+  }
+
+  // const toggleOpen = () => {
+  //   setIsOpen(prev => !prev)
+  // }
 
   const [saved, setSaved] = useState(false)
 
   const isAuthed = !!user
+
+  const body = <p>{`Are you sure you want to apply to ${jobTitle}`}</p>
 
   const handleClick = () => {
     setSaved((prev) => !prev)
@@ -25,29 +50,31 @@ export default function JobActions({ jobId }: { jobId: string }) {
       unsave.mutate(jobId)
     }
   }
-  
+
   if (isLoading) return null
 
   return (
-    <section className="mt-4 space-y-3">
+    <section className="mt-4">
       {/* SAVE */}
       {!isAuthed ? (
         <Link
           href="/auth"
-          className="flex items-center justify-center gap-2 border p-3 rounded cursor-pointer"
+          className="flex my-3 items-center justify-center gap-2 border p-3 rounded cursor-pointer"
         >
           <FiLogIn />
           Log in to save
         </Link>
       ) : (
         <button
-          className="flex w-full items-center justify-center gap-2 border p-3 rounded cursor-pointer"
+          className="flex my-3 w-full items-center justify-center gap-2 border p-3 rounded cursor-pointer"
           onClick={handleClick}
         >
           {saved ? <BsBookmarkFill /> : <BsBookmark />}
           {saved ? "Saved" : "Save to Favorites"}
         </button>
       )}
+
+      <Modal body={body} actionLabel="Apply" title="Confirm Application" onSubmit={handleApply} onClose={() => setIsOpen(false)} isOpen={isOpen} />
 
       {/* APPLY */}
       {!isAuthed ? (
@@ -59,7 +86,7 @@ export default function JobActions({ jobId }: { jobId: string }) {
           Log in to apply
         </Link>
       ) : (
-        <button className="flex w-full items-center justify-center gap-2 bg-black text-white p-3 rounded">
+        <button onClick={() => setIsOpen(true)} className="flex w-full items-center justify-center gap-2 bg-black text-white p-3 rounded">
           <FiSend />
           Apply
         </button>

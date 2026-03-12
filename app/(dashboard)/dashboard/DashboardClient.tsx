@@ -17,9 +17,18 @@ const DashboardClient: React.FC = () => {
     console.log(savedJobsQuery?.data?.length)
 
 
+    if (userQuery.isLoading) {
+        return <h1>Loading...</h1>
+    }
+
+    if (!userQuery.data) {
+        return <h1>No user data found. Please log in.</h1>
+    }
+
+
     return (
         <div>
-            <h1 className='text-3xl'>Welcome back, {userQuery?.data.name}!</h1>
+            <h1 className='text-3xl'>Welcome back, {userQuery.data?.name}!</h1>
             <p>Here's what's happening with your job search today. </p>
             <Link href={'/vacancies'}><button className='p-2 rounded shadow'>Go to Vacancies</button></Link>
 

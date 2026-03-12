@@ -1,14 +1,13 @@
 import { applyPayload } from "@/types/types"
-import { headers } from "next/headers"
 
 export const applyToJob = async (data: applyPayload) => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/applications/:jobId`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/applications/${data.jobId}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
         credentials: 'include',
-        body: JSON.stringify(data)
+        // body: JSON.stringify(data)
     })
 
     const result = await res.json()
@@ -52,7 +51,7 @@ export const cancelApplication = async () => {
 
 
 
-export const getJobApplications = async () => {
+export const getAllJobApplications = async () => {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/applications/admin/:jobId`, {
         method: 'GET',
         credentials: 'include',

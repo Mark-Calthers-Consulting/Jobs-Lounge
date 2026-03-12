@@ -98,7 +98,7 @@ const JobPage = async ({ params }: JobPageProps) => {
                         </div>
                     </section>
 
-                    <JobActions jobId={jobId} />
+                    <JobActions jobId={jobId} jobTitle={job?.title} />
 
                     <section className='my-5 space-y-2'>
                         <a
