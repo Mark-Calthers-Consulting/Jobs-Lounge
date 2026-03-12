@@ -22,9 +22,11 @@ export default function JobActions({ jobId, jobTitle }: { jobId: string, jobTitl
     try {
       await applyMutation.mutateAsync({ jobId })
       toast.success("Application submitted successfully!")
-    } catch (error:any) {
-      if(error?.messsage == 'You already applied' ){
-
+    } catch (error: any) {
+      if (error?.message == 'You already applied') {
+        toast.error("You already applied to this job")
+        console.log(error)
+        return
       }
       toast.error("Failed to apply to job")
       console.log(error)
