@@ -2,26 +2,34 @@
 
 import Link from "next/link"
 import { useState } from "react"
-import { useSaveJob, useUnsaveJob } from "@/hooks/useVacancies"
+import { useCheckApplicationStatus, useSaveJob, useUnsaveJob } from "@/hooks/useVacancies"
 import { BsBookmark, BsBookmarkFill } from "react-icons/bs"
 import { FiLogIn, FiSend } from "react-icons/fi"
 import { useUser } from "@/hooks/useUsers"
 import Modal from "@/components/Modal"
 import { useApplyToJob } from "@/hooks/useApplications"
 import { toast } from "sonner"
+import { useQueryClient } from "@tanstack/react-query"
 
 export default function JobActions({ jobId, jobTitle }: { jobId: string, jobTitle: string }) {
   const [isOpen, setIsOpen] = useState(false)
 
+  const queryClient = useQueryClient()
   const { data: user, isLoading } = useUser()
+  const { data: hasApplied, isLoading: loadingApplicationStatus } = useCheckApplicationStatus(jobId)
   const save = useSaveJob()
   const unsave = useUnsaveJob()
   const applyMutation = useApplyToJob()
+
+  console.log(hasApplied)
+
 
   const handleApply = async () => {
     try {
       await applyMutation.mutateAsync({ jobId })
       toast.success("Application submitted successfully!")
+
+      queryClient.invalidateQueries({ queryKey: ["application-status", jobId] })
     } catch (error: any) {
       if (error?.message == 'You already applied') {
         toast.error("You already applied to this job")
@@ -33,9 +41,6 @@ export default function JobActions({ jobId, jobTitle }: { jobId: string, jobTitl
     }
   }
 
-  // const toggleOpen = () => {
-  //   setIsOpen(prev => !prev)
-  // }
 
   const [saved, setSaved] = useState(false)
 
@@ -87,8 +92,19 @@ export default function JobActions({ jobId, jobTitle }: { jobId: string, jobTitl
           <FiLogIn />
           Log in to apply
         </Link>
+      ) : hasApplied ? (
+        <button
+          disabled
+          className="flex w-full items-center justify-center gap-2 bg-black text-white p-3 rounded"
+        >
+          <FiSend />
+          You have applied!
+        </button>
       ) : (
-        <button onClick={() => setIsOpen(true)} className="flex w-full items-center justify-center gap-2 bg-black text-white p-3 rounded">
+        <button
+          onClick={() => setIsOpen(true)}
+          className="flex w-full items-center justify-center gap-2 bg-black text-white p-3 rounded"
+        >
           <FiSend />
           Apply
         </button>

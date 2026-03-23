@@ -1,5 +1,5 @@
-import { fetchVacancies, saveJob, unsaveJob } from "@/api/vacancies"
-import { Job } from "@/types/types"
+import { checkApplicationStatus, fetchVacancies, saveJob, unsaveJob } from "@/api/vacancies"
+import { applyPayload, Job } from "@/types/types"
 import { useMutation, useQuery } from "@tanstack/react-query"
 
 export const useVacancies = () => {
@@ -18,5 +18,12 @@ export const useSaveJob = () => {
 export const useUnsaveJob = () => {
     return useMutation({
         mutationFn: unsaveJob
+    })
+}
+
+export const useCheckApplicationStatus = (jobId: String) => {
+    return useQuery({
+        queryKey: ["application-status", jobId],
+        queryFn: () => checkApplicationStatus(jobId)
     })
 }

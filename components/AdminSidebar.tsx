@@ -16,7 +16,7 @@ const DashboardSidebar = () => {
     const pathname = usePathname()
     const router = useRouter()
 
-      const logoutMutation = useLogout()
+    const logoutMutation = useLogout()
 
     const handleLogout = async () => {
         // document.cookie = "authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;"
@@ -34,6 +34,11 @@ const DashboardSidebar = () => {
         {
             name: "Jobs",
             href: "/admin-center/jobs",
+            icon: <LuBookmark size={20} />
+        },
+        {
+            name: "Applications",
+            href: "/admin-center/applications",
             icon: <LuBookmark size={20} />
         },
         {

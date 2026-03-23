@@ -24,7 +24,7 @@ export const saveJob = async (jobId: String) => {
 
 export const unsaveJob = async (jobId: String) => {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/${jobId}/save`, {
-        method:'DELETE',
+        method: 'DELETE',
         credentials: 'include',
         body: JSON.stringify(jobId)
     })
@@ -35,4 +35,15 @@ export const unsaveJob = async (jobId: String) => {
 
     const result = await res.json()
     return result.data
+}
+
+export const checkApplicationStatus = async (jobId: String) => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs/${jobId}/applcation-status`, {
+        credentials: 'include',
+    })
+    if (!res.ok) {
+        throw new Error("Failed to check application status")
+    }
+    const vacancies = await res.json()
+    return vacancies.data
 }
