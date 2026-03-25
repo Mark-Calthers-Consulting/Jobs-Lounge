@@ -1,4 +1,4 @@
-import { fetchUser, loginUser, logoutUser, registerUser } from "@/api/auth"
+import { loginUser, logoutUser, registerUser } from "@/api/auth"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 export const useLogin = () => {

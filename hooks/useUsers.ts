@@ -1,5 +1,4 @@
-import { fetchUser } from "@/api/auth"
-import { getSavedJobs } from "@/api/users"
+import { editUserDetails, fetchUser, getSavedJobs } from "@/api/users"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 type Options = {
@@ -20,3 +19,9 @@ export const useGetSavedJobs = (options: Options) => {
         enabled: options?.enabled
     })
 }
+
+export const useEditUserDetails = ()=> {
+    return useMutation({
+        mutationFn: editUserDetails
+    })
+ }

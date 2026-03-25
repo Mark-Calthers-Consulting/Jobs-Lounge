@@ -1,5 +1,5 @@
-export const fetchVacancies = async () => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs`)
+export const fetchVacancies = async (searchTerm: String) => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs?search=${searchTerm}&type=full&salary=12`)
     if (!res.ok) {
         throw new Error("Failed to fetch vacancies")
     }
@@ -38,7 +38,7 @@ export const unsaveJob = async (jobId: String) => {
 }
 
 export const checkApplicationStatus = async (jobId: String) => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs/${jobId}/applcation-status`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs/${jobId}/application-status`, {
         credentials: 'include',
     })
     if (!res.ok) {
@@ -46,4 +46,15 @@ export const checkApplicationStatus = async (jobId: String) => {
     }
     const vacancies = await res.json()
     return vacancies.data
+}
+
+export const getRecommendedJobs = async () => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs/recommended`, {
+        credentials: 'include',
+    })
+    if (!res.ok) {
+        throw new Error("Failed to get recommended jobs")
+    }
+    const recommended = await res.json()
+    return recommended.data
 }
