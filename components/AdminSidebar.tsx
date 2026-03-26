@@ -53,7 +53,7 @@ const DashboardSidebar = () => {
         },
         {
             name: "Settings",
-            href: "admin-center/settings",
+            href: "/admin-center/settings",
             icon: <LuSettings size={20} />
         },
     ]
