@@ -1,5 +1,12 @@
-export const fetchVacancies = async (searchTerm: String) => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs?search=${searchTerm}&type=full&salary=12`)
+export const fetchVacancies = async (searchTerm: string) => {
+    const params = new URLSearchParams()
+
+    if (searchTerm) {
+        params.append('search', searchTerm)
+    }
+
+    const queryString = params.toString()
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs${queryString ? `?${queryString}` : ""}`)
     if (!res.ok) {
         throw new Error("Failed to fetch vacancies")
     }
@@ -7,7 +14,7 @@ export const fetchVacancies = async (searchTerm: String) => {
     return vacancies.data
 }
 
-export const saveJob = async (jobId: String) => {
+export const saveJob = async (jobId: string) => {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/${jobId}/save`, {
         method: 'POST',
         credentials: 'include',
@@ -22,7 +29,7 @@ export const saveJob = async (jobId: String) => {
     return result.data
 }
 
-export const unsaveJob = async (jobId: String) => {
+export const unsaveJob = async (jobId: string) => {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/${jobId}/save`, {
         method: 'DELETE',
         credentials: 'include',
@@ -37,7 +44,7 @@ export const unsaveJob = async (jobId: String) => {
     return result.data
 }
 
-export const checkApplicationStatus = async (jobId: String) => {
+export const checkApplicationStatus = async (jobId: string) => {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs/${jobId}/application-status`, {
         credentials: 'include',
     })

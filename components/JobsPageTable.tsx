@@ -8,72 +8,16 @@ import {
     Row,
     useReactTable,
 } from '@tanstack/react-table'
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { FiMoreVertical } from "react-icons/fi"
-
-// const columns = [
-//     {
-//         header: 'Job Title',
-//         accessorKey: 'title',
-//     },
-//     {
-//         header: 'Status',
-//         accessorKey: 'status',
-//     },
-//     {
-//         header: 'Applicants',
-//         accessorKey: 'totalApplicants',
-//     },
-//     {
-//         header: 'Date Posted',
-//         accessorKey: 'createdAt',
-//     },
-//     {
-//         header: 'Actions',
-//         id: 'actions',
-//         cell: ({ row }) => (
-//             <div className="relative">
-//                 <button
-//                     className="p-2 rounded hover:bg-gray-100"
-//                     onClick={() =>
-//                         setOpenMenuId(openMenuId === row.id ? null : row.id)
-//                     }
-//                 >
-//                     <FiMoreVertical size={18} />
-//                 </button>
-
-//                 {openMenuId === row.id && (
-//                     <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded shadow-md z-10">
-//                         <button
-//                             className="w-full text-left px-4 py-2 hover:bg-gray-100"
-//                             onClick={() => alert(`View job ${row.original.title}`)}
-//                         >
-//                             View Job
-//                         </button>
-//                         <button
-//                             className="w-full text-left px-4 py-2 hover:bg-gray-100"
-//                             onClick={() => alert(`Edit job ${row.original.title}`)}
-//                         >
-//                             Edit Job
-//                         </button>
-//                         <button
-//                             className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
-//                             onClick={() => alert(`Delete job ${row.original.title}`)}
-//                         >
-//                             Delete Job
-//                         </button>
-//                     </div>
-//                 )}
-//             </div>
-//         ),
-//     },
-// ]
 
 const data = []
 const JobsPageTable = () => {
     const { data: vacancies, isLoading, error, isError } = useAdminVacancies()
     console.log(vacancies)
     const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+    const router = useRouter()
 
     const columns = [
         {
@@ -91,11 +35,19 @@ const JobsPageTable = () => {
         {
             header: 'Date Posted',
             accessorKey: 'createdAt',
+            cell: ({ getValue }) => {
+                const date = new Date(getValue())
+                return date.toLocaleDateString('en-NG', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                })
+            },
         },
         {
             header: 'Actions',
             id: 'actions',
-            cell: ({ row }:{row:Row<Job>}) => (
+            cell: ({ row }: { row: Row<Job> }) => (
                 <div className="relative">
                     <button
                         className="p-2 rounded hover:bg-gray-100"
@@ -110,7 +62,7 @@ const JobsPageTable = () => {
                         <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded shadow-md z-10">
                             <button
                                 className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                                onClick={() => alert(`View job ${row.original.title}`)}
+                                onClick={() => router.push(`/vacancies/${row.original._id}`)}
                             >
                                 View Job
                             </button>

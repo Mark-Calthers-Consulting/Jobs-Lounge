@@ -1,4 +1,4 @@
-import { fetchAdminDashboard, fetchAdminJobs, fetchAllUsers } from "@/api/admin"
+import { fetchAdminDashboard, fetchAdminJobs, fetchAllApplications, fetchAllUsers } from "@/api/admin"
 import { Job } from "@/types/types"
 import { useQuery } from "@tanstack/react-query"
 
@@ -18,8 +18,15 @@ export const useAdminVacancies = () => {
 }
 
 export const useAdminUsers = () => {
-    return useQuery<Job[]>({
+    return useQuery({
         queryKey: ['adminUsers'],
         queryFn: fetchAllUsers
+    })
+}
+
+export const useAdminApplications = ()=>{
+    return useQuery({
+        queryKey:['adminApplications'],
+        queryFn: fetchAllApplications
     })
 }

@@ -47,7 +47,7 @@ const DashboardClient: React.FC = () => {
             {/* <section>
                 <div className="ring-1 ring-red-400 p-5 my-4 rounded">
                     <h2>Complete your profile</h2>
-                </div>
+                </div>\
             </section> */}
 
             <section className='gap-2 grid grid-cols-1 md:grid-cols-3'>

@@ -1,45 +1,72 @@
 'use client'
+import { useAdminVacancies } from "@/hooks/useAdmin"
 import { useVacancies } from "@/hooks/useVacancies"
 import {
-    flexRender,
-    getCoreRowModel,
-    useReactTable,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
 } from '@tanstack/react-table'
 
+type Status = 'Open' | 'Closed' | 'Draft'
 const columns = [
-    {
-        header: 'Job Title',
-        accessorKey: 'title',
+  {
+    header: 'Job Title',
+    accessorKey: 'title',
+  },
+  {
+    header: 'Status',
+    accessorKey: 'status',
+    cell: ({ getValue }) => {
+      const status = getValue() as Status
+
+      const styles = {
+        Open: 'bg-green-100 text-green-700',
+        Closed: 'bg-red-100 text-red-700',
+        Draft: 'bg-gray-100 text-gray-700',
+      }
+
+      return (
+        <span
+          className={`px-3 py-1 rounded-full text-xs font-medium ${styles[status] || 'bg-gray-100 text-gray-700'}`}
+        >
+          {status}
+        </span>
+      )
     },
-    {
-        header: 'Status',
-        accessorKey: 'status',
+  },
+  {
+    header: 'Applicants',
+    accessorKey: 'totalApplicants',
+  },
+  {
+    header: 'Date Posted',
+    accessorKey: 'createdAt',
+    cell: ({ getValue }) => {
+      const date = new Date(getValue())
+      return date.toLocaleDateString('en-NG', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      })
     },
-    {
-        header: 'Applicants',
-        accessorKey: 'totalApplicants',
-    },
-    {
-        header: 'Date Posted',
-        accessorKey: 'createdAt',
-    },
+  },
 ]
 
 const data = []
 const DashboardJobsTable = () => {
-    const { data: vacancies, isLoading, error, isError } = useVacancies()
+  const { data: vacancies, isLoading, error, isError } = useAdminVacancies()
 
-    const table = useReactTable({
-        data: vacancies || [],
-        columns,
-        getCoreRowModel: getCoreRowModel()
-    })
-    if (isLoading) return <div className="p-4">Loading jobs...</div>
-    if (isError) return <div className="p-4 text-red-500">Error loading jobs.</div>
-    return (
-   <div className="w-full overflow-hidden border border-gray-200 rounded-lg shadow-sm">
+  const table = useReactTable({
+    data: vacancies || [],
+    columns,
+    getCoreRowModel: getCoreRowModel()
+  })
+  if (isLoading) return <div className="p-4">Loading jobs...</div>
+  if (isError) return <div className="p-4 text-red-500">Error loading jobs.</div>
+  return (
+    <div className="w-full overflow-hidden border border-gray-200 rounded-lg shadow-sm">
       <table className="w-full text-left border-collapse">
-        
+
         {/* Table Header */}
         <thead className="bg-gray-50 border-b border-gray-200">
           {table.getHeaderGroups().map((headerGroup) => (
@@ -80,8 +107,8 @@ const DashboardJobsTable = () => {
         </tbody>
 
       </table>
-    </div>        
-    )
+    </div>
+  )
 }
 
 export default DashboardJobsTable

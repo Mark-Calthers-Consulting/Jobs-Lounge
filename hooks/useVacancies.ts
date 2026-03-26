@@ -2,7 +2,7 @@ import { checkApplicationStatus, fetchVacancies, getRecommendedJobs, saveJob, un
 import { applyPayload, Job } from "@/types/types"
 import { useMutation, useQuery } from "@tanstack/react-query"
 
-export const useVacancies = (searchTerm: String) => {
+export const useVacancies = (searchTerm: string) => {
     return useQuery<Job[]>({
         queryKey: ['vacancies', searchTerm],
         queryFn: () => fetchVacancies(searchTerm)
@@ -21,7 +21,7 @@ export const useUnsaveJob = () => {
     })
 }
 
-export const useCheckApplicationStatus = (jobId: String) => {
+export const useCheckApplicationStatus = (jobId: string) => {
     return useQuery({
         queryKey: ["application-status", jobId],
         queryFn: () => checkApplicationStatus(jobId)

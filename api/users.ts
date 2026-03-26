@@ -32,7 +32,7 @@ export const getSavedJobs = async () => {
     return result.data
 }
 
-export const editUserDetails = async (data) => {
+export const editUserDetails = async (data: Object) => {
     console.log(data)
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me`, {
         method: 'PATCH',
