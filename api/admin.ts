@@ -41,7 +41,21 @@ export const fetchAllUsers = async () => {
 
     const users = await res.json()
     return users.data
+}
 
+export const fetchTeamMembers = async () => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/getTeamMembers`,
+        {
+            method: 'GET',
+            credentials: 'include'
+        }
+    )
+    if (!res.ok) {
+        throw new Error("Failed to fetch team")
+    }
+
+    const users = await res.json()
+    return users.data
 }
 
 export const fetchAllApplications = async () => {

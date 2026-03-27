@@ -41,9 +41,14 @@ const DashboardSidebar = () => {
             href: "/admin-center/applications",
             icon: <LuBookmark size={20} />
         },
+                {
+            name: "Candidates",
+            href: "/admin-center/candidates",
+            icon: <LuBookmark size={20} />
+        },
         {
-            name: "Users",
-            href: "/admin-center/users",
+            name: "Team",
+            href: "/admin-center/team",
             icon: <LuUsers size={20} />
         },
         {

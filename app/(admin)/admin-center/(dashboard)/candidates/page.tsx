@@ -1,14 +1,15 @@
+import ApplicantsGrid from "@/components/ApplicantsGrid"
 import ApplicationsPageTable from "@/components/ApplicationsPageTable"
 import JobsPageTable from "@/components/JobsPageTable"
 import { BiSearch } from "react-icons/bi"
 
-const AdminApplications: React.FC = () => {
+const Candidates: React.FC = () => {
     return (
         <div className="">
             <div className="">
                 <div className="">
-                    <h1 className="font-bold text-2xl">Applications</h1>
-                    <p className="my-3 text-[#797979]">Review and manage candidate applications.</p>
+                    <h1 className="font-bold text-2xl">Candidates</h1>
+                    <p className="my-3 text-[#797979]">Manage your candidate database and application history.</p>
                 </div>
                 <button>Export CSV</button>
             </div>
@@ -21,10 +22,11 @@ const AdminApplications: React.FC = () => {
             </div>
 
             <div className="">
-                <ApplicationsPageTable />
+                {/* <ApplicationsPageTable /> */}
+                <ApplicantsGrid />
             </div>
         </div>
     )
 }
 
-export default AdminApplications
+export default Candidates
