@@ -1,4 +1,4 @@
-import ApplicantsGrid from "@/components/ApplicantsGrid"
+import CandidatesGrid from "@/components/CandidatesGrid"
 import ApplicationsPageTable from "@/components/ApplicationsPageTable"
 import JobsPageTable from "@/components/JobsPageTable"
 import { BiSearch } from "react-icons/bi"
@@ -23,7 +23,7 @@ const Candidates: React.FC = () => {
 
             <div className="">
                 {/* <ApplicationsPageTable /> */}
-                <ApplicantsGrid />
+                <CandidatesGrid />
             </div>
         </div>
     )

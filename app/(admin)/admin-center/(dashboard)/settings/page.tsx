@@ -1,7 +1,12 @@
-const AdminSettings:React.FC = () => {
-    return (
-        <div className="">Settings</div>
-    )
+import SettingsClient from '@/app/(dashboard)/dashboard/settings/SettingsClient'
+import React from 'react'
+
+const AdminSettinga = () => {
+  return (
+    <div>
+      <SettingsClient />
+    </div>
+  )
 }
 
-export default AdminSettings
+export default AdminSettinga

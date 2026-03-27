@@ -11,6 +11,7 @@ import {
     LuUsers,
     LuLogOut
 } from "react-icons/lu"
+import { PiUsersThree } from "react-icons/pi"
 
 const DashboardSidebar = () => {
     const pathname = usePathname()
@@ -44,7 +45,7 @@ const DashboardSidebar = () => {
                 {
             name: "Candidates",
             href: "/admin-center/candidates",
-            icon: <LuBookmark size={20} />
+            icon: <PiUsersThree size={20} />
         },
         {
             name: "Team",

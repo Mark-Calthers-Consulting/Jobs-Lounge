@@ -58,6 +58,21 @@ export const fetchTeamMembers = async () => {
     return users.data
 }
 
+export const fetchJobCandidates = async () => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/getCandidates`,
+        {
+            method: 'GET',
+            credentials: 'include'
+        }
+    )
+    if (!res.ok) {
+        throw new Error("Failed to fetch candidates")
+    }
+
+    const users = await res.json()
+    return users.data
+}
+
 export const fetchAllApplications = async () => {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/getApplications`,
         {

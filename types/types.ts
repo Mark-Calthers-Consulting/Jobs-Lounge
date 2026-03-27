@@ -40,6 +40,58 @@ export type Job = {
   __v: number
 }
 
+export type User = {
+  _id?: string
+
+  // Basic info
+  name?: string
+  surname?: string
+  middleName?: string
+  lastName?: string
+  gender?: 'male' | 'female' | 'other'
+  dob?: Date
+  maritalStatus?: 'single' | 'married' | 'divorced' | 'widowed'
+
+  // Contact info
+  email?: string
+  telephone?: string
+  whatsapp?: string
+
+  // Address
+  residentialAddress?: string
+
+  // Auth
+  password?: string
+
+  // Activity
+  applications?: string[] // ObjectId as string
+  savedJobs?: string[]
+  role?: 'user' | 'admin' | 'super-admin'
+
+  lastLogin?: {
+    at?: Date
+    ip?: string
+    device?: string
+  }
+
+  // Profile
+  profileCompleted?: boolean
+
+  // Education
+  highestEducation?: string
+  yearCompletedNysc?: number
+  nyscStatus?: 'completed' | 'exempted' | 'not-started'
+  postNyscExperience?: number
+
+  // Files
+  cvLink?: string
+  coverLetterLink?: string
+
+  // Timestamps
+  createdAt?: Date
+  updatedAt?: Date
+}
+
 export type LoginPayload = {
   email: string
   password: string
