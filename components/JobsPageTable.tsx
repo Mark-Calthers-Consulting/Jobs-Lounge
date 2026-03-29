@@ -1,6 +1,7 @@
 'use client'
 import { useAdminVacancies } from "@/hooks/useAdmin"
-import { useVacancies } from "@/hooks/useVacancies"
+import { CellContext } from '@tanstack/react-table'
+
 import { Job } from "@/types/types"
 import {
     flexRender,
@@ -11,6 +12,8 @@ import {
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { FiMoreVertical } from "react-icons/fi"
+
+type Status = 'Open' | 'Closed' | 'Draft'
 
 const data = []
 const JobsPageTable = () => {
@@ -35,8 +38,10 @@ const JobsPageTable = () => {
         {
             header: 'Date Posted',
             accessorKey: 'createdAt',
-            cell: ({ getValue }) => {
-                const date = new Date(getValue())
+            cell: ({ getValue }: CellContext<any, unknown>) => {
+                const status = getValue() as Status
+
+                const date = new Date(getValue() as string)
                 return date.toLocaleDateString('en-NG', {
                     day: 'numeric',
                     month: 'short',

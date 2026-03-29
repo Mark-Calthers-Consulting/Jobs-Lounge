@@ -27,7 +27,7 @@ const columns = [
 
 const data = []
 const JobsTable = () => {
-    const { data: vacancies, isLoading, error, isError } = useVacancies()
+    const { data: vacancies, isLoading, error, isError } = useVacancies('')
 
     const table = useReactTable({
         data: vacancies || [],
