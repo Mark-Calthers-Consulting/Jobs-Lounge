@@ -1,6 +1,7 @@
 'use client'
 import { useAdminVacancies } from "@/hooks/useAdmin"
 import { useVacancies } from "@/hooks/useVacancies"
+import { CellContext } from '@tanstack/react-table'
 import {
   flexRender,
   getCoreRowModel,
@@ -16,8 +17,9 @@ const columns = [
   {
     header: 'Status',
     accessorKey: 'status',
-    cell: ({ getValue }) => {
-      const status = getValue() as Status
+cell: ({ getValue }: CellContext<any, unknown>) => {
+  const status = getValue() as Status
+
 
       const styles = {
         Open: 'bg-green-100 text-green-700',
@@ -41,8 +43,10 @@ const columns = [
   {
     header: 'Date Posted',
     accessorKey: 'createdAt',
-    cell: ({ getValue }) => {
-      const date = new Date(getValue())
+cell: ({ getValue }: CellContext<any, unknown>) => {
+  const status = getValue() as Status
+
+      const date = new Date(getValue() as string)
       return date.toLocaleDateString('en-NG', {
         day: 'numeric',
         month: 'short',
