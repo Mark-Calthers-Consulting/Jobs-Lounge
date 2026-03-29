@@ -1,13 +1,20 @@
 import AuthForm from "@/components/AuthForm"
 import Image from "next/image"
+import Link from "next/link"
+// import Image from "next/image"
 
 const Auth: React.FC = () => {
     return (
-        <div className="flex-1 flex  border border-blue-700">
-            <section className="relative w-1/2 flex-1">
-                <Image src='/auth.webp' fill priority sizes="50vw" alt="office setting" className="object-cover" />
+        <div className="flex-1 h-screen flex brder brder-blue-700 p-4 bg-[linear-gradient(rgba(0,0,0,0.1),rgba(0,0,0,0.8)),url('/auth2.jpg')] bg-cover bg-center">
+            <section className="relative flex-1 p-5 flex flex-col justify-between gap-2">
+                <Link href='/'><Image width={70} height={70} src='/logo.svg' alt='logo' /></Link>
+                <div className=" space-y-4">
+                    <h1 className="text-white text-5xl font-bold w-10/12">Your next opportunity starts here.</h1>
+                    <p className="text-[#ffffff9a] text-lg w-10/12">Whether you're looking for your next role or searching for top talent, Jobs Lounge gives you a smoother way to connect, apply, and grow.</p>
+                </div>
+                {/* <Image src='/auth2.jpg' fill priority sizes="50vw" alt="office setting" className="object-cover" /> */}
             </section>
-            <section className="flex min-h-[650px] flex-col gap-3 w-1/2 borde h-full py-16 px-20">
+            <section className="bg-white rounded flex min-h-[580px] flex-col justify-center gap-3 w-5/12 borde h-full py-10 px-14">
                 <AuthForm />
             </section>
         </div>

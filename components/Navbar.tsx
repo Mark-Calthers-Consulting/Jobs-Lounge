@@ -18,7 +18,7 @@ const Navbar: React.FC = () => {
 
   const isAuthed = !!user
   return (
-    <nav className='relative flex md:w-[85%] md:mx-auto justify-between items-center px-20 py-4'>
+    <nav className='relative flex  max-w-7xl mx-auto w-full justify-between items-center px-20 py-4'>
       <Link href='/'><Image width={70} height={70} src='/logo.svg' alt='logo' /></Link>
       <div className="hidden md:flex items-center text-[#1B1F87] gap-10">
         <Link href={'/'} className={pathname === "/" ? "text-[#1b1f87a0] font-bold" : ""}>Home</Link>

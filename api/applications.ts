@@ -1,5 +1,24 @@
 import { applyPayload } from "@/types/types"
 
+export const createJob = async (job:any) => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify(job)
+    })
+
+    const result = await res.json()
+
+    if (!res.ok) {
+        throw new Error(result.message || 'Request failed');
+    }
+
+    return result.data
+}
+
 export const applyToJob = async (data: applyPayload) => {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/applications/${data.jobId}`, {
         method: 'POST',
@@ -7,7 +26,7 @@ export const applyToJob = async (data: applyPayload) => {
             'Content-Type': 'application/json'
         },
         credentials: 'include',
-        // body: JSON.stringify(data)
+        body: JSON.stringify(data)
     })
 
     const result = await res.json()

@@ -1,4 +1,4 @@
-import type { Job, JobPageProps } from '../../../../../types/types'
+import type { Job, JobPageProps } from '../../../../../../types/types'
 
 const getSingleJob = async (id: string): Promise<Job> => {
     const res = await fetch(

@@ -1,5 +1,12 @@
-import { applyToJob, cancelApplication, getAllJobApplications, getMyApplications } from "@/api/applications";
+import { applyToJob, cancelApplication, createJob, getAllJobApplications, getMyApplications } from "@/api/applications";
 import { useMutation, useQuery } from "@tanstack/react-query";
+
+
+export const useCreatejob = () => {
+    return useMutation({
+        mutationFn: createJob
+    })
+}
 
 export const useApplyToJob = () => {
     return useMutation({

@@ -18,9 +18,14 @@ const SavedJobs = () => {
       <p className='text-[#797979] my-3'>Manage your saved jobs and track your applications.</p>
 
       <div className="grid gap-2 grid-cols-1 md:grid-cols-2">
-        {data.map((job: Job) => (
-          <JobCard key={job._id} job={job} />
-        ))}
+        {data.length > 0
+          ?
+          data.map((job: Job) => (
+            <JobCard key={job._id} job={job} />
+          ))
+
+          : <p className='text-[#797979]'>No saved jobs yet...</p>
+        }
       </div>
 
     </div>

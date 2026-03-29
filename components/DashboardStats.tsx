@@ -24,14 +24,14 @@ const DashboardStats = () => {
                 <div className="rounded bg-white ring-1 ring-black/5 shadow p-5 flex justify-between">
                     <div className="">
                         <h6>Active Jobs</h6>
-                        <p className="font-semibold text-2xl">{dashboardStats.totalUsers}</p>
+                        <p className="font-semibold text-2xl">{dashboardStats.activeJobs}</p>
                     </div>
                     <BsGraphUpArrow size={24} color='07A944' />
                 </div>
                 <div className="rounded bg-white ring-1 ring-black/5 shadow p-5 flex justify-between">
                     <div className="">
                         <h6>Total Applications</h6>
-                        <p className="font-semibold text-2xl">TBD</p>
+                        <p className="font-semibold text-2xl">{dashboardStats.totalApplications}</p>
                     </div>
                     <FaWpforms size={24} color='9810FA' />
                 </div>

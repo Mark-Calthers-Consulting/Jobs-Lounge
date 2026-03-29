@@ -1,8 +1,10 @@
 "use client"
 
 import { useLogout } from "@/hooks/useAuth"
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+import { FaWpforms } from "react-icons/fa"
 import {
     LuLayoutDashboard,
     LuBookmark,
@@ -11,7 +13,7 @@ import {
     LuUsers,
     LuLogOut
 } from "react-icons/lu"
-import { PiUsersThree } from "react-icons/pi"
+import { PiSuitcase, PiUsersThree } from "react-icons/pi"
 
 const DashboardSidebar = () => {
     const pathname = usePathname()
@@ -35,14 +37,14 @@ const DashboardSidebar = () => {
         {
             name: "Jobs",
             href: "/admin-center/jobs",
-            icon: <LuBookmark size={20} />
+            icon: <PiSuitcase size={20} />
         },
         {
             name: "Applications",
             href: "/admin-center/applications",
-            icon: <LuBookmark size={20} />
+            icon: <FaWpforms size={20} />
         },
-                {
+        {
             name: "Candidates",
             href: "/admin-center/candidates",
             icon: <PiUsersThree size={20} />
@@ -67,10 +69,8 @@ const DashboardSidebar = () => {
     return (
         <aside className="w-64 h-screen bg-white border-r border-gray-100 flex flex-col fixed left-0 top-0 z-30 hidden md:flex">
             {/* 1. Logo Area */}
-            <div className="h-20 flex items-center px-8">
-                <Link href="/" className="text-2xl font-bold tracking-tight text-gray-900">
-                    Jobs<span className="text-red-600">Lounge</span>
-                </Link>
+            <div className="h-20 flex justify-center items-center px-8 mt-4 ">
+                <Link href='/'><Image width={70} height={70} src='/logo.svg' alt='logo' /></Link>
             </div>
 
             {/* 2. Navigation */}

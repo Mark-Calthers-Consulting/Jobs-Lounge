@@ -2,6 +2,7 @@
 import { useEditUserDetails, useUser } from '@/hooks/useUsers'
 import { useState } from 'react'
 import { FaLink } from 'react-icons/fa'
+import { toast } from 'sonner'
 
 const ProfileClient: React.FC = () => {
     const [cvLink, setCvLink] = useState('')
@@ -17,6 +18,7 @@ const ProfileClient: React.FC = () => {
         await editDetailsMutation.mutateAsync({
             cvLink
         })
+        toast.success('Resume link updated!')
     }
 
     return (

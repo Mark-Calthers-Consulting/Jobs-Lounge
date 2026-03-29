@@ -32,10 +32,10 @@ const Vacancies: React.FC = () => {
   }, [inputValue])
 
   return (
-    <div>
+    <div className="max-w-7xl mx-auto">
       <section className="px-12 py-4 mb-8 bg-[#003B6D] flex items-center justify-between">
         <p className="text-white">Find Jobs</p>
-        <input type="text" value={inputValue} onChange={handleSearchChange} className="bg-white rounded px-4 py-2 outline-none" placeholder="Search jobs by title (min. 3 letters)" />
+        <input type="text" value={inputValue} onChange={handleSearchChange} className=" bg-white rounded px-4 py-2 outline-none" placeholder="Search jobs by title (min. 3 letters)" />
         <p className="text-white">Home <span className="fontbo">/ Vacancies</span></p>
       </section>
       <section className="flex px-12 gap-4 mb-6">

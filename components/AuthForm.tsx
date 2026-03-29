@@ -72,19 +72,30 @@ const AuthForm: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6">
-            <h2 className="text-[#003B6D] text-3xl font-bold">Welcome to Jobs Lounge</h2>
-            <p>Create your account to begin your journey with Jobs Lounge, whether you're searching for the perfect job or hiring top talent.</p>
+        <div className="space-y-3">
+            {mode === 'login'
+                ?
+                <>
+                    <h2 className="text-[#003B6D] text-3xl font-bold">Sign in to Jobs Lounge</h2>
+                    <p className="text-[#797979]">Access your account to continue your journey, whether you're exploring new job opportunities or managing your hiring process.</p>
+                </>
+                :
+                <>
+                    <h2 className="text-[#003B6D] text-3xl font-bold">Welcome to Jobs Lounge</h2>
+                    <p className="text-[#797979]">Create your account to begin your journey with Jobs Lounge, whether you're searching for the perfect job or hiring top talent.</p>
+                </>
+
+            }
             {
                 mode === 'login' ?
                     <form onSubmit={handleSubmit}>
                         <label htmlFor="" className="flex flex-col">
                             Email Address
-                            <input onChange={handleChange} name="email" className="px-4 py-2 my-2 ring-1 ring-gray-100 shadow  rounded outline-none" type="email" placeholder="E-mail" />
+                            <input onChange={handleChange} name="email" className="px-4 py-2 my-2 ring-1 ring-gray-200   rounded outline-none" type="email" placeholder="E-mail" />
                         </label>
                         <label htmlFor="" className="flex flex-col">
                             Password
-                            <input onChange={handleChange} name="password" className="px-4 py-2 my-2 ring-1 ring-gray-100 shadow rounded outline-none" type="password" placeholder="Password" />
+                            <input onChange={handleChange} name="password" className="px-4 py-2 my-2 ring-1 ring-gray-200  rounded outline-none" type="password" placeholder="Password" />
                         </label>
                         <button type="submit" className="w-full p-3 my-4 rounded cursor-pointer text-white bg-[#003B6D]">SIGN IN</button>
                     </form>
@@ -92,21 +103,21 @@ const AuthForm: React.FC = () => {
                     <form onSubmit={handleSubmit}>
                         <div className="flex flex-col">
                             <label htmlFor="">Name</label>
-                            <input onChange={handleChange} type="text" name="name" className="py-2 px-3 my-2 shadow rounded outline-none" placeholder="Full Name" />
+                            <input onChange={handleChange} type="text" name="name" className="py-2 px-3 my-2 ring-1 ring-gray-200 rounded outline-none" placeholder="Full Name" />
                         </div>
                         <div className="flex flex-col">
                             <label htmlFor="">Phone Number</label>
-                            <input onChange={handleChange} type="text" name="telephone" className="py-2 px-3 my-2 shadow rounded outline-none" placeholder="Full Name" />
+                            <input onChange={handleChange} type="text" name="phoneNumber" className="py-2 px-3 my-2 ring-1 ring-gray-200 rounded outline-none" placeholder="Phone Number" />
                         </div>
                         <div className="flex flex-col">
                             <label htmlFor="" className="">Email Address</label>
-                            <input onChange={handleChange} className="py-2 px-3 my-2 shadow rounded outline-none" type="email" name="email" placeholder="E-mail" />
+                            <input onChange={handleChange} className="py-2 px-3 my-2 ring-1 ring-gray-200 rounded outline-none" type="email" name="email" placeholder="E-mail" />
                         </div>
                         <div className="flex flex-col">
                             <label htmlFor="" className="">
                                 Password
                             </label>
-                            <input onChange={handleChange} className="py-2 px-3 my-2 shadow rounded outline-none" type="password" name="password" placeholder="E-mail" />
+                            <input onChange={handleChange} className="py-2 px-3 my-2 ring-1 ring-gray-200 rounded outline-none" type="password" name="password" placeholder="Password" />
                         </div>
                         <button type="submit" className="w-full p-2 cursor-pointer text-white bg-[#003B6D]">SIGN UP</button>
                     </form>

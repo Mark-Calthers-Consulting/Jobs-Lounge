@@ -10,7 +10,7 @@ import { LuUserRound } from "react-icons/lu";
 
 export default function Home() {
   return (
-    <div className="flex-1">
+    <div className="flex-1 max-w-7xl mx-auto">
 
       <section className="relative">
         <div className="flex flex-col items-center md:flex-row px-12">
@@ -35,7 +35,6 @@ export default function Home() {
       <section className="w-full text-center">
         <p className="bg-[#161C2D] py-3 text-white ">Enthusiastic about experiencing the comprehensive offerings of Jobs Lounge? Watch our video <Link target="_blank" href='https://www.youtube.com/@mcchrtv'><span className="underline cursor-pointer">here</span></Link></p>
       </section>
-
       <section className="px-12 py-12">
         <h1 className="text-[#161C2D] text-center font-bold text-4xl  mb-12">How It Works</h1>
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">

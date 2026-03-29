@@ -1,6 +1,7 @@
 "use client"
 
 import { useLogout } from "@/hooks/useAuth"
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
@@ -20,7 +21,7 @@ const DashboardSidebar = () => {
     const handleLogout = async () => {
         // document.cookie = "authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
         // document.cookie = "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
- 
+
         await logoutMutation.mutateAsync()
 
 
@@ -54,9 +55,9 @@ const DashboardSidebar = () => {
         <aside className="w-64 h-screen bg-white border-r border-gray-100 flex flex-col fixed left-0 top-0 z-30 hidden md:flex">
             {/* 1. Logo Area */}
             <div className="h-20 flex items-center px-8">
-                <Link href="/" className="text-2xl font-bold tracking-tight text-gray-900">
-                    JobsLounge
-                </Link>
+                <div className="h-20 flex justify-center items-center px-8 mt-4 ">
+                    <Link href='/'><Image width={70} height={70} src='/logo.svg' alt='logo' /></Link>
+                </div>
             </div>
 
             {/* 2. Navigation */}

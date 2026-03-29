@@ -3,7 +3,7 @@ import { IoMail } from "react-icons/io5";
 
 const Contact: React.FC = () => {
     return (
-        <div>
+        <div className="max-w-7xl mx-auto">
             <section className="text-center px-12 my-12">
                 <h1 className="text-[#1B1F87] font-bold text-5xl">Contact Us</h1>
                 <p className="w-1/2 mx-auto text-[#1A1A19]">At MCC Jobs Lounge, we're here to assist you every step of the way. Whether you have a question, need assistance, or want to provide feedback, our dedicated team is ready to help. Get in touch with us today and let's start the conversation.</p>
