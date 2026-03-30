@@ -9,7 +9,7 @@ type formValues = {
     email: string,
     password: string,
     name?: string,
-    phoneNumber?: string
+    telephone?: string
 }
 
 const AuthForm: React.FC = () => {
@@ -18,7 +18,7 @@ const AuthForm: React.FC = () => {
         email: '',
         password: '',
         name: '',
-        phoneNumber: ''
+        telephone: ''
     })
 
     const loginMutation = useLogin()
@@ -45,6 +45,7 @@ const AuthForm: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        console.log(authData)
         const toastId = toast.loading(
             mode === 'login' ? 'Logging in...' : 'Creating account...'
         )
@@ -107,7 +108,7 @@ const AuthForm: React.FC = () => {
                         </div>
                         <div className="flex flex-col">
                             <label htmlFor="">Phone Number</label>
-                            <input onChange={handleChange} type="text" name="phoneNumber" className="py-2 px-3 my-2 ring-1 ring-gray-200 rounded outline-none" placeholder="Phone Number" />
+                            <input onChange={handleChange} type="text" name="telephone" className="py-2 px-3 my-2 ring-1 ring-gray-200 rounded outline-none" placeholder="Phone Number" />
                         </div>
                         <div className="flex flex-col">
                             <label htmlFor="" className="">Email Address</label>
