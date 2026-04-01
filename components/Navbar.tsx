@@ -20,10 +20,10 @@ const Navbar: React.FC = () => {
   return (
     <nav className='relative flex  max-w-7xl mx-auto w-full justify-between items-center px-20 py-4'>
       <Link href='/'><Image width={70} height={70} src='/logo.svg' alt='logo' /></Link>
-      <div className="hidden md:flex items-center text-[#1B1F87] gap-10">
-        <Link href={'/'} className={pathname === "/" ? "text-[#1b1f87a0] font-bold" : ""}>Home</Link>
-        <Link href={'/vacancies'} className={pathname === "/vacancies" ? "text-[#1b1f87a0] font-bold" : ""}>Vacancies</Link>
-        <Link href={'/contact'} className={pathname === "/contact" ? "text-[#1b1f87a0] font-bold" : ""}>Contact</Link>
+      <div className="hidden md:flex items-center text-[#222] text-lg gap-10">
+        <Link href={'/'} className={pathname === "/" ? "text-[#111] font-bold border-b-2" : ""}>Home</Link>
+        <Link href={'/vacancies'} className={pathname === "/vacancies" ? "text-[#111] font-bold border-b-2" : ""}>Vacancies</Link>
+        <Link href={'/contact'} className={pathname === "/contact" ? "text-[#111] font-bold border-b-2" : ""}>Contact</Link>
       </div>
       <div className="hidden md:block">
         {isAuthed
