@@ -28,7 +28,7 @@ const Navbar: React.FC = () => {
       <div className="hidden md:block">
         {isAuthed
           ? <Link href={`${user.role == 'user' ? '/dashboard' : '/admin-center'}`}> <button className='bg-[#1B1F87] font-semibold rounded cursor-pointer  text-white px-6 py-3'>Dashboard</button></Link>
-          : <Link href={'/auth'}> <button className='bg-[#1B1F87] font-semibold  rounded cursor-pointer  text-white px-6 py-3'>Sign In</button></Link>
+          : <Link href={'/auth'}> <button className='bg-[#003B6D] font-semibold  rounded cursor-pointer  text-white px-6 py-3'>Sign In</button></Link>
         }
       </div>
 
