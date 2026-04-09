@@ -1,3 +1,5 @@
+'use client'
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { MdOutlineAssignment } from "react-icons/md";
@@ -10,6 +12,7 @@ import { Container } from "@/components/Container";
 
 
 export default function Home() {
+  const router = useRouter()
   return (
     // <div className="flex-1 max-w-screen-2xl mx-auto">
     <Container>
@@ -19,7 +22,7 @@ export default function Home() {
           <h1 className="text-3xl md:text-5xl lg:text-7xl md:w-10/12 mx-auto">Find the opportunity that moves you forward.</h1>
           <p className="w-10/12 sm:-8/12 md:w-1/2 mx-auto md:text-xl">Discover roles that match your skills, goals, and ambition in a job search experience built to feel clear, modern, and effortless.</p>
           <div className="">
-            <button className="bg-[#111] md:text-lg p-3 rounded-full cursor-pointer hover:opacity-85">Browse Opportunities</button>
+            <button onClick={() => router.push('/vacancies')} className="bg-[#111] md:text-lg p-3 rounded-full cursor-pointer hover:opacity-85">Browse Opportunities</button>
           </div>
         </div>
       </section>
@@ -72,7 +75,7 @@ export default function Home() {
           </div>
           <div className="bg-[#3FA2F7] rounded py-12 text-white flex flex-col gap-8 items-center">
             <IoMdCheckmarkCircleOutline size={40} />
-            <p className="font-semibold">Step 1</p>
+            <p className="font-semibold">Step 4</p>
             <h6 className="w-8/12 text-center font-bold text-2xl">Get Hired</h6>
             <p className="w-8/12 text-center text-lg">Achieve success as you secure your dream job with ease.</p>
           </div>
