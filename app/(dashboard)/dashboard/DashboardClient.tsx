@@ -33,10 +33,10 @@ const DashboardClient: React.FC = () => {
     let dateJoined
 
     dateJoined = userQuery.data ? new Date(userQuery.data?.createdAt).toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    }): ''
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+    }) : ''
 
     return (
         <div>
@@ -70,7 +70,7 @@ const DashboardClient: React.FC = () => {
                         <h5>Member Since</h5>
                         <p className='text-2xl font-semibold'>{dateJoined}</p>
                     </div>
-                    <CiCalendarDate size={24}  color='9810FA' />
+                    <CiCalendarDate size={24} color='9810FA' />
                 </div>
             </section>
             <section>
@@ -83,7 +83,9 @@ const DashboardClient: React.FC = () => {
                             <p className='text-[#797979] text-sm font-semibold'>{rec.company.name}</p>
                             <p className='flex items-center text-sm text-[#797979]'> <IoLocationOutline className='mr-2' />{rec.workMode}</p>
                             <p className='flex items-center text-sm text-[#797979]'><CiMoneyBill className='mr-2' />{rec.salary.min} - {rec.salary.max}</p>
-                            <button className='bg-[#184aa2] cursor-pointer hover:bg-[#496698] text-white text-sm px-3 py-2 rounded-sm'>View Details</button>
+                            <Link href={`/vacancies/${rec._id}`}>
+                                <button className='bg-[#184aa2] cursor-pointer hover:bg-[#496698] text-white text-sm px-3 py-2 rounded-sm'>View Details</button>
+                            </Link>
                         </div>
                     ))}
                 </div>
