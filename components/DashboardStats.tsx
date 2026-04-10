@@ -11,8 +11,8 @@ const DashboardStats = () => {
     const { data: dashboardStats, isLoading, error, isError } = useAdminDashboard()
     console.log(dashboardStats)
 
-    if (!dashboardStats.data) {
-router.replace('/aut h')
+    if (!dashboardStats) {
+        router.replace('/auth')
     }
 
     if (isLoading) return <p>Loading...</p>
