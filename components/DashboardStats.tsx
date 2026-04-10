@@ -1,14 +1,19 @@
 'use client'
 import { useAdminDashboard, useAdminUsers, useAdminVacancies } from "@/hooks/useAdmin"
+import { useRouter } from "next/navigation"
 import { BsGraphUpArrow } from "react-icons/bs"
 import { FaWpforms } from "react-icons/fa"
 import { HiOutlineUsers } from "react-icons/hi"
 import { PiSuitcase } from "react-icons/pi"
 
 const DashboardStats = () => {
-
+    const router = useRouter()
     const { data: dashboardStats, isLoading, error, isError } = useAdminDashboard()
     console.log(dashboardStats)
+
+    if (!dashboardStats.data) {
+router.replace('/aut h')
+    }
 
     if (isLoading) return <p>Loading...</p>
     return (

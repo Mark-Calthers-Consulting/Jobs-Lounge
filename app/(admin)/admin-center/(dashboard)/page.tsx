@@ -1,6 +1,5 @@
 import DashboardJobsTable from "@/components/DashboardJobsTable"
 import DashboardStats from "@/components/DashboardStats"
-import JobsTable from "@/components/JobsTable"
 
 const AdminDashboard: React.FC = () => {
     return (

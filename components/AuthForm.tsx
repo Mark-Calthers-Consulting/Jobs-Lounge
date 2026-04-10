@@ -1,5 +1,6 @@
 'use client'
 import { useLogin, useRegister } from "@/hooks/useAuth"
+import { register } from "module"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -50,19 +51,29 @@ const AuthForm: React.FC = () => {
             mode === 'login' ? 'Logging in...' : 'Creating account...'
         )
         try {
+            let userData
             if (mode === 'login') {
-                await loginMutation.mutateAsync({
+                userData = await loginMutation.mutateAsync({
                     email: authData.email,
                     password: authData.password,
                 })
             } else {
-                await registerMutation.mutateAsync(
+                userData = await registerMutation.mutateAsync(
                     authData
                 )
             }
 
+            console.log(userData)
+
+
             toast.success('Success!', { id: toastId })
-            router.replace('/dashboard')
+
+            if (mode === "register" || userData.role === 'user') {
+                router.replace('/dashboard')
+            } else {
+                router.replace('/admin-center')
+            }
+
 
         } catch (error) {
             toast.error(

@@ -3,12 +3,13 @@ import { useGetSavedJobs, useUser } from '@/hooks/useUsers'
 import { useRecommendedJobs } from '@/hooks/useVacancies'
 import { Job } from '@/types/types'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { CiBookmark, CiCalendarDate, CiMoneyBill } from 'react-icons/ci'
 import { IoCheckmark, IoCheckmarkCircle, IoCheckmarkCircleOutline, IoLocationOutline } from 'react-icons/io5'
 
 
 const DashboardClient: React.FC = () => {
-
+const router = useRouter()
     const userQuery = useUser()
     const userRecommendations = useRecommendedJobs()
 
@@ -26,9 +27,13 @@ const DashboardClient: React.FC = () => {
         return <h1>Loading...</h1>
     }
 
+
     if (!userQuery.data) {
+        // TODO ensure all dashboard routes redirect to auth not just one
+        router.replace('/auth')
         return <h1>No user data found. Please log in.</h1>
     }
+
 
     let dateJoined
 

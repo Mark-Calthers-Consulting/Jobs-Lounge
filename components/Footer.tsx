@@ -9,7 +9,7 @@ export default function Footer(): React.JSX.Element {
         <footer className="bg-[#1B1F87] grid grid-cols-2 md:grid-cols-3 gap-3 text-white p-12">
             <div className="">
                 <Image src='/logowhite.svg' className="mb-6" width={400} height={100} alt="logo white" />
-                <p className="w-10/12">Mark Calthers Consulting is a leading management consulting firm that offers a comprehensive range of human resource management and business consulting services. Read more.</p>
+                <p className="w-10/12">Mark Calthers Consulting is a leading management consulting firm that offers a comprehensive range of human resource management and business consulting services. <span className="underline"><Link href={'https://markcalthers.com/services/'}>Read more.</Link></span></p>
             </div>
             <div className="">
                 <h3 className="font-semibold text-3xl mb-6">CONTACT US</h3>
@@ -29,6 +29,5 @@ export default function Footer(): React.JSX.Element {
                 </div>
             </div>
         </footer>
-
     )
 }
