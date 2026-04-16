@@ -12,6 +12,21 @@ export const getAllBlogPosts = async () => {
     const posts = await res.json()
     return posts.data
 }
+// MAKING THE API CALL DIRECTLY IN THE COMPONENT
+// export const getSingleBlogPost = async (slug) => {
+//     const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/blog/${slug}`,
+//         {
+//             method: 'GET',
+//             credentials: 'include'
+//         }
+//     )
+//     if (!res.ok) {
+//         throw new Error("Failed to fetch blog posts")
+//     }
+
+//     const posts = await res.json()
+//     return posts.data
+// }
 
 export const createBlogPost = async (post: {}) => {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/blog/create`,

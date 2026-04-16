@@ -27,14 +27,13 @@ const JobPage = async ({ params }: JobPageProps) => {
     const { jobId } = await params
     const job = await getSingleJob(jobId)
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_ORIGIN || 'http://localhost:3000';
     const currentUrl = `${baseUrl}/jobs/${jobId}`;
     const encodedUrl = encodeURIComponent(currentUrl);
 
     return (
         <section>
             <section className='bg-[#333] h-24 w-full' />
-
             <section className='max-w-7xl mx-auto flex flex-col md:flex-row pt-8 px-12 '>
                 <div className="">
                     <section className=''>

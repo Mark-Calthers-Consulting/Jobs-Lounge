@@ -16,9 +16,7 @@ const router = useRouter()
     const savedJobsQuery = useGetSavedJobs({
         enabled: !!userQuery.data
     })
-    if (userQuery.isLoading) {
-        return <h1>Loading</h1>
-    }
+
     console.log(userQuery.data)
     console.log(savedJobsQuery?.data?.length)
 
@@ -28,11 +26,11 @@ const router = useRouter()
     }
 
 
-    if (!userQuery.data) {
-        // TODO ensure all dashboard routes redirect to auth not just one
-        router.replace('/auth')
-        return <h1>No user data found. Please log in.</h1>
-    }
+    // if (!userQuery.data) {
+    //     // TODO ensure all dashboard routes redirect to auth not just one
+    //     router.replace('/auth')
+    //     return <h1>No user data found. Please log in.</h1>
+    // }
 
 
     let dateJoined

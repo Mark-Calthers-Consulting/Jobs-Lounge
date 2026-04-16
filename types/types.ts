@@ -109,6 +109,12 @@ export type JobPageProps = {
   }>
 }
 
+export type BlogPageProps = {
+  params: Promise<{
+    slug: string
+  }>
+}
+
 export type applyPayload = {
   jobId: string
 }
