@@ -11,8 +11,9 @@ const Blog: React.FC = () => {
         <div className="max-w-7xl mx-auto">
             <h1>Blog Posts</h1>
 
+            {/* #TODO change type from any */}
             <div className="flex flex-col gap-3 py-5">
-                {data?.map(post => (
+                {data?.map((post: any, index: number) => (
                     <div className="p-3 rounded border shadow border-[#e9e9e9] space-y-3">
                         <h2 className="font-semibold text-xl">{post.title}</h2>
                         <p className="text-sm text-[#797979]">{post.content.slice(0, 100)}...</p>
