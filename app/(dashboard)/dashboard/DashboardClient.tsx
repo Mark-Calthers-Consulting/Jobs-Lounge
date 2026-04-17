@@ -9,7 +9,7 @@ import { IoCheckmark, IoCheckmarkCircle, IoCheckmarkCircleOutline, IoLocationOut
 
 
 const DashboardClient: React.FC = () => {
-const router = useRouter()
+    const router = useRouter()
     const userQuery = useUser()
     const userRecommendations = useRecommendedJobs()
 
@@ -25,14 +25,6 @@ const router = useRouter()
         return <h1>Loading...</h1>
     }
 
-
-    // if (!userQuery.data) {
-    //     // TODO ensure all dashboard routes redirect to auth not just one
-    //     router.replace('/auth')
-    //     return <h1>No user data found. Please log in.</h1>
-    // }
-
-
     let dateJoined
 
     dateJoined = userQuery.data ? new Date(userQuery.data?.createdAt).toLocaleDateString('en-GB', {
@@ -44,14 +36,35 @@ const router = useRouter()
     return (
         <div>
             <h1 className='text-3xl font-bold'>Welcome back, {userQuery.data?.name}!</h1>
-            <p className='text-[#797979] my-3'>Here's what's happening with your job search today. </p>
-            <Link href={'/vacancies'}><button className='p-2 rounded shadow my-3'>Go to Vacancies</button></Link>
+            <p className='text-[#797979] my-3'>
+                Here's what's happening with your job search today.
+            </p>
 
-            {/* <section>
-                <div className="ring-1 ring-red-400 p-5 my-4 rounded">
-                    <h2>Complete your profile</h2>
-                </div>\
-            </section> */}
+            {!userQuery.data?.cvLink && (
+                <div className="my-4 rounded bg-amber-50 px-4 py-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <h3 className="text-sm font-semibold text-amber-900">
+                                Add your CV link before applying
+                            </h3>
+                            <p className="mt-1 text-sm text-amber-800">
+                                Update your profile with your CV link to unlock job applications.
+                            </p>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => router.push('/dashboard/profile')}
+                            className="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700"
+                        >
+                            Add CV Link
+                        </button>
+                    </div>
+                </div>
+            )}
+
+
+            <Link href={'/vacancies'}><button className='p-2 rounded shadow my-3'>Go to Vacancies</button></Link>
 
             <section className='gap-2 grid grid-cols-1 md:grid-cols-3'>
                 <div className="rounded bg-white ring-1 ring-black/5 shadow p-5 flex justify-between">

@@ -5,20 +5,35 @@ import { FaLink } from 'react-icons/fa'
 import { toast } from 'sonner'
 
 const ProfileClient: React.FC = () => {
-    const [cvLink, setCvLink] = useState('')
+    const [cvLink, setCvLink] = useState<string | null>(null)
     const { data: user, isLoading, error, isError } = useUser()
 
-    const resumeValue = cvLink || user?.cvLink || '';
+    const resumeValue = cvLink ?? user?.cvLink ?? ''
 
     const editDetailsMutation = useEditUserDetails()
 
     //TODO - EXPAND TO BE ABLE TO EDIT OTHER FIELD APART FROM RESUME
-
     const saveDetails = async () => {
-        await editDetailsMutation.mutateAsync({
-            cvLink
-        })
-        toast.success('Resume link updated!')
+        console.log('work')
+        const trimmedLink = resumeValue.trim()
+        try {
+            await editDetailsMutation.mutateAsync({ cvLink: trimmedLink })
+            toast.success('Resume link updated!')
+        } catch (error) {
+            toast.error('Failed to update resume link')
+        }
+    }
+
+    const openResumeLink = () => {
+        const trimmedLink = resumeValue.trim()
+
+        if (!trimmedLink) return
+
+        const formattedLink = /^https?:\/\//i.test(trimmedLink)
+            ? trimmedLink
+            : `https://${trimmedLink}`
+
+        window.open(formattedLink, '_blank', 'noopener,noreferrer')
     }
 
     return (
@@ -42,10 +57,7 @@ const ProfileClient: React.FC = () => {
                             <h4>Phone Number</h4>
                             <p className='bg-[#F3F3F5] rounded px-4 py-2'>{user?.telephone}</p>
                         </div>
-                        {/* <div className="">
-                            <h4>Gender</h4>
-                            <p className='bg-[#F3F3F5] rounded px-4 py-2'>{user?.gender}</p>
-                        </div> */}
+
                     </div>
                 </section>
                 <section className='bg-white ring-1 ring-black/10 p-5 rounded my-4'>
@@ -57,13 +69,16 @@ const ProfileClient: React.FC = () => {
 
                             <input value={resumeValue} onChange={(e) => setCvLink(e.target.value)} placeholder={resumeValue ? '' : 'Put your cv link here'} className='w-full px-8 py-2 focus:outline-none bg-[#F3F3F5]' type="text" />
                         </div>
-                        <button className='cursor-pointer hover:bg-white w-max ring-1 ring-black/10 px-3 py-1 rounded-sm'>View</button>
+                        <button disabled={!resumeValue.trim()}
+                            onClick={openResumeLink}
+                            type='button'
+                            className="cursor-pointer hover:bg-white w-max ring-1 ring-black/10 px-3 py-1 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed" >View</button>
                     </div>
                     <p className='text-xs'>Make sure your resume link is publicly accessible or shareable</p>
                 </section>
             </div>
 
-            <button onClick={saveDetails} className='cursor-pointer hover:bg-[#003a6dbb] bg-[#184aa2] text-white px-4 py-2 rounded-sm'>Save Link</button>
+            <button type='button' onClick={saveDetails} className='cursor-pointer hover:bg-[#003a6dbb] bg-[#184aa2] text-white px-4 py-2 rounded-sm'>Save Link</button>
         </div>
     )
 }

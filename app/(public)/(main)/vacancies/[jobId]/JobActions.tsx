@@ -25,6 +25,11 @@ export default function JobActions({ jobId, jobTitle }: { jobId: string, jobTitl
 
 
   const handleApply = async () => {
+    if (!user?.cvLink) {
+      toast.error('You cannot apply to this job without providing a link to your CV on your dashboard!')
+      return
+    }
+
     try {
       await applyMutation.mutateAsync({ jobId })
       toast.success("Application submitted successfully!")
@@ -83,10 +88,17 @@ export default function JobActions({ jobId, jobTitle }: { jobId: string, jobTitl
 
       <Modal body={body} actionLabel="Apply" title="Confirm Application" onSubmit={handleApply} onClose={() => setIsOpen(false)} isOpen={isOpen} />
 
+
+      {
+        user.cvLink
+          ? <p>User has a cv</p>
+          : <p>There is no CV</p>
+      }
+
       {/* APPLY */}
       {!isAuthed ? (
         <Link
-          href="/login"
+          href="/auth"
           className="flex w-full items-center justify-center gap-2 bg-black text-white p-3 rounded cursor-pointer"
         >
           <FiLogIn />
