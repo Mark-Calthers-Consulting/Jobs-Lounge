@@ -1,6 +1,8 @@
 'use client'
 import { useLogin, useRegister } from "@/hooks/useAuth"
 import { register } from "module"
+import Image from "next/image"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -87,6 +89,7 @@ const AuthForm: React.FC = () => {
 
     return (
         <div className="space-y-3">
+            <Link href='/' className=" sm:hidden"><Image className="mb-3" width={50} height={50} src='/logo.svg' alt='logo' /></Link>
             {mode === 'login'
                 ?
                 <>
