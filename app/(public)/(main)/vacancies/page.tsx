@@ -77,9 +77,11 @@ const Vacancies: React.FC = () => {
           />
         </section>
         <section className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 content-start">
-          {isLoading && <p className="col-span-full">Loading jobs...</p>}
+
+          {isLoading && <p className="col-span-full mx-auto text-xl">Loading jobs...</p>}
+
           {isError && <p className="col-span-full">Could not load jobs.</p>}
-          {filteredJobs.length == 0
+          {!isLoading && filteredJobs?.length == 0
             ?(
               <div className="col-span-full flex items-center justify-center py-16">
                 <div className="text-center px-4">

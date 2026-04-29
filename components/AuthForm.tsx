@@ -9,7 +9,8 @@ type formMode = 'login' | 'register'
 type formValues = {
     email: string,
     password: string,
-    name?: string,
+    firstName: '',
+    lastName: '',
     telephone?: string
 }
 
@@ -18,7 +19,8 @@ const AuthForm: React.FC = () => {
     const [authData, setAuthData] = useState<formValues>({
         email: '',
         password: '',
-        name: '',
+        firstName: '',
+        lastName: '',
         telephone: ''
     })
 
@@ -113,9 +115,19 @@ const AuthForm: React.FC = () => {
                     </form>
                     :
                     <form onSubmit={handleSubmit}>
-                        <div className="flex flex-col">
+                        {/* <div className="flex flex-col">
                             <label htmlFor="">Name</label>
                             <input onChange={handleChange} type="text" name="name" className="py-2 px-3 my-2 ring-1 ring-gray-200 rounded outline-none" placeholder="Full Name" />
+                        </div> */}
+                        <div className="flex gap-2 flex-col md:flex-row">
+                            <div className="flex-1 flex flex-col">
+                                <label htmlFor="">First Name</label>
+                                <input onChange={handleChange} type="text" name="firstName" className="py-2 px-3 my-2 ring-1 ring-gray-200 rounded outline-none" placeholder="Full Name" />
+                            </div>
+                            <div className="flex-1 flex flex-col">
+                                <label htmlFor="">Last Name</label>
+                                <input onChange={handleChange} type="text" name="lastName" className="py-2 px-3 my-2 ring-1 ring-gray-200 rounded outline-none" placeholder="Full Name" />
+                            </div>
                         </div>
                         <div className="flex flex-col">
                             <label htmlFor="">Phone Number</label>
