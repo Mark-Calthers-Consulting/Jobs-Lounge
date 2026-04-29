@@ -90,13 +90,13 @@ const AuthForm: React.FC = () => {
             {mode === 'login'
                 ?
                 <>
-                    <h2 className="text-[#003B6D] text-3xl font-bold">Sign in to Jobs Lounge</h2>
-                    <p className="text-[#797979]">Access your account to continue your journey, whether you're exploring new job opportunities or managing your hiring process.</p>
+                    <h2 className="text-[#003B6D] text-2xl md:text-3xl font-bold">Sign in to Jobs Lounge</h2>
+                    <p className="text-[#797979] text-sm md:text-base">Access your account to continue your journey, whether you're exploring new job opportunities or managing your hiring process.</p>
                 </>
                 :
                 <>
-                    <h2 className="text-[#003B6D] text-3xl font-bold">Welcome to Jobs Lounge</h2>
-                    <p className="text-[#797979]">Create your account to begin your journey with Jobs Lounge, whether you're searching for the perfect job or hiring top talent.</p>
+                    <h2 className="text-[#003B6D] text-2xl md:text-3xl font-bold">Welcome to Jobs Lounge</h2>
+                    <p className="text-[#797979] text-sm md:text-base">Create your account to begin your journey with Jobs Lounge, whether you're searching for the perfect job or hiring top talent.</p>
                 </>
 
             }
@@ -111,7 +111,7 @@ const AuthForm: React.FC = () => {
                             Password
                             <input onChange={handleChange} name="password" className="px-4 py-2 my-2 ring-1 ring-gray-200  rounded outline-none" type="password" placeholder="Password" />
                         </label>
-                        <button type="submit" className="w-full p-3 my-4 rounded cursor-pointer text-white bg-[#003B6D]">SIGN IN</button>
+                        <button type="submit" className="w-full p-3 my-3 rounded cursor-pointer text-white bg-[#003B6D]">SIGN IN</button>
                     </form>
                     :
                     <form onSubmit={handleSubmit}>
@@ -119,14 +119,14 @@ const AuthForm: React.FC = () => {
                             <label htmlFor="">Name</label>
                             <input onChange={handleChange} type="text" name="name" className="py-2 px-3 my-2 ring-1 ring-gray-200 rounded outline-none" placeholder="Full Name" />
                         </div> */}
-                        <div className="flex gap-2 flex-col md:flex-row">
-                            <div className="flex-1 flex flex-col">
+                        <div className="flex gap-2 flex-col lg:flex-row">
+                            <div className="flex-1 min-w-0 flex flex-col">
                                 <label htmlFor="">First Name</label>
-                                <input onChange={handleChange} type="text" name="firstName" className="py-2 px-3 my-2 ring-1 ring-gray-200 rounded outline-none" placeholder="Full Name" />
+                                <input onChange={handleChange} type="text" name="firstName" className="py-2 px-3 my-2 ring-1 ring-gray-200 rounded outline-none" placeholder="First Name" />
                             </div>
-                            <div className="flex-1 flex flex-col">
+                            <div className="flex-1 min-w-0 flex flex-col">
                                 <label htmlFor="">Last Name</label>
-                                <input onChange={handleChange} type="text" name="lastName" className="py-2 px-3 my-2 ring-1 ring-gray-200 rounded outline-none" placeholder="Full Name" />
+                                <input onChange={handleChange} type="text" name="lastName" className="py-2 px-3 my-2 ring-1 ring-gray-200 rounded outline-none" placeholder="Last Name" />
                             </div>
                         </div>
                         <div className="flex flex-col">
@@ -149,8 +149,8 @@ const AuthForm: React.FC = () => {
 
             {
                 mode === 'login'
-                    ? <p className="text-center my-4">Don’t have an account? <span onClick={changeMode} className="underline cursor-pointer">Sign up</span> </p>
-                    : <p className="text-center my-4">Already have an account? <span onClick={changeMode} className="underline cursor-pointer">Sign In</span> </p>
+                    ? <p className="text-center mt-4">Don’t have an account? <span onClick={changeMode} className="underline cursor-pointer">Sign up</span> </p>
+                    : <p className="text-center mt-4">Already have an account? <span onClick={changeMode} className="underline cursor-pointer">Sign In</span> </p>
             }
 
         </div>
