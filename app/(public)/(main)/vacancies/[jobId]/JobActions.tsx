@@ -90,7 +90,7 @@ export default function JobActions({ jobId, jobTitle }: { jobId: string, jobTitl
 
 
       {
-        user.cvLink
+        user?.cvLink
           ? <p>User has a cv</p>
           : <p>There is no CV</p>
       }
