@@ -17,7 +17,7 @@ const AdminUsers: React.FC = () => {
             <div className="w-full my-4 ring-1 ring-gray-300 rounded shadow p-2 bg-white">
                 <div className="rounded bg-gray-100 relative">
                     <BiSearch className="absolute top-1/2 -translate-y-1/2 left-3" size={18} color="gray" />
-                    <input type="text" className="rounded focus:outline-none focus:ring-0 ring-1 ring-gray-300 px-10 py-2 w-full" placeholder="Search Applications..." />
+                    <input type="text" className="rounded focus:outline-none focus:ring-0 ring-1 ring-gray-300 px-10 py-2 w-full" placeholder="Search Team Members..." />
                 </div>
             </div>
 
