@@ -16,21 +16,16 @@ const columns = [
         accessorKey: 'status',
     },
     {
-        header: 'Applicants',
-        accessorKey: 'totalApplicants',
-    },
-    {
         header: 'Date Posted',
         accessorKey: 'createdAt',
     },
 ]
 
-const data = []
 const JobsTable = () => {
-    const { data: vacancies, isLoading, error, isError } = useVacancies('')
+    const { data: vacancies, isLoading, isError } = useVacancies('', 1, 5)
 
     const table = useReactTable({
-        data: vacancies || [],
+        data: vacancies?.data || [],
         columns,
         getCoreRowModel: getCoreRowModel()
     })

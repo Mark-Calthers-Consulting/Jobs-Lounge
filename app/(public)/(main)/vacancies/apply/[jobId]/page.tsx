@@ -1,4 +1,5 @@
 import type { Job, JobPageProps } from '../../../../../../types/types'
+import { notFound } from 'next/navigation'
 
 const getSingleJob = async (id: string): Promise<Job> => {
     const res = await fetch(
@@ -6,12 +7,15 @@ const getSingleJob = async (id: string): Promise<Job> => {
         { cache: 'no-store' }
     )
 
+    if (res.status === 404) {
+        notFound()
+    }
+
     if (!res.ok) {
         throw new Error('Failed to fetch job')
     }
 
     const data = await res.json()
-    console.log(data)
     return data.data
 }
 

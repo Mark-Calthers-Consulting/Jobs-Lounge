@@ -14,7 +14,6 @@ const ProfileClient: React.FC = () => {
 
     //TODO - EXPAND TO BE ABLE TO EDIT OTHER FIELD APART FROM RESUME
     const saveDetails = async () => {
-        console.log('work')
         const trimmedLink = resumeValue.trim()
         try {
             await editDetailsMutation.mutateAsync({ cvLink: trimmedLink })

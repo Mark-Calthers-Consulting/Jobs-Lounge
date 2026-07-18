@@ -5,7 +5,7 @@ import { FaLocationDot, FaXTwitter } from "react-icons/fa6";
 import { MdOutlineWorkOutline, MdWorkspacePremium } from "react-icons/md";
 import { BsLinkedin } from "react-icons/bs";
 import JobActions from './JobActions';
-import { useUser } from '@/hooks/useUsers';
+import { notFound } from 'next/navigation';
 
 
 const getSingleJob = async (id: string): Promise<Job> => {
@@ -14,12 +14,15 @@ const getSingleJob = async (id: string): Promise<Job> => {
         { cache: 'no-store' }
     )
 
+    if (res.status === 404) {
+        notFound()
+    }
+
     if (!res.ok) {
         throw new Error('Failed to fetch job')
     }
 
     const data = await res.json()
-    console.log(data)
     return data.data
 }
 

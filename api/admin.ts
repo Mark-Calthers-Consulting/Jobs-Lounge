@@ -13,8 +13,13 @@ export const fetchAdminDashboard = async () => {
     return dashboard.data 
 }
 
-export const fetchAdminJobs = async () => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/getAllJobs`,
+const pageQuery = (page = 1, limit = 20) => new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+})
+
+export const fetchAdminJobs = async (page = 1, limit = 20) => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/getAllJobs?${pageQuery(page, limit)}`,
         {
             method: 'GET',
             credentials: 'include'
@@ -24,12 +29,11 @@ export const fetchAdminJobs = async () => {
         throw new Error("Failed to fetch vacancies")
     }
 
-    const vacancies = await res.json()
-    return vacancies.data
+    return res.json()
 }
 
-export const fetchAllUsers = async () => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/getAllUsers`,
+export const fetchAllUsers = async (page = 1, limit = 20) => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/getAllUsers?${pageQuery(page, limit)}`,
         {
             method: 'GET',
             credentials: 'include'
@@ -39,12 +43,11 @@ export const fetchAllUsers = async () => {
         throw new Error("Failed to fetch users")
     }
 
-    const users = await res.json()
-    return users.data
+    return res.json()
 }
 
-export const fetchTeamMembers = async () => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/getTeamMembers`,
+export const fetchTeamMembers = async (page = 1, limit = 20) => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/getTeamMembers?${pageQuery(page, limit)}`,
         {
             method: 'GET',
             credentials: 'include'
@@ -54,12 +57,11 @@ export const fetchTeamMembers = async () => {
         throw new Error("Failed to fetch team")
     }
 
-    const users = await res.json()
-    return users.data
+    return res.json()
 }
 
-export const fetchJobCandidates = async () => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/getCandidates`,
+export const fetchJobCandidates = async (page = 1, limit = 20) => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/getCandidates?${pageQuery(page, limit)}`,
         {
             method: 'GET',
             credentials: 'include'
@@ -69,12 +71,11 @@ export const fetchJobCandidates = async () => {
         throw new Error("Failed to fetch candidates")
     }
 
-    const users = await res.json()
-    return users.data
+    return res.json()
 }
 
-export const fetchAllApplications = async () => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/getApplications`,
+export const fetchAllApplications = async (page = 1, limit = 20) => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/getApplications?${pageQuery(page, limit)}`,
         {
             method: 'GET',
             credentials: 'include'
@@ -84,7 +85,6 @@ export const fetchAllApplications = async () => {
         throw new Error("Failed to fetch applications")
     }
 
-    const users = await res.json()
-    return users.data
+    return res.json()
 
 }

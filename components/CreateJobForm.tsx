@@ -206,15 +206,12 @@ const CreateJobForm = () => {
                 skills: listValues.skills,
             };
 
-            console.log('Transformed Payload:', payload);
-
             await createJobMutation.mutateAsync(payload);
             toast.success("Job created successfully!");
 
             // Optional: Reset form here
         } catch (error: any) {
             toast.error(error?.response?.data?.message || "Could not create job");
-            console.error(error);
         }
     };
 

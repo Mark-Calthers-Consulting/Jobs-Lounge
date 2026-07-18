@@ -1,9 +1,10 @@
 import { LoginPayload, RegisterPayload } from "@/types/types";
+import { clearCsrfToken, csrfFetch } from "./csrf";
 
 
 
 export const loginUser = async (data: LoginPayload) => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/login`, {
+    const res = await csrfFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -18,11 +19,12 @@ export const loginUser = async (data: LoginPayload) => {
         throw new Error(result.message || 'Request failed');
     }
 
+    clearCsrfToken()
     return result.data
 }
 
 export const logoutUser = async () => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/logout`, {
+    const res = await csrfFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/logout`, {
         method: 'POST',
         credentials: 'include',
     })
@@ -33,11 +35,12 @@ export const logoutUser = async () => {
         throw new Error(result.message || 'Request failed');
     }
 
+    clearCsrfToken()
     return result.data
 }
 
 export const registerUser = async (data: RegisterPayload) => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/register`, {
+    const res = await csrfFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -49,5 +52,6 @@ export const registerUser = async (data: RegisterPayload) => {
     if (!res.ok) {
         throw new Error(result.message || 'Request failed');
     }
+    clearCsrfToken()
     return result.data
 }

@@ -41,7 +41,6 @@ const AuthForm: React.FC = () => {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        console.log(name, value)
         setAuthData(prev => ({
             ...prev,
             [name]: value,
@@ -50,7 +49,6 @@ const AuthForm: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        console.log(authData)
         const toastId = toast.loading(
             mode === 'login' ? 'Logging in...' : 'Creating account...'
         )
@@ -66,9 +64,6 @@ const AuthForm: React.FC = () => {
                     authData
                 )
             }
-
-            console.log(userData)
-
 
             toast.success('Success!', { id: toastId })
 

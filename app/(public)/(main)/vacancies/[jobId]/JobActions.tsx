@@ -21,9 +21,6 @@ export default function JobActions({ jobId, jobTitle }: { jobId: string, jobTitl
   const unsave = useUnsaveJob()
   const applyMutation = useApplyToJob()
 
-  console.log(hasApplied)
-
-
   const handleApply = async () => {
     if (!user?.cvLink) {
       toast.error('You cannot apply to this job without providing a link to your CV on your dashboard!')
@@ -38,11 +35,9 @@ export default function JobActions({ jobId, jobTitle }: { jobId: string, jobTitl
     } catch (error: any) {
       if (error?.message == 'You already applied') {
         toast.error("You already applied to this job")
-        console.log(error)
         return
       }
       toast.error("Failed to apply to job")
-      console.log(error)
     }
   }
 

@@ -14,8 +14,6 @@ const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const closeMenu = () => setIsMenuOpen(false)
 
-  console.log(user)
-
   const isAuthed = !!user
   return (
     <nav className='relative flex  max-w-7xl mx-auto w-full justify-between items-center px-20 py-4'>

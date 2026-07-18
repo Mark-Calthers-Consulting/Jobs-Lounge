@@ -25,7 +25,6 @@ const AdminAuthForm: React.FC = () => {
     const router = useRouter();
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        console.log(name, value)
         setAuthData(prev => ({
             ...prev,
             [name]: value,
@@ -42,9 +41,6 @@ const AdminAuthForm: React.FC = () => {
                 email: authData.email,
                 password: authData.password,
             })
-
-            console.log(data)
-            console.log(data.role === 'user')
 
             if (data.role !== 'admin' && data.role !== 'super-admin') {
                 toast.error('Access denied. Not an admin account.', { id: toastId })

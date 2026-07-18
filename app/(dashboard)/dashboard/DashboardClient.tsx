@@ -5,7 +5,7 @@ import { Job } from '@/types/types'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { CiBookmark, CiCalendarDate, CiMoneyBill } from 'react-icons/ci'
-import { IoCheckmark, IoCheckmarkCircle, IoCheckmarkCircleOutline, IoLocationOutline } from 'react-icons/io5'
+import { IoCheckmarkCircleOutline, IoLocationOutline } from 'react-icons/io5'
 
 
 const DashboardClient: React.FC = () => {
@@ -14,20 +14,15 @@ const DashboardClient: React.FC = () => {
     const userRecommendations = useRecommendedJobs()
 
     const savedJobsQuery = useGetSavedJobs({
-        enabled: !!userQuery.data
+        enabled: !!userQuery.data,
+        limit: 1,
     })
-
-    console.log(userQuery.data)
-    console.log(savedJobsQuery?.data?.length)
-
 
     if (userQuery.isLoading) {
         return <h1>Loading...</h1>
     }
 
-    let dateJoined
-
-    dateJoined = userQuery.data ? new Date(userQuery.data?.createdAt).toLocaleDateString('en-GB', {
+    const dateJoined = userQuery.data ? new Date(userQuery.data?.createdAt).toLocaleDateString('en-GB', {
         day: 'numeric',
         month: 'short',
         year: 'numeric',
@@ -37,7 +32,7 @@ const DashboardClient: React.FC = () => {
         <div>
             <h1 className='text-3xl font-bold'>Welcome back, {userQuery.data?.name}!</h1>
             <p className='text-[#797979] my-3'>
-                Here's what's happening with your job search today.
+                Here&apos;s what&apos;s happening with your job search today.
             </p>
 
             {!userQuery.data?.cvLink && (
@@ -70,14 +65,14 @@ const DashboardClient: React.FC = () => {
                 <div className="rounded bg-white ring-1 ring-black/5 shadow p-5 flex justify-between">
                     <div className="">
                         <h5>Saved Jobs</h5>
-                        <p className='text-2xl font-semibold'>{savedJobsQuery?.data?.length}</p>
+                        <p className='text-2xl font-semibold'>{savedJobsQuery.data?.pagination.total ?? 0}</p>
                     </div>
                     <CiBookmark size={24} color='155DFC' />
                 </div>
                 <div className="rounded bg-white ring-1 ring-black/5 shadow p-5 flex justify-between">
                     <div className="">
                         <h5>Jobs Applied</h5>
-                        <p className='text-2xl font-semibold'>{userQuery.data?.applications.length}</p>
+                        <p className='text-2xl font-semibold'>{userQuery.data?.applicationCount ?? 0}</p>
                     </div>
                     <IoCheckmarkCircleOutline size={24} color='07A944' />
                 </div>

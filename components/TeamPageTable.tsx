@@ -1,6 +1,7 @@
 'use client'
 
-import { useAdminApplications, useGetTeamMembers } from "@/hooks/useAdmin"
+import { useGetTeamMembers } from "@/hooks/useAdmin"
+import type { User } from "@/types/types"
 import {
     flexRender,
     getCoreRowModel,
@@ -9,19 +10,11 @@ import {
 } from "@tanstack/react-table"
 import { useState } from "react"
 import { FiMoreVertical } from "react-icons/fi"
-
-type Application = {
-    applicantId: string
-    name: string
-    email: string
-    jobId: string
-    title: string
-    createdAt: string
-    status: string
-}
+import PaginationControls from "./PaginationControls"
 
 const TeamPageTable = () => {
-    const { data: applications, isLoading, isError } = useGetTeamMembers()
+    const [page, setPage] = useState(1)
+    const { data: applications, isLoading, isError } = useGetTeamMembers(page)
     const [openMenuId, setOpenMenuId] = useState<string | null>(null)
 
     const columns = [
@@ -59,7 +52,7 @@ const TeamPageTable = () => {
         {
             header: "Actions",
             id: "actions",
-            cell: ({ row }: { row: Row<Application> }) => (
+            cell: ({ row }: { row: Row<User> }) => (
                 <div className="relative">
                     <button
                         className="p-2 rounded hover:bg-gray-100"
@@ -86,7 +79,7 @@ const TeamPageTable = () => {
     ]
 
     const table = useReactTable({
-        data: applications || [],
+        data: applications?.data || [],
         columns,
         getCoreRowModel: getCoreRowModel(),
     })
@@ -138,6 +131,7 @@ const TeamPageTable = () => {
                     )}
                 </tbody>
             </table>
+            <PaginationControls pagination={applications?.pagination} onPageChange={setPage} />
         </div>
     )
 }

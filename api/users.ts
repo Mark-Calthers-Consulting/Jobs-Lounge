@@ -1,3 +1,5 @@
+import { csrfFetch } from "./csrf"
+
 export const fetchUser = async () => {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me`, {
         method: 'GET',
@@ -15,8 +17,9 @@ export const fetchUser = async () => {
     return result.data
 }
 
-export const getSavedJobs = async () => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/saved-jobs`, {
+export const getSavedJobs = async (page = 1, limit = 20) => {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) })
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/saved-jobs?${params}`, {
         method: 'GET',
         credentials: 'include',
     })
@@ -29,12 +32,11 @@ export const getSavedJobs = async () => {
         throw new Error(result.message || 'Request failed')
     }
 
-    return result.data
+    return result
 }
 
 export const editUserDetails = async (data: Object) => {
-    console.log(data)
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me`, {
+    const res = await csrfFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json'

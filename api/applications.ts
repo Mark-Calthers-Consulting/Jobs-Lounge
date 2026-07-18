@@ -1,7 +1,8 @@
-import { applyPayload } from "@/types/types"
+import { ApplicationStatus, applyPayload } from "@/types/types"
+import { csrfFetch } from "./csrf"
 
-export const createJob = async (job:any) => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs`, {
+export const createJob = async (job: Record<string, unknown>) => {
+    const res = await csrfFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -20,7 +21,7 @@ export const createJob = async (job:any) => {
 }
 
 export const applyToJob = async (data: applyPayload) => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/applications/${data.jobId}`, {
+    const res = await csrfFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/applications/${data.jobId}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -38,8 +39,9 @@ export const applyToJob = async (data: applyPayload) => {
     return result.data
 }
 
-export const getMyApplications = async () => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/applications/me`, {
+export const getMyApplications = async ({ page = 1, limit = 20 } = {}) => {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) })
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/applications/me?${params}`, {
         method: 'GET',
         credentials: 'include',
     })
@@ -50,11 +52,11 @@ export const getMyApplications = async () => {
         throw new Error(result.message || 'Request failed');
     }
 
-    return result.data
+    return result
 }
 
-export const cancelApplication = async () => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/:applicationId`, {
+export const cancelApplication = async (applicationId: string) => {
+    const res = await csrfFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/applications/${encodeURIComponent(applicationId)}`, {
         method: 'DELETE',
         credentials: 'include',
     })
@@ -70,8 +72,23 @@ export const cancelApplication = async () => {
 
 
 
-export const getAllJobApplications = async () => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/applications/admin/:jobId`, {
+type GetJobApplicationsOptions = {
+    jobId: string
+    page?: number
+    limit?: number
+    status?: ApplicationStatus
+}
+
+export const getAllJobApplications = async ({
+    jobId,
+    page = 1,
+    limit = 20,
+    status,
+}: GetJobApplicationsOptions) => {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) })
+    if (status) params.set('status', status)
+
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/applications/admin/${encodeURIComponent(jobId)}?${params}`, {
         method: 'GET',
         credentials: 'include',
     })
@@ -82,24 +99,30 @@ export const getAllJobApplications = async () => {
         throw new Error(result.message || 'Request failed');
     }
 
-    return result.data
+    return result
 }
 
-// export const updateApplicationStatus = async (data) => {
-//     const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/applications/me`, {
-//         method: 'PATCH',
-//         headers: {
-//             'Content-Type': 'application/json'
-//         },
-//         credentials: 'include',
-//         body: JSON.stringify(data)
-//     })
+export const updateApplicationStatus = async ({
+    applicationId,
+    status,
+}: {
+    applicationId: string
+    status: ApplicationStatus
+}) => {
+    const res = await csrfFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/applications/admin/${encodeURIComponent(applicationId)}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ status })
+    })
 
-//     const result = await res.json()
+    const result = await res.json()
 
-//     if (!res.ok) {
-//         throw new Error(result.message || 'Request failed');
-//     }
+    if (!res.ok) {
+        throw new Error(result.message || 'Request failed');
+    }
 
-//     return result.data
-// }
+    return result.data
+}

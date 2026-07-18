@@ -3,6 +3,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 type Options = {
     enabled?: boolean;
+    page?: number;
+    limit?: number;
 };
 
 export const useUser = () => {
@@ -12,11 +14,12 @@ export const useUser = () => {
     })
 }
 
-export const useGetSavedJobs = (options: Options) => {
+export const useGetSavedJobs = (options: Options = {}) => {
+    const { enabled = true, page = 1, limit = 20 } = options
     return useQuery({
-        queryKey: ['savedJobs'],
-        queryFn: getSavedJobs,
-        enabled: options?.enabled
+        queryKey: ['savedJobs', page, limit],
+        queryFn: () => getSavedJobs(page, limit),
+        enabled,
     })
 }
 

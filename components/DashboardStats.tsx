@@ -9,8 +9,6 @@ import { PiSuitcase } from "react-icons/pi"
 const DashboardStats = () => {
     const router = useRouter()
     const { data: dashboardStats, isLoading, error, isError } = useAdminDashboard()
-    console.log(dashboardStats)
-
     // if (!dashboardStats) {
     //     router.replace('/auth')
     // }

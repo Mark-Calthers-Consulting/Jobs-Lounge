@@ -4,19 +4,20 @@ import Link from "next/link"
 import JobFilters from "@/components/JobFilters"
 import { useVacancies } from "@/hooks/useVacancies"
 import { useEffect, useMemo, useState } from "react"
+import PaginationControls from "@/components/PaginationControls"
 
 const Vacancies: React.FC = () => {
   const [inputValue, setInputValue] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
+  const [page, setPage] = useState(1)
 
   const [filterData, setFilterData] = useState<{ datePosted: string, level: string[] }>({
     datePosted: '',
     level: []
   })
 
-  const { data = [], isLoading, error, isError } = useVacancies(searchTerm)
-  console.log(data)
-
+  const { data: vacancyPage, isLoading, isError } = useVacancies(searchTerm, page)
+  const data = vacancyPage?.data ?? []
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value)
   }
@@ -27,10 +28,12 @@ const Vacancies: React.FC = () => {
     const timer = setTimeout(() => {
       if (trimmed.length < 3) {
         setSearchTerm("")
+        setPage(1)
         return
       }
 
       setSearchTerm(trimmed)
+      setPage(1)
     }, 400)
 
     return () => clearTimeout(timer)
@@ -66,7 +69,7 @@ const Vacancies: React.FC = () => {
     <div className="max-w-7xl mx-auto">
       <section className="px-12 py-4 mb-8 bg-[#003B6D] flex items-center justify-between">
         <p className="text-white">Find Jobs</p>
-        <input type="text" value={inputValue} onChange={handleSearchChange} className=" bg-white placeholder:text-sm w-65 rounded px-4 py-2 outline-none" placeholder="Search jobs by title (min. 3 letters)" />
+        <input type="search" maxLength={80} value={inputValue} onChange={handleSearchChange} className=" bg-white placeholder:text-sm w-65 rounded px-4 py-2 outline-none" placeholder="Search jobs by title (min. 3 letters)" aria-label="Search jobs by title" />
         <p className="text-white hidden sm:block">Home <span className="">/ Vacancies</span></p>
       </section>
       <section className="flex flex-col sm:flex-row px-12 gap-4 mb-6">
@@ -122,6 +125,7 @@ const Vacancies: React.FC = () => {
             ))}
         </section>
       </section>
+      <PaginationControls pagination={vacancyPage?.pagination} onPageChange={setPage} />
     </div>
   )
 }

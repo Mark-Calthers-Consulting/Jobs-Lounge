@@ -12,13 +12,14 @@ import {
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { FiMoreVertical } from "react-icons/fi"
+import PaginationControls from "./PaginationControls"
 
 type Status = 'Open' | 'Closed' | 'Draft'
 
 const data = []
 const JobsPageTable = () => {
-    const { data: vacancies, isLoading, error, isError } = useAdminVacancies()
-    console.log(vacancies)
+    const [page, setPage] = useState(1)
+    const { data: vacancies, isLoading, isError } = useAdminVacancies(page)
     const [openMenuId, setOpenMenuId] = useState<string | null>(null)
     const router = useRouter()
 
@@ -90,7 +91,7 @@ const JobsPageTable = () => {
         },
     ]
     const table = useReactTable({
-        data: vacancies || [],
+        data: vacancies?.data || [],
         columns,
         getCoreRowModel: getCoreRowModel()
     })
@@ -140,6 +141,7 @@ const JobsPageTable = () => {
                 </tbody>
 
             </table>
+            <PaginationControls pagination={vacancies?.pagination} onPageChange={setPage} />
         </div>
     )
 }

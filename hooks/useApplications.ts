@@ -1,5 +1,5 @@
-import { applyToJob, cancelApplication, createJob, getAllJobApplications, getMyApplications } from "@/api/applications";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { applyToJob, cancelApplication, createJob, getAllJobApplications, getMyApplications, updateApplicationStatus } from "@/api/applications";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 
 export const useCreatejob = () => {
@@ -14,22 +14,39 @@ export const useApplyToJob = () => {
     })
 }
 
-export const useGetMyApplications = () => {
+export const useGetMyApplications = (page = 1, limit = 20) => {
     return useQuery({
-        queryKey: ['getPersonalApplications'],
-        queryFn: getMyApplications
+        queryKey: ['getPersonalApplications', page, limit],
+        queryFn: () => getMyApplications({ page, limit })
     })
 }
 
 export const useCancelApplication = () => {
+    const queryClient = useQueryClient()
     return useMutation({
-        mutationFn: cancelApplication
+        mutationFn: cancelApplication,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['getPersonalApplications'] })
+            queryClient.invalidateQueries({ queryKey: ['me'] })
+        }
     })
 }
 
-export const useGetAllApplications = () => {
+export const useGetAllApplications = (jobId: string, page = 1, limit = 20) => {
     return useQuery({
-        queryKey: ['getAllApplications'],
-        queryFn: getAllJobApplications
+        queryKey: ['getAllApplications', jobId, page, limit],
+        queryFn: () => getAllJobApplications({ jobId, page, limit }),
+        enabled: Boolean(jobId)
+    })
+}
+
+export const useUpdateApplicationStatus = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: updateApplicationStatus,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['getAllApplications'] })
+            queryClient.invalidateQueries({ queryKey: ['adminApplications'] })
+        }
     })
 }

@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-table"
 import { useState } from "react"
 import { FiMoreVertical } from "react-icons/fi"
+import PaginationControls from "./PaginationControls"
 
 type Application = {
   applicantId: string
@@ -21,7 +22,8 @@ type Application = {
 }
 
 const UsersPageTable = () => {
-  const { data: applications, isLoading, isError } = useAdminApplications()
+  const [page, setPage] = useState(1)
+  const { data: applications, isLoading, isError } = useAdminApplications(page)
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
 
   const columns = [
@@ -98,7 +100,7 @@ const UsersPageTable = () => {
   ]
 
   const table = useReactTable({
-    data: applications || [],
+    data: applications?.data || [],
     columns,
     getCoreRowModel: getCoreRowModel(),
   })
@@ -150,6 +152,7 @@ const UsersPageTable = () => {
           )}
         </tbody>
       </table>
+      <PaginationControls pagination={applications?.pagination} onPageChange={setPage} />
     </div>
   )
 }

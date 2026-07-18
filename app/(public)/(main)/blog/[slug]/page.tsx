@@ -1,4 +1,5 @@
 import { BlogPageProps } from '@/types/types'
+import { notFound } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 
 
@@ -8,25 +9,21 @@ const getSingleBlogPost = async (slug: string) => {
         { cache: 'no-store' }
     )
 
+    if (res.status === 404) {
+        notFound()
+    }
+
     if (!res.ok) {
-        console.log(res)
-        throw new Error('Failed to fetch job')
+        throw new Error('Failed to fetch post')
     }
 
     const post = await res.json()
-    console.log(post)
-    return post.data[0]
+    return post.data
 }
 
 const BlogPage = async ({ params }: BlogPageProps) => {
     const { slug } = await params
-    console.log(slug)
     const post = await getSingleBlogPost(slug)
-    console.log(post)
-
-    const baseUrl = process.env.NEXT_PUBLIC_ORIGIN || 'http://localhost:3000';
-    const currentUrl = `${baseUrl}/blog/${slug}`;
-    const encodedUrl = encodeURIComponent(currentUrl);
 
     return (
         <div className=" prose prose-lg max-w-7xl mx-auto">
