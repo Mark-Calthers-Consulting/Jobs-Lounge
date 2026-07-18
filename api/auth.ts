@@ -1,6 +1,7 @@
 import type { ApiSuccess, AuthUser, LoginPayload, RegisterPayload } from "@/types/types";
 import { clearCsrfToken, csrfFetch } from "./csrf";
 import { apiPath } from "./base";
+import { readApiResponse } from './errors';
 
 
 
@@ -14,11 +15,7 @@ export const loginUser = async (data: LoginPayload): Promise<AuthUser> => {
         body: JSON.stringify(data)
     })
 
-    const result = await res.json() as ApiSuccess<AuthUser> & { message?: string }
-
-    if (!res.ok) {
-        throw new Error(result.message || 'Request failed');
-    }
+    const result = await readApiResponse<ApiSuccess<AuthUser>>(res, 'Unable to sign in')
 
     clearCsrfToken()
     return result.data
@@ -30,11 +27,7 @@ export const logoutUser = async (): Promise<null> => {
         credentials: 'include',
     })
 
-    const result = await res.json() as ApiSuccess<null> & { message?: string }
-
-    if (!res.ok) {
-        throw new Error(result.message || 'Request failed');
-    }
+    const result = await readApiResponse<ApiSuccess<null>>(res, 'Unable to sign out')
 
     clearCsrfToken()
     return result.data
@@ -49,10 +42,7 @@ export const registerUser = async (data: RegisterPayload): Promise<AuthUser> => 
         credentials: 'include',
         body: JSON.stringify(data)
     })
-    const result = await res.json() as ApiSuccess<AuthUser> & { message?: string }
-    if (!res.ok) {
-        throw new Error(result.message || 'Request failed');
-    }
+    const result = await readApiResponse<ApiSuccess<AuthUser>>(res, 'Unable to create account')
     clearCsrfToken()
     return result.data
 }

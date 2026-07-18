@@ -1,5 +1,5 @@
 import { FaFacebook } from 'react-icons/fa'
-import type { Job, JobPageProps } from '../../../../../types/types'
+import type { ApiSuccess, Job, JobPageProps } from '../../../../../types/types'
 import CopyLink from '../../../../../components/CopyLink'
 import { FaLocationDot, FaXTwitter } from "react-icons/fa6";
 import { MdOutlineWorkOutline, MdWorkspacePremium } from "react-icons/md";
@@ -7,6 +7,7 @@ import { BsLinkedin } from "react-icons/bs";
 import JobActions from './JobActions';
 import { notFound } from 'next/navigation';
 import { serverApiUrl } from '@/api/serverBase';
+import { readApiResponse } from '@/api/errors';
 
 
 const getSingleJob = async (id: string): Promise<Job> => {
@@ -19,11 +20,7 @@ const getSingleJob = async (id: string): Promise<Job> => {
         notFound()
     }
 
-    if (!res.ok) {
-        throw new Error('Failed to fetch job')
-    }
-
-    const data = await res.json()
+    const data = await readApiResponse<ApiSuccess<Job>>(res, 'Failed to fetch job')
     return data.data
 }
 

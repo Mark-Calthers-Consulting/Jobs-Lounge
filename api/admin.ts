@@ -7,6 +7,7 @@ import type {
     PaginatedResponse,
     User,
 } from '@/types/types'
+import { readApiResponse } from './errors'
 
 export const fetchAdminDashboard = async (): Promise<DashboardStats> => {
     const res = await fetch(apiPath('/admin/dashboard'),
@@ -15,11 +16,10 @@ export const fetchAdminDashboard = async (): Promise<DashboardStats> => {
             credentials: 'include'
         }
     )
-    if (!res.ok) {
-        throw new Error("Failed to fetch dashboard data")
-    }
-
-    const dashboard = await res.json() as ApiSuccess<DashboardStats>
+    const dashboard = await readApiResponse<ApiSuccess<DashboardStats>>(
+        res,
+        'Failed to fetch dashboard data',
+    )
     return dashboard.data 
 }
 
@@ -35,11 +35,7 @@ export const fetchAdminJobs = async (page = 1, limit = 20): Promise<PaginatedRes
             credentials: 'include'
         }
     )
-    if (!res.ok) {
-        throw new Error("Failed to fetch vacancies")
-    }
-
-    return res.json() as Promise<PaginatedResponse<Job>>
+    return readApiResponse<PaginatedResponse<Job>>(res, 'Failed to fetch vacancies')
 }
 
 export const fetchAllUsers = async (page = 1, limit = 20): Promise<PaginatedResponse<User>> => {
@@ -49,11 +45,7 @@ export const fetchAllUsers = async (page = 1, limit = 20): Promise<PaginatedResp
             credentials: 'include'
         }
     )
-    if (!res.ok) {
-        throw new Error("Failed to fetch users")
-    }
-
-    return res.json() as Promise<PaginatedResponse<User>>
+    return readApiResponse<PaginatedResponse<User>>(res, 'Failed to fetch users')
 }
 
 export const fetchTeamMembers = async (page = 1, limit = 20): Promise<PaginatedResponse<User>> => {
@@ -63,11 +55,7 @@ export const fetchTeamMembers = async (page = 1, limit = 20): Promise<PaginatedR
             credentials: 'include'
         }
     )
-    if (!res.ok) {
-        throw new Error("Failed to fetch team")
-    }
-
-    return res.json() as Promise<PaginatedResponse<User>>
+    return readApiResponse<PaginatedResponse<User>>(res, 'Failed to fetch team')
 }
 
 export const fetchJobCandidates = async (page = 1, limit = 20): Promise<PaginatedResponse<User>> => {
@@ -77,11 +65,7 @@ export const fetchJobCandidates = async (page = 1, limit = 20): Promise<Paginate
             credentials: 'include'
         }
     )
-    if (!res.ok) {
-        throw new Error("Failed to fetch candidates")
-    }
-
-    return res.json() as Promise<PaginatedResponse<User>>
+    return readApiResponse<PaginatedResponse<User>>(res, 'Failed to fetch candidates')
 }
 
 export const fetchAllApplications = async (page = 1, limit = 20): Promise<PaginatedResponse<AdminApplication>> => {
@@ -91,10 +75,6 @@ export const fetchAllApplications = async (page = 1, limit = 20): Promise<Pagina
             credentials: 'include'
         }
     )
-    if (!res.ok) {
-        throw new Error("Failed to fetch applications")
-    }
-
-    return res.json() as Promise<PaginatedResponse<AdminApplication>>
+    return readApiResponse<PaginatedResponse<AdminApplication>>(res, 'Failed to fetch applications')
 
 }

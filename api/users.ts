@@ -1,6 +1,7 @@
 import { csrfFetch } from "./csrf"
 import { apiPath } from "./base"
 import type { ApiSuccess, PaginatedResponse, Job, User, UserUpdatePayload } from '@/types/types'
+import { readApiResponse } from './errors'
 
 export const fetchUser = async (): Promise<User | null> => {
     const res = await fetch(apiPath('/users/me'), {
@@ -11,11 +12,7 @@ export const fetchUser = async (): Promise<User | null> => {
 
     if (res.status === 401) return null
 
-    const result = await res.json() as ApiSuccess<User> & { message?: string }
-
-    if (!res.ok) {
-        throw new Error(result.message || 'Request failed');
-    }
+    const result = await readApiResponse<ApiSuccess<User>>(res, 'Unable to load profile')
 
     return result.data
 }
@@ -29,11 +26,7 @@ export const getSavedJobs = async (page = 1, limit = 20): Promise<PaginatedRespo
 
     if (res.status === 401) return null
 
-    const result = await res.json() as PaginatedResponse<Job> & { message?: string }
-
-    if (!res.ok) {
-        throw new Error(result.message || 'Request failed')
-    }
+    const result = await readApiResponse<PaginatedResponse<Job>>(res, 'Unable to load saved jobs')
 
     return result
 }
@@ -50,11 +43,7 @@ export const editUserDetails = async (data: UserUpdatePayload): Promise<User | n
 
     if (res.status === 401) return null
 
-    const result = await res.json() as ApiSuccess<User> & { message?: string }
-
-    if (!res.ok) {
-        throw new Error(result.message || 'Request failed')
-    }
+    const result = await readApiResponse<ApiSuccess<User>>(res, 'Unable to update profile')
 
     return result.data
 }

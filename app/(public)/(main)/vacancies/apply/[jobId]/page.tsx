@@ -1,6 +1,7 @@
-import type { Job, JobPageProps } from '../../../../../../types/types'
+import type { ApiSuccess, Job, JobPageProps } from '../../../../../../types/types'
 import { notFound } from 'next/navigation'
 import { serverApiUrl } from '@/api/serverBase'
+import { readApiResponse } from '@/api/errors'
 
 const getSingleJob = async (id: string): Promise<Job> => {
     const res = await fetch(
@@ -12,11 +13,7 @@ const getSingleJob = async (id: string): Promise<Job> => {
         notFound()
     }
 
-    if (!res.ok) {
-        throw new Error('Failed to fetch job')
-    }
-
-    const data = await res.json()
+    const data = await readApiResponse<ApiSuccess<Job>>(res, 'Failed to fetch job')
     return data.data
 }
 

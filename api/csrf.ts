@@ -1,4 +1,6 @@
 import { apiPath } from './base'
+import type { ApiSuccess } from '@/types/types'
+import { ApiError, readApiResponse } from './errors'
 
 const CSRF_ERROR_CODE = 'CSRF_TOKEN_INVALID'
 
@@ -11,10 +13,17 @@ const fetchCsrfToken = async () => {
         credentials: 'include',
         cache: 'no-store',
     })
-    const result = await res.json()
+    const result = await readApiResponse<ApiSuccess<{ csrfToken: string }>>(
+        res,
+        'Unable to initialize request security',
+    )
 
-    if (!res.ok || typeof result.data?.csrfToken !== 'string') {
-        throw new Error(result.message || 'Unable to initialize request security')
+    if (typeof result.data?.csrfToken !== 'string') {
+        throw new ApiError({
+            status: 'error',
+            code: 'INVALID_API_RESPONSE',
+            message: 'Unable to initialize request security',
+        }, res.status)
     }
 
     return result.data.csrfToken as string

@@ -11,6 +11,7 @@ import type {
 import type { JobFormType } from "@/schemas/jobSchema"
 import { csrfFetch } from "./csrf"
 import { apiPath } from "./base"
+import { readApiResponse } from './errors'
 
 export const createJob = async (job: JobFormType): Promise<Job> => {
     const res = await csrfFetch(apiPath('/jobs'), {
@@ -22,11 +23,7 @@ export const createJob = async (job: JobFormType): Promise<Job> => {
         body: JSON.stringify(job)
     })
 
-    const result = await res.json() as ApiSuccess<Job> & { message?: string }
-
-    if (!res.ok) {
-        throw new Error(result.message || 'Request failed');
-    }
+    const result = await readApiResponse<ApiSuccess<Job>>(res, 'Unable to create job')
 
     return result.data
 }
@@ -41,11 +38,7 @@ export const applyToJob = async (data: ApplyPayload): Promise<ApplicationRecord>
         body: JSON.stringify(data)
     })
 
-    const result = await res.json() as ApiSuccess<ApplicationRecord> & { message?: string }
-
-    if (!res.ok) {
-        throw new Error(result.message || 'Request failed');
-    }
+    const result = await readApiResponse<ApiSuccess<ApplicationRecord>>(res, 'Unable to apply for job')
 
     return result.data
 }
@@ -57,11 +50,10 @@ export const getMyApplications = async ({ page = 1, limit = 20 } = {}): Promise<
         credentials: 'include',
     })
 
-    const result = await res.json() as PaginatedResponse<JobApplication> & { message?: string }
-
-    if (!res.ok) {
-        throw new Error(result.message || 'Request failed');
-    }
+    const result = await readApiResponse<PaginatedResponse<JobApplication>>(
+        res,
+        'Unable to load applications',
+    )
 
     return result
 }
@@ -72,11 +64,10 @@ export const cancelApplication = async (applicationId: string): Promise<{ applic
         credentials: 'include',
     })
 
-    const result = await res.json() as ApiSuccess<{ applicationId: string }> & { message?: string }
-
-    if (!res.ok) {
-        throw new Error(result.message || 'Request failed');
-    }
+    const result = await readApiResponse<ApiSuccess<{ applicationId: string }>>(
+        res,
+        'Unable to cancel application',
+    )
 
     return result.data
 }
@@ -104,11 +95,10 @@ export const getAllJobApplications = async ({
         credentials: 'include',
     })
 
-    const result = await res.json() as JobApplicationsResponse & { message?: string }
-
-    if (!res.ok) {
-        throw new Error(result.message || 'Request failed');
-    }
+    const result = await readApiResponse<JobApplicationsResponse>(
+        res,
+        'Unable to load job applications',
+    )
 
     return result
 }
@@ -129,11 +119,10 @@ export const updateApplicationStatus = async ({
         body: JSON.stringify({ status })
     })
 
-    const result = await res.json() as ApiSuccess<ApplicationRecord> & { message?: string }
-
-    if (!res.ok) {
-        throw new Error(result.message || 'Request failed');
-    }
+    const result = await readApiResponse<ApiSuccess<ApplicationRecord>>(
+        res,
+        'Unable to update application status',
+    )
 
     return result.data
 }

@@ -2,6 +2,7 @@ import type { ApiSuccess, BlogPageProps, BlogPost } from '@/types/types'
 import { notFound } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import { serverApiUrl } from '@/api/serverBase';
+import { readApiResponse } from '@/api/errors';
 
 
 const getSingleBlogPost = async (slug: string): Promise<BlogPost> => {
@@ -14,11 +15,7 @@ const getSingleBlogPost = async (slug: string): Promise<BlogPost> => {
         notFound()
     }
 
-    if (!res.ok) {
-        throw new Error('Failed to fetch post')
-    }
-
-    const post = await res.json() as ApiSuccess<BlogPost>
+    const post = await readApiResponse<ApiSuccess<BlogPost>>(res, 'Failed to fetch post')
     return post.data
 }
 

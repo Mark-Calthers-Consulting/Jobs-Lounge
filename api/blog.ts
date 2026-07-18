@@ -1,6 +1,7 @@
 import { csrfFetch } from "./csrf"
 import { apiPath } from "./base"
 import type { ApiSuccess, BlogPost, CreateBlogPostPayload, PaginatedResponse } from '@/types/types'
+import { readApiResponse } from './errors'
 
 export const getAllBlogPosts = async (page = 1, limit = 20): Promise<PaginatedResponse<BlogPost>> => {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) })
@@ -10,11 +11,7 @@ export const getAllBlogPosts = async (page = 1, limit = 20): Promise<PaginatedRe
             credentials: 'include'
         }
     )
-    if (!res.ok) {
-        throw new Error("Failed to fetch blog posts")
-    }
-
-    return res.json() as Promise<PaginatedResponse<BlogPost>>
+    return readApiResponse<PaginatedResponse<BlogPost>>(res, 'Failed to fetch blog posts')
 }
 export const createBlogPost = async (post: CreateBlogPostPayload): Promise<BlogPost> => {
     const res = await csrfFetch(apiPath('/blog/create'),
@@ -27,10 +24,6 @@ export const createBlogPost = async (post: CreateBlogPostPayload): Promise<BlogP
             body: JSON.stringify(post)
         }
     )
-    if (!res.ok) {
-        throw new Error("Failed to create blog post")
-    }
-
-    const blogPost = await res.json() as ApiSuccess<BlogPost>
+    const blogPost = await readApiResponse<ApiSuccess<BlogPost>>(res, 'Failed to create blog post')
     return blogPost.data
 }
