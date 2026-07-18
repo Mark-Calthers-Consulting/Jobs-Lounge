@@ -89,8 +89,8 @@ export type User = {
   coverLetterLink?: string
 
   // Timestamps
-  createdAt?: Date
-  updatedAt?: Date
+  createdAt?: string
+  updatedAt?: string
 }
 
 export type LoginPayload = {

@@ -1,6 +1,5 @@
 'use client'
 import { useLogin, useRegister } from "@/hooks/useAuth"
-import { register } from "module"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -16,7 +15,7 @@ type formValues = {
     telephone?: string
 }
 
-const AuthForm: React.FC = () => {
+const AuthForm = ({ nextPath }: { nextPath?: string }) => {
     const [mode, setMode] = useState<formMode>('login')
     const [authData, setAuthData] = useState<formValues>({
         email: '',
@@ -68,7 +67,7 @@ const AuthForm: React.FC = () => {
             toast.success('Success!', { id: toastId })
 
             if (mode === "register" || userData.role === 'user') {
-                router.replace('/dashboard')
+                router.replace(nextPath || '/dashboard')
             } else {
                 router.replace('/admin-center')
             }
@@ -89,12 +88,12 @@ const AuthForm: React.FC = () => {
                 ?
                 <>
                     <h2 className="text-[#003B6D] text-2xl md:text-3xl font-bold">Sign in to Jobs Lounge</h2>
-                    <p className="text-[#797979] text-sm md:text-base">Access your account to continue your journey, whether you're exploring new job opportunities or managing your hiring process.</p>
+                    <p className="text-[#797979] text-sm md:text-base">Access your account to continue your journey, whether you&apos;re exploring new job opportunities or managing your hiring process.</p>
                 </>
                 :
                 <>
                     <h2 className="text-[#003B6D] text-2xl md:text-3xl font-bold">Welcome to Jobs Lounge</h2>
-                    <p className="text-[#797979] text-sm md:text-base">Create your account to begin your journey with Jobs Lounge, whether you're searching for the perfect job or hiring top talent.</p>
+                    <p className="text-[#797979] text-sm md:text-base">Create your account to begin your journey with Jobs Lounge, whether you&apos;re searching for the perfect job or hiring top talent.</p>
                 </>
 
             }

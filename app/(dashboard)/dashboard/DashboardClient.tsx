@@ -22,7 +22,7 @@ const DashboardClient: React.FC = () => {
         return <h1>Loading...</h1>
     }
 
-    const dateJoined = userQuery.data ? new Date(userQuery.data?.createdAt).toLocaleDateString('en-GB', {
+    const dateJoined = userQuery.data?.createdAt ? new Date(userQuery.data.createdAt).toLocaleDateString('en-GB', {
         day: 'numeric',
         month: 'short',
         year: 'numeric',

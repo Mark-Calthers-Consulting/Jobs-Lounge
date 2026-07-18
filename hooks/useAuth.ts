@@ -1,24 +1,29 @@
 import { loginUser, logoutUser, registerUser } from "@/api/auth"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 export const useLogin = () => {
-    // const qc = useQueryClient()
+    const queryClient = useQueryClient()
     return useMutation({
         mutationFn: loginUser,
-        // onSuccess: () => {
-        //     qc.invalidateQueries({ queryKey: ["me"] })
-        // },
+        onSuccess: (user) => queryClient.setQueryData(['me'], user),
     })
 }
 
 export const useLogout = () => {
+    const queryClient = useQueryClient()
     return useMutation({
-        mutationFn: logoutUser
+        mutationFn: logoutUser,
+        onSuccess: () => {
+            queryClient.removeQueries()
+            queryClient.setQueryData(['me'], null)
+        },
     })
 }
 
 export const useRegister = () => {
+    const queryClient = useQueryClient()
     return useMutation({
-        mutationFn: registerUser
+        mutationFn: registerUser,
+        onSuccess: (user) => queryClient.setQueryData(['me'], { ...user, role: 'user' }),
     })
 }

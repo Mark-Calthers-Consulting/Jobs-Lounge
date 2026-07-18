@@ -1,5 +1,6 @@
 import { editUserDetails, fetchUser, getSavedJobs } from "@/api/users"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import type { User } from "@/types/types"
+import { useMutation, useQuery } from "@tanstack/react-query"
 
 type Options = {
     enabled?: boolean;
@@ -8,9 +9,11 @@ type Options = {
 };
 
 export const useUser = () => {
-    return useQuery({
+    return useQuery<User | null>({
         queryKey: ['me'],
-        queryFn: fetchUser
+        queryFn: fetchUser,
+        staleTime: 30_000,
+        retry: 1,
     })
 }
 

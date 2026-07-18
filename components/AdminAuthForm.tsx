@@ -1,12 +1,11 @@
 'use client'
-import { useLogin, useRegister } from "@/hooks/useAuth"
+import { useLogin } from "@/hooks/useAuth"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
 
-type formMode = 'login' | 'register'
 type formValues = {
     email: string,
     password: string,
@@ -14,7 +13,7 @@ type formValues = {
     phoneNumber?: string
 }
 
-const AdminAuthForm: React.FC = () => {
+const AdminAuthForm = ({ nextPath }: { nextPath?: string }) => {
     const [authData, setAuthData] = useState<formValues>({
         email: '',
         password: '',
@@ -44,13 +43,13 @@ const AdminAuthForm: React.FC = () => {
 
             if (data.role !== 'admin' && data.role !== 'super-admin') {
                 toast.error('Access denied. Not an admin account.', { id: toastId })
-                router.replace('/auth')
+                router.replace('/dashboard')
                 return
             }
 
 
             toast.success('Success!', { id: toastId })
-            router.replace('/admin-center')
+            router.replace(nextPath || '/admin-center')
 
         } catch (error) {
             toast.error(

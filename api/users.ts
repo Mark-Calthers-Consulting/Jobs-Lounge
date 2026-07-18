@@ -4,6 +4,7 @@ export const fetchUser = async () => {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me`, {
         method: 'GET',
         credentials: 'include',
+        cache: 'no-store',
     })
 
     if (res.status === 401) return null
@@ -35,7 +36,7 @@ export const getSavedJobs = async (page = 1, limit = 20) => {
     return result
 }
 
-export const editUserDetails = async (data: Object) => {
+export const editUserDetails = async (data: Record<string, unknown>) => {
     const res = await csrfFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me`, {
         method: 'PATCH',
         headers: {
