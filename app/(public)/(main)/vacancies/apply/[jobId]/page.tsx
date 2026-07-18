@@ -1,9 +1,10 @@
 import type { Job, JobPageProps } from '../../../../../../types/types'
 import { notFound } from 'next/navigation'
+import { serverApiUrl } from '@/api/serverBase'
 
 const getSingleJob = async (id: string): Promise<Job> => {
     const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs/${id}`,
+        serverApiUrl(`/jobs/${encodeURIComponent(id)}`),
         { cache: 'no-store' }
     )
 

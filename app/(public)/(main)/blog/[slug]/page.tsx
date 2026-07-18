@@ -1,11 +1,12 @@
 import { BlogPageProps } from '@/types/types'
 import { notFound } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
+import { serverApiUrl } from '@/api/serverBase';
 
 
 const getSingleBlogPost = async (slug: string) => {
     const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/blog/${slug}`,
+        serverApiUrl(`/blog/${encodeURIComponent(slug)}`),
         { cache: 'no-store' }
     )
 

@@ -16,6 +16,18 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+Copy `.env.example` to `.env.development` and set `API_ORIGIN` to the backend origin.
+Browser requests use the same-origin `/api/backend/*` gateway; do not expose the API origin
+through a `NEXT_PUBLIC_*` variable. Builds fail when `API_ORIGIN` is missing so a deployment
+cannot silently target an obsolete backend.
+
+For production, set `API_ORIGIN` to the cPanel API origin without the `/api` suffix, for example:
+
+```dotenv
+API_ORIGIN=https://jobsapi.example.com
+NEXT_PUBLIC_ORIGIN=https://jobs.example.com
+```
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

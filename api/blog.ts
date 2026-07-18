@@ -1,8 +1,9 @@
 import { csrfFetch } from "./csrf"
+import { apiPath } from "./base"
 
 export const getAllBlogPosts = async (page = 1, limit = 20) => {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) })
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/blog?${params}`,
+    const res = await fetch(`${apiPath('/blog')}?${params}`,
         {
             method: 'GET',
             credentials: 'include'
@@ -14,24 +15,8 @@ export const getAllBlogPosts = async (page = 1, limit = 20) => {
 
     return res.json()
 }
-// MAKING THE API CALL DIRECTLY IN THE COMPONENT
-// export const getSingleBlogPost = async (slug) => {
-//     const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/blog/${slug}`,
-//         {
-//             method: 'GET',
-//             credentials: 'include'
-//         }
-//     )
-//     if (!res.ok) {
-//         throw new Error("Failed to fetch blog posts")
-//     }
-
-//     const posts = await res.json()
-//     return posts.data
-// }
-
-export const createBlogPost = async (post: {}) => {
-    const res = await csrfFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/blog/create`,
+export const createBlogPost = async (post: Record<string, unknown>) => {
+    const res = await csrfFetch(apiPath('/blog/create'),
         {
             method: 'POST',
             headers: {

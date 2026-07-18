@@ -1,4 +1,5 @@
 import { csrfFetch } from "./csrf"
+import { apiPath } from "./base"
 
 export const fetchVacancies = async (
     searchTerm: string,
@@ -14,7 +15,7 @@ export const fetchVacancies = async (
 
     const queryString = params.toString()
     const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs${queryString ? `?${queryString}` : ""}`,
+        `${apiPath('/jobs')}${queryString ? `?${queryString}` : ""}`,
         { signal },
     )
     if (!res.ok) {
@@ -24,7 +25,7 @@ export const fetchVacancies = async (
 }
 
 export const saveJob = async (jobId: string) => {
-    const res = await csrfFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/${jobId}/save`, {
+    const res = await csrfFetch(apiPath(`/users/me/${encodeURIComponent(jobId)}/save`), {
         method: 'POST',
         credentials: 'include',
         body: JSON.stringify(jobId)
@@ -39,7 +40,7 @@ export const saveJob = async (jobId: string) => {
 }
 
 export const unsaveJob = async (jobId: string) => {
-    const res = await csrfFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/${jobId}/save`, {
+    const res = await csrfFetch(apiPath(`/users/me/${encodeURIComponent(jobId)}/save`), {
         method: 'DELETE',
         credentials: 'include',
         body: JSON.stringify(jobId)
@@ -54,7 +55,7 @@ export const unsaveJob = async (jobId: string) => {
 }
 
 export const checkApplicationStatus = async (jobId: string) => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs/${jobId}/application-status`, {
+    const res = await fetch(apiPath(`/jobs/${encodeURIComponent(jobId)}/application-status`), {
         credentials: 'include',
     })
     if (!res.ok) {
@@ -65,7 +66,7 @@ export const checkApplicationStatus = async (jobId: string) => {
 }
 
 export const getRecommendedJobs = async () => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs/recommended`, {
+    const res = await fetch(apiPath('/jobs/recommended'), {
         credentials: 'include',
     })
     if (!res.ok) {

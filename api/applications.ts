@@ -1,8 +1,9 @@
 import { ApplicationStatus, applyPayload } from "@/types/types"
 import { csrfFetch } from "./csrf"
+import { apiPath } from "./base"
 
 export const createJob = async (job: Record<string, unknown>) => {
-    const res = await csrfFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs`, {
+    const res = await csrfFetch(apiPath('/jobs'), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -21,7 +22,7 @@ export const createJob = async (job: Record<string, unknown>) => {
 }
 
 export const applyToJob = async (data: applyPayload) => {
-    const res = await csrfFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/applications/${data.jobId}`, {
+    const res = await csrfFetch(apiPath(`/applications/${encodeURIComponent(data.jobId)}`), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -41,7 +42,7 @@ export const applyToJob = async (data: applyPayload) => {
 
 export const getMyApplications = async ({ page = 1, limit = 20 } = {}) => {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) })
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/applications/me?${params}`, {
+    const res = await fetch(`${apiPath('/applications/me')}?${params}`, {
         method: 'GET',
         credentials: 'include',
     })
@@ -56,7 +57,7 @@ export const getMyApplications = async ({ page = 1, limit = 20 } = {}) => {
 }
 
 export const cancelApplication = async (applicationId: string) => {
-    const res = await csrfFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/applications/${encodeURIComponent(applicationId)}`, {
+    const res = await csrfFetch(apiPath(`/applications/${encodeURIComponent(applicationId)}`), {
         method: 'DELETE',
         credentials: 'include',
     })
@@ -88,7 +89,7 @@ export const getAllJobApplications = async ({
     const params = new URLSearchParams({ page: String(page), limit: String(limit) })
     if (status) params.set('status', status)
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/applications/admin/${encodeURIComponent(jobId)}?${params}`, {
+    const res = await fetch(`${apiPath(`/applications/admin/${encodeURIComponent(jobId)}`)}?${params}`, {
         method: 'GET',
         credentials: 'include',
     })
@@ -109,7 +110,7 @@ export const updateApplicationStatus = async ({
     applicationId: string
     status: ApplicationStatus
 }) => {
-    const res = await csrfFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/applications/admin/${encodeURIComponent(applicationId)}`, {
+    const res = await csrfFetch(apiPath(`/applications/admin/${encodeURIComponent(applicationId)}`), {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json'

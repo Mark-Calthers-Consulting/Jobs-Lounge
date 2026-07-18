@@ -1,10 +1,11 @@
 import { LoginPayload, RegisterPayload } from "@/types/types";
 import { clearCsrfToken, csrfFetch } from "./csrf";
+import { apiPath } from "./base";
 
 
 
 export const loginUser = async (data: LoginPayload) => {
-    const res = await csrfFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/login`, {
+    const res = await csrfFetch(apiPath('/auth/login'), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -24,7 +25,7 @@ export const loginUser = async (data: LoginPayload) => {
 }
 
 export const logoutUser = async () => {
-    const res = await csrfFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/logout`, {
+    const res = await csrfFetch(apiPath('/auth/logout'), {
         method: 'POST',
         credentials: 'include',
     })
@@ -40,7 +41,7 @@ export const logoutUser = async () => {
 }
 
 export const registerUser = async (data: RegisterPayload) => {
-    const res = await csrfFetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/register`, {
+    const res = await csrfFetch(apiPath('/auth/register'), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'

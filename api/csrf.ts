@@ -1,10 +1,12 @@
+import { apiPath } from './base'
+
 const CSRF_ERROR_CODE = 'CSRF_TOKEN_INVALID'
 
 let cachedCsrfToken: string | null = null
 let csrfTokenRequest: Promise<string> | null = null
 
 const fetchCsrfToken = async () => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/csrf-token`, {
+    const res = await fetch(apiPath('/auth/csrf-token'), {
         method: 'GET',
         credentials: 'include',
         cache: 'no-store',

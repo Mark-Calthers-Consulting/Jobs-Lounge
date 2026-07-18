@@ -6,11 +6,12 @@ import { MdOutlineWorkOutline, MdWorkspacePremium } from "react-icons/md";
 import { BsLinkedin } from "react-icons/bs";
 import JobActions from './JobActions';
 import { notFound } from 'next/navigation';
+import { serverApiUrl } from '@/api/serverBase';
 
 
 const getSingleJob = async (id: string): Promise<Job> => {
     const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/jobs/${id}`,
+        serverApiUrl(`/jobs/${encodeURIComponent(id)}`),
         { cache: 'no-store' }
     )
 
