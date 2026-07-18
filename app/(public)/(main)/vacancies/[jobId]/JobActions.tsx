@@ -30,10 +30,11 @@ export default function JobActions({ jobId, jobTitle }: { jobId: string, jobTitl
     try {
       await applyMutation.mutateAsync({ jobId })
       toast.success("Application submitted successfully!")
+      setIsOpen(false)
 
       queryClient.invalidateQueries({ queryKey: ["application-status", jobId] })
-    } catch (error: any) {
-      if (error?.message == 'You already applied') {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message === 'You already applied') {
         toast.error("You already applied to this job")
         return
       }
@@ -46,7 +47,7 @@ export default function JobActions({ jobId, jobTitle }: { jobId: string, jobTitl
 
   const isAuthed = !!user
 
-  const body = <p>{`Are you sure you want to apply to ${jobTitle}`}</p>
+  const body = <p>{`Are you sure you want to apply to ${jobTitle}?`}</p>
 
   const handleClick = () => {
     setSaved((prev) => !prev)
@@ -68,26 +69,29 @@ export default function JobActions({ jobId, jobTitle }: { jobId: string, jobTitl
           href="/auth"
           className="flex my-3 items-center justify-center gap-2 border p-3 rounded cursor-pointer"
         >
-          <FiLogIn />
+          <FiLogIn aria-hidden="true" />
           Log in to save
         </Link>
       ) : (
         <button
+          type="button"
           className="flex my-3 w-full items-center justify-center gap-2 border p-3 rounded cursor-pointer"
           onClick={handleClick}
+          aria-pressed={saved}
+          disabled={save.isPending || unsave.isPending}
         >
-          {saved ? <BsBookmarkFill /> : <BsBookmark />}
+          {saved ? <BsBookmarkFill aria-hidden="true" /> : <BsBookmark aria-hidden="true" />}
           {saved ? "Saved" : "Save to Favorites"}
         </button>
       )}
 
-      <Modal body={body} actionLabel="Apply" title="Confirm Application" onSubmit={handleApply} onClose={() => setIsOpen(false)} isOpen={isOpen} />
+      <Modal body={body} actionLabel={applyMutation.isPending ? "Submitting…" : "Apply"} title="Confirm Application" onSubmit={handleApply} onClose={() => setIsOpen(false)} isOpen={isOpen} disabled={applyMutation.isPending} />
 
 
       {
         user?.cvLink
-          ? <p>User has a cv</p>
-          : <p>There is no CV</p>
+          ? <p className="my-3 text-sm text-green-800" role="status">Your CV link is ready.</p>
+          : <p className="my-3 text-sm text-amber-800" role="status">Add a CV link in your profile before applying.</p>
       }
 
       {/* APPLY */}
@@ -96,24 +100,27 @@ export default function JobActions({ jobId, jobTitle }: { jobId: string, jobTitl
           href="/auth"
           className="flex w-full items-center justify-center gap-2 bg-black text-white p-3 rounded cursor-pointer"
         >
-          <FiLogIn />
+          <FiLogIn aria-hidden="true" />
           Log in to apply
         </Link>
       ) : hasApplied ? (
         <button
+          type="button"
           disabled
           className="flex w-full items-center justify-center gap-2 bg-black text-white p-3 rounded"
         >
-          <FiSend />
+          <FiSend aria-hidden="true" />
           You have applied!
         </button>
       ) : (
         <button
+          type="button"
           onClick={() => setIsOpen(true)}
+          disabled={loadingApplicationStatus}
           className="flex w-full items-center justify-center gap-2 bg-black text-white p-3 rounded"
         >
-          <FiSend />
-          Apply
+          <FiSend aria-hidden="true" />
+          {loadingApplicationStatus ? 'Checking application status…' : 'Apply'}
         </button>
       )}
     </section>

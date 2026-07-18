@@ -37,11 +37,11 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filterData, setFilterData }) =>
   }
 
   return (
-    <section className="shadow p-6 space-y-4">
-      <h6 className="font-semibold text-xl">Filters</h6>
+    <section aria-labelledby="job-filters-title" className="shadow p-6 space-y-4">
+      <h2 id="job-filters-title" className="font-semibold text-xl">Filters</h2>
 
-      <fieldset>
-        <legend>Date Posted</legend>
+      <fieldset className="space-y-2">
+        <legend className="font-medium">Date posted</legend>
         <label className="flex items-center gap-2">
           <input
             onChange={handleFilterChange}
@@ -84,8 +84,8 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filterData, setFilterData }) =>
         </label>
       </fieldset>
 
-      <fieldset>
-        <legend>Job level</legend>
+      <fieldset className="space-y-2">
+        <legend className="font-medium">Job level</legend>
         <label className="flex items-center gap-2"><input onChange={handleFilterChange} checked={filterData.level.includes("Entry")} type="checkbox" name="level" value="Entry" /> Entry</label>
         <label className="flex items-center gap-2"><input onChange={handleFilterChange} checked={filterData.level.includes("Junior")} type="checkbox" name="level" value="Junior" /> Junior</label>
         <label className="flex items-center gap-2"><input onChange={handleFilterChange} checked={filterData.level.includes("Mid")} type="checkbox" name="level" value="Mid" /> Mid</label>
@@ -95,8 +95,8 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filterData, setFilterData }) =>
         <label className="flex items-center gap-2"><input onChange={handleFilterChange} checked={filterData.level.includes("Executive")} type="checkbox" name="level" value="Executive" /> Executive</label>
       </fieldset>
 
-      <button onClick={resetFilters} className="text-sm px-2 cursor-pointer py-1 border rounded">
-        Reset Filters
+      <button type="button" onClick={resetFilters} className="text-sm px-2 cursor-pointer py-1 border rounded">
+        Reset filters
       </button>
     </section>
   )

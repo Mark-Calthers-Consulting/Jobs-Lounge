@@ -59,19 +59,19 @@ const AdminAuthForm = ({ nextPath }: { nextPath?: string }) => {
 
     return (
         <div className="space-y-4">
-            <Link href='/'><Image width={70} height={70} src='/logo.svg' alt='logo' /></Link>
-            <h2 className="text-[#003B6D] text-2xl font-bold">Jobs Lounge Admin Panel</h2>
+            <Link href='/' aria-label="Jobs Lounge home"><Image width={70} height={70} src='/logo.svg' alt="" /></Link>
+            <h1 id="admin-auth-title" className="text-[#003B6D] text-2xl font-bold">Jobs Lounge Admin Panel</h1>
             <p>Sign in to access the Jobs Lounge administration dashboard and manage the platform.</p>
-            <form onSubmit={handleSubmit}>
-                <label htmlFor="" className="flex flex-col">
+            <form onSubmit={handleSubmit} aria-labelledby="admin-auth-title" aria-busy={loginMutation.isPending}>
+                <label htmlFor="admin-email" className="flex flex-col">
                     Email Address
-                    <input onChange={handleChange} name="email" className="px-4 py-2 my-2 ring-1 ring-gray-100 shadow  rounded outline-none" type="email" placeholder="E-mail" />
+                    <input id="admin-email" required autoComplete="email" onChange={handleChange} name="email" className="px-4 py-2 my-2 ring-1 ring-gray-300 shadow rounded" type="email" />
                 </label>
-                <label htmlFor="" className="flex flex-col">
+                <label htmlFor="admin-password" className="flex flex-col">
                     Password
-                    <input onChange={handleChange} name="password" className="px-4 py-2 my-2 ring-1 ring-gray-100 shadow rounded outline-none" type="password" placeholder="Password" />
+                    <input id="admin-password" required autoComplete="current-password" onChange={handleChange} name="password" className="px-4 py-2 my-2 ring-1 ring-gray-300 shadow rounded" type="password" />
                 </label>
-                <button type="submit" className="w-full p-3 my-4 rounded cursor-pointer text-white bg-[#003B6D]">SIGN IN</button>
+                <button disabled={loginMutation.isPending} type="submit" className="w-full p-3 my-4 rounded cursor-pointer text-white bg-[#003B6D] disabled:cursor-wait disabled:opacity-70">{loginMutation.isPending ? 'Signing in…' : 'Sign in'}</button>
             </form>
         </div>
     )

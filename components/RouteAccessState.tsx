@@ -6,7 +6,7 @@ type RouteAccessStateProps = {
 }
 
 const RouteAccessState = ({ error = false, retry }: RouteAccessStateProps) => (
-  <main className="flex min-h-screen items-center justify-center bg-gray-50 px-6">
+  <main id="main-content" tabIndex={-1} className="flex min-h-screen items-center justify-center bg-gray-50 px-6">
     <div className="max-w-md text-center" role={error ? 'alert' : 'status'} aria-live="polite">
       {error ? (
         <>

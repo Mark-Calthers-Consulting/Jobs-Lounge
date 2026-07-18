@@ -10,14 +10,12 @@ const SavedJobs = () => {
   const [page, setPage] = useState(1)
   const { data, isLoading } = useGetSavedJobs({ enabled: true, page })
 
-  if (isLoading) {
-    return <h1>Loading</h1>
-  }
+  if (isLoading) return <p role="status">Loading saved jobs…</p>
 
   return (
     <div>
       <h1 className='text-3xl font-bold'>Saved Jobs</h1>
-      <p className='text-[#797979] my-3'>Manage your saved jobs and track your applications.</p>
+      <p className='text-gray-600 my-3'>Manage your saved jobs and track your applications.</p>
 
       <div className="grid gap-2 grid-cols-1 md:grid-cols-2">
         {data && data.data.length > 0
@@ -26,7 +24,7 @@ const SavedJobs = () => {
             <JobCard key={job._id} job={job} />
           ))
 
-          : <p className='text-[#797979]'>No saved jobs yet...</p>
+          : <p className='text-gray-600'>No saved jobs yet.</p>
         }
       </div>
       <PaginationControls pagination={data?.pagination} onPageChange={setPage} />

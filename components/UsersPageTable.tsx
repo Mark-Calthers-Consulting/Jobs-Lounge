@@ -64,29 +64,36 @@ const UsersPageTable = () => {
       cell: ({ row }: { row: Row<Application> }) => (
         <div className="relative">
           <button
+            type="button"
+            aria-label={`Actions for ${row.original.name}`}
+            aria-expanded={openMenuId === row.id}
+            aria-controls={`user-actions-${row.id}`}
             className="p-2 rounded hover:bg-gray-100"
             onClick={() =>
               setOpenMenuId(openMenuId === row.id ? null : row.id)
             }
           >
-            <FiMoreVertical size={18} />
+            <FiMoreVertical aria-hidden="true" size={18} />
           </button>
 
           {openMenuId === row.id && (
-            <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-md z-10">
+            <div id={`user-actions-${row.id}`} className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-md z-10">
               <button
+                type="button"
                 className="w-full text-left px-4 py-2 hover:bg-gray-100"
                 onClick={() => alert(`Applicant ID: ${row.original.applicantId}`)}
               >
                 View Applicant
               </button>
               <button
+                type="button"
                 className="w-full text-left px-4 py-2 hover:bg-gray-100"
                 onClick={() => alert(`Job ID: ${row.original.jobId}`)}
               >
                 View Job
               </button>
               <button
+                type="button"
                 className="w-full text-left px-4 py-2 hover:bg-gray-100"
                 onClick={() => alert(`Update status for ${row.original.name}`)}
               >
@@ -105,17 +112,19 @@ const UsersPageTable = () => {
     getCoreRowModel: getCoreRowModel(),
   })
 
-  if (isLoading) return <div className="p-4">Loading applications...</div>
-  if (isError) return <div className="p-4 text-red-500">Error loading applications.</div>
+  if (isLoading) return <p role="status" className="p-4">Loading users…</p>
+  if (isError) return <p role="alert" className="p-4 text-red-700">Error loading users.</p>
 
   return (
-    <div className="w-full overflow-hidden border border-gray-200 rounded-lg shadow-sm">
+    <div className="w-full overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
       <table className="w-full text-left border-collapse">
+        <caption className="sr-only">Users and their applications</caption>
         <thead className="bg-gray-50 border-b border-gray-200">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
                 <th
+                  scope="col"
                   key={header.id}
                   className="p-4 text-sm font-medium text-gray-500"
                 >

@@ -58,7 +58,7 @@ const JobCard = ({ job }:JobCardProps) => {
           rel="noreferrer"
           className="inline-flex items-center rounded bg-[#184aa2] px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition"
         >
-          Apply Now
+          Apply now <span className="sr-only">for {job.title} (opens in a new tab)</span>
         </a>
       </div>
     </div>

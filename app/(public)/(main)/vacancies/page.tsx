@@ -17,7 +17,7 @@ const Vacancies: React.FC = () => {
   })
 
   const { data: vacancyPage, isLoading, isError } = useVacancies(searchTerm, page)
-  const data = vacancyPage?.data ?? []
+  const data = useMemo(() => vacancyPage?.data ?? [], [vacancyPage?.data])
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value)
   }
@@ -67,29 +67,31 @@ const Vacancies: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <section className="px-12 py-4 mb-8 bg-[#003B6D] flex items-center justify-between">
-        <p className="text-white">Find Jobs</p>
-        <input type="search" maxLength={80} value={inputValue} onChange={handleSearchChange} className=" bg-white placeholder:text-sm w-65 rounded px-4 py-2 outline-none" placeholder="Search jobs by title (min. 3 letters)" aria-label="Search jobs by title" />
+      <header className="px-6 md:px-12 py-4 mb-8 bg-[#003B6D] flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-xl font-semibold text-white">Find jobs</h1>
+        <label htmlFor="job-search" className="sr-only">Search jobs by title</label>
+        <input id="job-search" type="search" maxLength={80} value={inputValue} onChange={handleSearchChange} className="bg-white placeholder:text-sm w-full sm:w-72 rounded px-4 py-2 text-black" placeholder="Search jobs by title (min. 3 letters)" aria-describedby="job-search-hint" />
+        <span id="job-search-hint" className="sr-only">Enter at least three letters to search.</span>
         <p className="text-white hidden sm:block">Home <span className="">/ Vacancies</span></p>
-      </section>
-      <section className="flex flex-col sm:flex-row px-12 gap-4 mb-6">
-        <section>
+      </header>
+      <div className="flex flex-col sm:flex-row px-6 md:px-12 gap-4 mb-6">
+        <aside>
           <JobFilters
             filterData={filterData}
             setFilterData={setFilterData}
           />
-        </section>
-        <section className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 content-start">
+        </aside>
+        <section aria-label="Job search results" aria-busy={isLoading} aria-live="polite" className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 content-start">
 
-          {isLoading && <p className="col-span-full mx-auto text-xl">Loading jobs...</p>}
+          {isLoading && <p role="status" className="col-span-full mx-auto text-xl">Loading jobs…</p>}
 
-          {isError && <p className="col-span-full">Could not load jobs.</p>}
-          {!isLoading && filteredJobs?.length == 0
+          {isError && <p role="alert" className="col-span-full text-red-700">Could not load jobs.</p>}
+          {!isLoading && !isError && filteredJobs.length === 0
             ?(
               <div className="col-span-full flex items-center justify-center py-16">
                 <div className="text-center px-4">
                   <div className="mx-auto w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg aria-hidden="true" className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
                         d="M9.172 9.172a4 4 0 115.656 5.656M15 15l5 5m-5-5A7 7 0 1110 3a7 7 0 015 12z" />
                     </svg>
@@ -106,25 +108,25 @@ const Vacancies: React.FC = () => {
               </div>
             )
             : filteredJobs.map((job: Job) => (
-              <div key={job._id} className=" ring-2 ring-gray-100 p-5 rounded ">
-                <p className="text-[#959595] text-sm">{job.company.name}</p>
+              <article key={job._id} className="ring-2 ring-gray-100 p-5 rounded">
+                <p className="text-gray-600 text-sm">{job.company.name}</p>
                 <h3 className="font-semibold ">{job.title}</h3>
-                <p className="text-[#959595] my-2 leading-5">{job.description.slice(0, 90)}...</p>
+                <p className="text-gray-600 my-2 leading-5">{job.description.slice(0, 90)}...</p>
                 <div className="flex gap-2">
                   <p className="text-[#222] bg-[#e3e3e3] px-2 py-1 rounded text-sm ">{job.jobType}</p>
                   <p className="text-[#222] bg-[#e3e3e3] px-2 py-1 rounded text-sm ">{job.level} level</p>
                 </div>
                 <hr className="my-3 text-[#d4d4d4]" />
                 <div className="flex justify-between items-center">
-                  <p className="text-sm max-w-1/2 text-[#7f7f7f]">{job.location}</p>
-                  <Link className="" key={job._id} href={`/vacancies/${job._id}`}>
-                    <button className="cursor-pointer rounded text-sm px-5 py-2  bg-[#003B6D] text-white">Apply Now</button>
+                  <p className="text-sm max-w-1/2 text-gray-600">{job.location}</p>
+                  <Link className="rounded bg-[#003B6D] px-5 py-2 text-sm text-white" href={`/vacancies/${job._id}`} aria-label={`View ${job.title} at ${job.company.name}`}>
+                    View job
                   </Link>
                 </div>
-              </div>
+              </article>
             ))}
         </section>
-      </section>
+      </div>
       <PaginationControls pagination={vacancyPage?.pagination} onPageChange={setPage} />
     </div>
   )

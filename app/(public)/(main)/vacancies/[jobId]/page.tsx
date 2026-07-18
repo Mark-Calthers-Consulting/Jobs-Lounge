@@ -34,22 +34,22 @@ const JobPage = async ({ params }: JobPageProps) => {
 
     return (
         <section>
-            <section className='bg-[#333] h-24 w-full' />
-            <section className='max-w-7xl mx-auto flex flex-col md:flex-row pt-8 px-12 '>
+            <div aria-hidden="true" className='bg-[#333] h-24 w-full' />
+            <div className='max-w-7xl mx-auto flex flex-col gap-8 md:flex-row pt-8 px-6 md:px-12'>
                 <div className="">
                     <section className=''>
                         <h1 className='text-4xl font-bold'>{job.title}</h1>
 
-                        <h3 className='text-2xl'>{job.company.name}</h3>
+                        <h2 className='text-2xl'>{job.company.name}</h2>
 
                         <div className="">
-                            <h3 className='font-semibold my-3'>Description</h3>
-                            <p className='w-8/12'>{job.description}</p>
+                            <h2 className='font-semibold my-3'>Description</h2>
+                            <p className='max-w-3xl'>{job.description}</p>
                         </div>
 
                         <div className="my-8">
-                            <h3 className='font-semibold my-3'>Responsibilities</h3>
-                            <ul className='list-none pl-5 space-y-3 '>
+                            <h2 className='font-semibold my-3'>Responsibilities</h2>
+                            <ul className='list-disc pl-5 space-y-3'>
                                 {job.responsibilities.map((responsibility, index) => (
                                     <li className="border-l-3 border-gray-400 pl-4 text-gray-600" key={index}>{responsibility}</li>
                                 ))}
@@ -57,8 +57,8 @@ const JobPage = async ({ params }: JobPageProps) => {
                         </div>
 
                         <div className="my-8">
-                            <h3 className='font-semibold my-3'>Benefits</h3>
-                            <ul className='list-none pl-5 space-y-3 '>
+                            <h2 className='font-semibold my-3'>Benefits</h2>
+                            <ul className='list-disc pl-5 space-y-3'>
                                 {job.benefits.map((benefit, index) => (
                                     <li className="border-l-3 border-gray-400 pl-4 text-gray-600" key={index}>{benefit}</li>
                                 ))}
@@ -66,8 +66,8 @@ const JobPage = async ({ params }: JobPageProps) => {
                         </div>
 
                         <div className="my-8">
-                            <h3 className='font-semibold my-3'>Requirements</h3>
-                            <ul className='list-none pl-5 space-y-3 '>
+                            <h2 className='font-semibold my-3'>Requirements</h2>
+                            <ul className='list-disc pl-5 space-y-3'>
                                 {job.requirements.map((requirement, index) => (
                                     <li className="border-l-3 border-gray-400 pl-4 text-gray-600" key={index}>{requirement}</li>
                                 ))}
@@ -77,7 +77,7 @@ const JobPage = async ({ params }: JobPageProps) => {
                 </div>
                 <div className="">
                     <section className='shadow rounded p-4 space-y-2 text-sm'>
-                        <h5 className='text-center'>Job Overview</h5>
+                        <h2 className='text-center font-semibold'>Job overview</h2>
                         <div className="flex items-center gap-2">
                             <FaLocationDot color="#0A65CC" aria-hidden="true" />
                             <span>
@@ -107,8 +107,8 @@ const JobPage = async ({ params }: JobPageProps) => {
                             rel="noopener noreferrer"
                             className="flex items-center gap-2 border border-gray-300 p-2 text-sm rounded hover:bg-gray-50 cursor-pointer transition"
                         >
-                            <FaFacebook className="text-blue-600 text-lg" />
-                            <p>Share on Facebook</p>
+                            <FaFacebook aria-hidden="true" className="text-blue-600 text-lg" />
+                            <span>Share on Facebook <span className="sr-only">(opens in a new tab)</span></span>
                         </a>
 
                         <a
@@ -117,8 +117,8 @@ const JobPage = async ({ params }: JobPageProps) => {
                             rel="noopener noreferrer"
                             className="flex items-center gap-2 border border-gray-300 p-2 text-sm rounded hover:bg-gray-50 cursor-pointer transition"
                         >
-                            <FaXTwitter className="text-black text-lg" />
-                            <p>Share on X</p>
+                            <FaXTwitter aria-hidden="true" className="text-black text-lg" />
+                            <span>Share on X <span className="sr-only">(opens in a new tab)</span></span>
                         </a>
 
                         <a
@@ -127,14 +127,14 @@ const JobPage = async ({ params }: JobPageProps) => {
                             rel="noopener noreferrer"
                             className="flex items-center gap-2 border border-gray-300 p-2 text-sm rounded hover:bg-gray-50 cursor-pointer transition"
                         >
-                            <BsLinkedin className="text-blue-700 text-lg" />
-                            <p>Share on LinkedIn</p>
+                            <BsLinkedin aria-hidden="true" className="text-blue-700 text-lg" />
+                            <span>Share on LinkedIn <span className="sr-only">(opens in a new tab)</span></span>
                         </a>
                     </section>
 
                     <CopyLink />
                 </div>
-            </section>
+            </div>
         </section>
     )
 }

@@ -19,8 +19,9 @@ const DashboardClient: React.FC = () => {
     })
 
     if (userQuery.isLoading) {
-        return <h1>Loading...</h1>
+        return <p role="status">Loading dashboard…</p>
     }
+    if (userQuery.isError) return <p role="alert" className="text-red-700">Unable to load your dashboard.</p>
 
     const dateJoined = userQuery.data?.createdAt ? new Date(userQuery.data.createdAt).toLocaleDateString('en-GB', {
         day: 'numeric',
@@ -31,7 +32,7 @@ const DashboardClient: React.FC = () => {
     return (
         <div>
             <h1 className='text-3xl font-bold'>Welcome back, {userQuery.data?.name}!</h1>
-            <p className='text-[#797979] my-3'>
+            <p className='text-gray-600 my-3'>
                 Here&apos;s what&apos;s happening with your job search today.
             </p>
 
@@ -59,49 +60,49 @@ const DashboardClient: React.FC = () => {
             )}
 
 
-            <Link href={'/vacancies'}><button className='p-2 rounded shadow my-3'>Go to Vacancies</button></Link>
+            <Link href='/vacancies' className='my-3 inline-block rounded p-2 shadow'>Go to vacancies</Link>
 
             <section className='gap-2 grid grid-cols-1 md:grid-cols-3'>
                 <div className="rounded bg-white ring-1 ring-black/5 shadow p-5 flex justify-between">
                     <div className="">
-                        <h5>Saved Jobs</h5>
+                        <p>Saved jobs</p>
                         <p className='text-2xl font-semibold'>{savedJobsQuery.data?.pagination.total ?? 0}</p>
                     </div>
-                    <CiBookmark size={24} color='155DFC' />
+                    <CiBookmark aria-hidden="true" size={24} color='#155DFC' />
                 </div>
                 <div className="rounded bg-white ring-1 ring-black/5 shadow p-5 flex justify-between">
                     <div className="">
-                        <h5>Jobs Applied</h5>
+                        <p>Jobs applied</p>
                         <p className='text-2xl font-semibold'>{userQuery.data?.applicationCount ?? 0}</p>
                     </div>
-                    <IoCheckmarkCircleOutline size={24} color='07A944' />
+                    <IoCheckmarkCircleOutline aria-hidden="true" size={24} color='#078536' />
                 </div>
                 <div className="rounded bg-white ring-1 ring-black/5 shadow p-5 flex justify-between">
                     <div className="">
-                        <h5>Member Since</h5>
+                        <p>Member since</p>
                         <p className='text-2xl font-semibold'>{dateJoined}</p>
                     </div>
-                    <CiCalendarDate size={24} color='9810FA' />
+                    <CiCalendarDate aria-hidden="true" size={24} color='#7E22CE' />
                 </div>
             </section>
             <section>
                 <h2 className='text-lg md:text:xl font-semibold my-4'>Recommended Opportunities</h2>
+                {userRecommendations.isLoading && <p role="status">Loading recommendations…</p>}
+                {userRecommendations.isError && <p role="alert" className="text-red-700">Unable to load recommendations.</p>}
                 <div className="grid gap-2 grid-cols-1 sm:grid-cols-2  md:grid-cols-3 ">
                     {userRecommendations.data?.map((rec: Job, id: number) => (
                         <div key={id} className='bg-white p-5 rounded ring-1 ring-black/5 shadow flex flex-col gap-2'>
                             <span className='text-xs bg-[#d0d0d098] px-2 py-1 font-semibold rounded w-max'>{rec.jobType}</span>
-                            <h1 className='font-bold'>{rec.title}</h1>
-                            <p className='text-[#797979] text-sm font-semibold'>{rec.company.name}</p>
-                            <p className='flex items-center text-sm text-[#797979]'> <IoLocationOutline className='mr-2' />{rec.workMode}</p>
-                            <p className='flex items-center text-sm text-[#797979]'>
-                                <CiMoneyBill className='mr-2' />
+                            <h3 className='font-bold'>{rec.title}</h3>
+                            <p className='text-gray-600 text-sm font-semibold'>{rec.company.name}</p>
+                            <p className='flex items-center text-sm text-gray-600'><IoLocationOutline aria-hidden="true" className='mr-2' />{rec.workMode}</p>
+                            <p className='flex items-center text-sm text-gray-600'>
+                                <CiMoneyBill aria-hidden="true" className='mr-2' />
                                 {rec.salary?.min !== undefined || rec.salary?.max !== undefined
                                     ? `${rec.salary?.min ?? '—'} - ${rec.salary?.max ?? '—'}`
                                     : 'Salary not disclosed'}
                             </p>
-                            <Link href={`/vacancies/${rec._id}`}>
-                                <button className='bg-[#184aa2] cursor-pointer hover:bg-[#496698] text-white text-sm px-3 py-2 rounded-sm'>View Details</button>
-                            </Link>
+                            <Link className='w-fit bg-[#184aa2] cursor-pointer hover:bg-[#496698] text-white text-sm px-3 py-2 rounded-sm' href={`/vacancies/${rec._id}`} aria-label={`View details for ${rec.title}`}>View details</Link>
                         </div>
                     ))}
                 </div>

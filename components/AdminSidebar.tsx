@@ -7,7 +7,6 @@ import { usePathname, useRouter } from "next/navigation"
 import { FaWpforms } from "react-icons/fa"
 import {
     LuLayoutDashboard,
-    LuBookmark,
     LuUser,
     LuSettings,
     LuUsers,
@@ -15,7 +14,7 @@ import {
 } from "react-icons/lu"
 import { PiSuitcase, PiUsersThree } from "react-icons/pi"
 
-const DashboardSidebar = () => {
+const AdminSidebar = () => {
     const pathname = usePathname()
     const router = useRouter()
 
@@ -67,14 +66,14 @@ const DashboardSidebar = () => {
     ]
 
     return (
-        <aside className="w-64 h-screen bg-white border-r border-gray-100 flex flex-col fixed left-0 top-0 z-30 hidden md:flex">
+        <aside aria-label="Administration" className="z-30 flex w-full flex-col border-b border-gray-200 bg-white md:fixed md:left-0 md:top-0 md:h-screen md:w-64 md:border-b-0 md:border-r md:border-gray-100">
             {/* 1. Logo Area */}
-            <div className="h-20 flex justify-center items-center px-8 mt-4 ">
-                <Link href='/'><Image width={70} height={70} src='/logo.svg' alt='logo' /></Link>
+            <div className="flex h-20 items-center justify-center px-8 md:mt-4">
+                <Link href='/' aria-label="Jobs Lounge home"><Image width={70} height={70} src='/logo.svg' alt="" /></Link>
             </div>
 
             {/* 2. Navigation */}
-            <nav className="flex-1 px-4 py-6 space-y-2">
+            <nav aria-label="Administration navigation" className="flex flex-1 gap-2 overflow-x-auto px-4 py-3 md:flex-col md:space-y-2 md:overflow-visible md:py-6">
                 {menuItems.map((item) => {
                     const isActive = pathname === item.href
 
@@ -82,12 +81,13 @@ const DashboardSidebar = () => {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${isActive
+                            aria-current={isActive ? 'page' : undefined}
+                            className={`flex shrink-0 items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${isActive
                                 ? "bg-blue-50 text-blue-700 shadow-sm"
                                 : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                                 }`}
                         >
-                            <span className={isActive ? "text-blue-600" : "text-gray-400"}>
+                            <span aria-hidden="true" className={isActive ? "text-blue-600" : "text-gray-400"}>
                                 {item.icon}
                             </span>
                             {item.name}
@@ -97,17 +97,19 @@ const DashboardSidebar = () => {
             </nav>
 
             {/* 3. Logout Area */}
-            <div className="p-4 border-t border-gray-50">
+            <div className="p-4 border-t border-gray-100">
                 <button
+                    type="button"
                     onClick={handleLogout}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                    disabled={logoutMutation.isPending}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-colors disabled:cursor-wait disabled:opacity-70"
                 >
-                    <LuLogOut size={20} />
-                    Sign Out
+                    <LuLogOut aria-hidden="true" size={20} />
+                    {logoutMutation.isPending ? 'Signing out…' : 'Sign out'}
                 </button>
             </div>
         </aside>
     )
 }
 
-export default DashboardSidebar
+export default AdminSidebar

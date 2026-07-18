@@ -29,18 +29,19 @@ const JobsTable = () => {
         columns,
         getCoreRowModel: getCoreRowModel()
     })
-    if (isLoading) return <div className="p-4">Loading jobs...</div>
-    if (isError) return <div className="p-4 text-red-500">Error loading jobs.</div>
+    if (isLoading) return <p role="status" className="p-4">Loading jobs…</p>
+    if (isError) return <p role="alert" className="p-4 text-red-700">Error loading jobs.</p>
     return (
-   <div className="w-full overflow-hidden border border-gray-200 rounded-lg shadow-sm">
+   <div className="w-full overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
       <table className="w-full text-left border-collapse">
+        <caption className="sr-only">Recent jobs</caption>
         
         {/* Table Header */}
         <thead className="bg-gray-50 border-b border-gray-200">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
-                <th key={header.id} className="p-4 text-sm font-medium text-gray-500">
+                <th scope="col" key={header.id} className="p-4 text-sm font-medium text-gray-600">
                   {/* flexRender puts the 'header' text from your columns array into the HTML */}
                   {flexRender(
                     header.column.columnDef.header,

@@ -55,7 +55,7 @@ const listFieldMeta: Record<
 };
 
 const inputClassName =
-    'w-full rounded-md border border-gray-300 px-4 py-2 outline-none transition focus:border-black';
+    'w-full rounded-md border border-gray-300 px-4 py-2 transition focus:border-black';
 const labelClassName = 'mb-1 text-sm font-medium text-gray-800';
 
 const CreateJobForm = () => {
@@ -199,7 +199,7 @@ const CreateJobForm = () => {
                 </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit} className="space-y-8" aria-busy={createJobMutation.isPending}>
                 <div className="rounded-xl border border-gray-200 p-4 md:p-6">
                     <h2 className="mb-4 text-lg font-semibold">Job Overview</h2>
 
@@ -216,6 +216,7 @@ const CreateJobForm = () => {
                                 value={formData.jobTitle}
                                 onChange={handleFieldChange}
                                 placeholder="e.g. Frontend Developer"
+                                required
                             />
                         </div>
 
@@ -230,6 +231,7 @@ const CreateJobForm = () => {
                                 value={formData.jobDescription}
                                 onChange={handleFieldChange}
                                 placeholder="Describe the role, expectations, and scope"
+                                required
                             />
                         </div>
 
@@ -245,6 +247,7 @@ const CreateJobForm = () => {
                                 value={formData.companyName}
                                 onChange={handleFieldChange}
                                 placeholder="e.g. Acme Inc."
+                                required
                             />
                         </div>
 
@@ -254,7 +257,7 @@ const CreateJobForm = () => {
                             </label>
                             <input
                                 className={inputClassName}
-                                type="string"
+                                type="url"
                                 id="companyWebsite"
                                 name="companyWebsite"
                                 value={formData.companyWebsite}
@@ -296,6 +299,7 @@ const CreateJobForm = () => {
                                 value={formData.jobLocation}
                                 onChange={handleFieldChange}
                                 placeholder="e.g. Lagos, Nigeria"
+                                required
                             />
                         </div>
 
@@ -407,6 +411,7 @@ const CreateJobForm = () => {
                                 onChange={handleFieldChange}
                                 min="0"
                                 placeholder="e.g. 3"
+                                required
                             />
                         </div>
 
@@ -435,12 +440,13 @@ const CreateJobForm = () => {
 
                             return (
                                 <div key={key}>
-                                    <label className={`${labelClassName} block`}>
+                                    <label htmlFor={`${key}-input`} className={`${labelClassName} block`}>
                                         {field.label}
                                     </label>
 
                                     <div className="flex flex-col gap-2 sm:flex-row">
                                         <input
+                                            id={`${key}-input`}
                                             type="text"
                                             value={listInputs[key]}
                                             onChange={(e) =>
@@ -453,6 +459,7 @@ const CreateJobForm = () => {
 
                                         <button
                                             type="button"
+                                            aria-label={`Add ${field.label.toLowerCase()} item`}
                                             onClick={() => addListItem(key)}
                                             className="rounded-md border border-black px-4 py-2 text-sm font-medium hover:bg-black hover:text-white transition"
                                         >
@@ -461,7 +468,7 @@ const CreateJobForm = () => {
                                     </div>
 
                                     {listValues[key].length > 0 && (
-                                        <ul className="mt-3 space-y-2">
+                                        <ul aria-live="polite" className="mt-3 space-y-2">
                                             {listValues[key].map((item, index) => (
                                                 <li
                                                     key={`${item}-${index}`}
@@ -470,6 +477,7 @@ const CreateJobForm = () => {
                                                     <span className="text-sm">{item}</span>
                                                     <button
                                                         type="button"
+                                                        aria-label={`Remove ${item} from ${field.label.toLowerCase()}`}
                                                         onClick={() => removeListItem(key, index)}
                                                         className="text-sm text-red-600 hover:underline"
                                                     >
@@ -488,9 +496,10 @@ const CreateJobForm = () => {
                 <div className="flex justify-end">
                     <button
                         type="submit"
-                        className="rounded-md bg-black px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 transition"
+                        disabled={createJobMutation.isPending}
+                        className="rounded-md bg-black px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 transition disabled:cursor-wait disabled:opacity-70"
                     >
-                        Create Job
+                        {createJobMutation.isPending ? 'Creating job…' : 'Create job'}
                     </button>
                 </div>
             </form>

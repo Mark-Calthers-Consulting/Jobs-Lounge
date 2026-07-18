@@ -14,9 +14,6 @@ import { useState } from "react"
 import { FiMoreVertical } from "react-icons/fi"
 import PaginationControls from "./PaginationControls"
 
-type Status = 'Open' | 'Closed' | 'Draft'
-
-const data = []
 const JobsPageTable = () => {
     const [page, setPage] = useState(1)
     const { data: vacancies, isLoading, isError } = useAdminVacancies(page)
@@ -39,9 +36,7 @@ const JobsPageTable = () => {
         {
             header: 'Date Posted',
             accessorKey: 'createdAt',
-            cell: ({ getValue }: CellContext<any, unknown>) => {
-                const status = getValue() as Status
-
+            cell: ({ getValue }: CellContext<Job, unknown>) => {
                 const date = new Date(getValue() as string)
                 return date.toLocaleDateString('en-NG', {
                     day: 'numeric',
@@ -56,29 +51,36 @@ const JobsPageTable = () => {
             cell: ({ row }: { row: Row<Job> }) => (
                 <div className="relative">
                     <button
+                        type="button"
+                        aria-label={`Actions for ${row.original.title}`}
+                        aria-expanded={openMenuId === row.id}
+                        aria-controls={`job-actions-${row.id}`}
                         className="p-2 rounded hover:bg-gray-100"
                         onClick={() =>
                             setOpenMenuId(openMenuId === row.id ? null : row.id)
                         }
                     >
-                        <FiMoreVertical size={18} />
+                        <FiMoreVertical aria-hidden="true" size={18} />
                     </button>
 
                     {openMenuId === row.id && (
-                        <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded shadow-md z-10">
+                        <div id={`job-actions-${row.id}`} className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded shadow-md z-10">
                             <button
+                                type="button"
                                 className="w-full text-left px-4 py-2 hover:bg-gray-100"
                                 onClick={() => router.push(`/vacancies/${row.original._id}`)}
                             >
                                 View Job
                             </button>
                             <button
+                                type="button"
                                 className="w-full text-left px-4 py-2 hover:bg-gray-100"
                                 onClick={() => alert(`Edit job ${row.original.title}`)}
                             >
                                 Edit Job
                             </button>
                             <button
+                                type="button"
                                 className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
                                 onClick={() => alert(`Delete job ${row.original.title}`)}
                             >
@@ -95,18 +97,19 @@ const JobsPageTable = () => {
         columns,
         getCoreRowModel: getCoreRowModel()
     })
-    if (isLoading) return <div className="p-4">Loading jobs...</div>
-    if (isError) return <div className="p-4 text-red-500">Error loading jobs.</div>
+    if (isLoading) return <p role="status" className="p-4">Loading jobs…</p>
+    if (isError) return <p role="alert" className="p-4 text-red-700">Error loading jobs.</p>
     return (
-        <div className="w-full overflow-hidden border border-gray-200 rounded-lg shadow-sm">
+        <div className="w-full overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
             <table className="w-full text-left border-collapse">
+                <caption className="sr-only">Job listings</caption>
 
                 {/* Table Header */}
                 <thead className="bg-gray-50 border-b border-gray-200">
                     {table.getHeaderGroups().map((headerGroup) => (
                         <tr key={headerGroup.id}>
                             {headerGroup.headers.map((header) => (
-                                <th key={header.id} className="p-4 text-sm font-medium text-gray-500">
+                                <th scope="col" key={header.id} className="p-4 text-sm font-medium text-gray-600">
                                     {/* flexRender puts the 'header' text from your columns array into the HTML */}
                                     {flexRender(
                                         header.column.columnDef.header,
