@@ -10,9 +10,9 @@ type formMode = 'login' | 'register'
 type formValues = {
     email: string,
     password: string,
-    firstName: '',
-    lastName: '',
-    telephone?: string
+    firstName: string,
+    lastName: string,
+    telephone: string
 }
 
 const AuthForm = ({ nextPath }: { nextPath?: string }) => {
@@ -102,11 +102,11 @@ const AuthForm = ({ nextPath }: { nextPath?: string }) => {
                     <form onSubmit={handleSubmit}>
                         <label htmlFor="" className="flex flex-col">
                             Email Address
-                            <input onChange={handleChange} name="email" className="px-4 py-2 my-2 ring-1 ring-gray-200   rounded outline-none" type="email" placeholder="E-mail" />
+                            <input required onChange={handleChange} name="email" className="px-4 py-2 my-2 ring-1 ring-gray-200   rounded outline-none" type="email" placeholder="E-mail" />
                         </label>
                         <label htmlFor="" className="flex flex-col">
                             Password
-                            <input onChange={handleChange} name="password" className="px-4 py-2 my-2 ring-1 ring-gray-200  rounded outline-none" type="password" placeholder="Password" />
+                            <input required onChange={handleChange} name="password" className="px-4 py-2 my-2 ring-1 ring-gray-200  rounded outline-none" type="password" placeholder="Password" />
                         </label>
                         <button type="submit" className="w-full p-3 my-3 rounded cursor-pointer text-white bg-[#003B6D]">SIGN IN</button>
                     </form>
@@ -119,26 +119,26 @@ const AuthForm = ({ nextPath }: { nextPath?: string }) => {
                         <div className="flex gap-2 flex-col lg:flex-row">
                             <div className="flex-1 min-w-0 flex flex-col">
                                 <label htmlFor="">First Name</label>
-                                <input onChange={handleChange} type="text" name="firstName" className="py-2 px-3 my-2 ring-1 ring-gray-200 rounded outline-none" placeholder="First Name" />
+                                <input required onChange={handleChange} type="text" name="firstName" className="py-2 px-3 my-2 ring-1 ring-gray-200 rounded outline-none" placeholder="First Name" />
                             </div>
                             <div className="flex-1 min-w-0 flex flex-col">
                                 <label htmlFor="">Last Name</label>
-                                <input onChange={handleChange} type="text" name="lastName" className="py-2 px-3 my-2 ring-1 ring-gray-200 rounded outline-none" placeholder="Last Name" />
+                                <input required onChange={handleChange} type="text" name="lastName" className="py-2 px-3 my-2 ring-1 ring-gray-200 rounded outline-none" placeholder="Last Name" />
                             </div>
                         </div>
                         <div className="flex flex-col">
                             <label htmlFor="">Phone Number</label>
-                            <input onChange={handleChange} type="text" name="telephone" className="py-2 px-3 my-2 ring-1 ring-gray-200 rounded outline-none" placeholder="Phone Number" />
+                            <input required onChange={handleChange} type="tel" name="telephone" className="py-2 px-3 my-2 ring-1 ring-gray-200 rounded outline-none" placeholder="Phone Number" />
                         </div>
                         <div className="flex flex-col">
                             <label htmlFor="" className="">Email Address</label>
-                            <input onChange={handleChange} className="py-2 px-3 my-2 ring-1 ring-gray-200 rounded outline-none" type="email" name="email" placeholder="E-mail" />
+                            <input required onChange={handleChange} className="py-2 px-3 my-2 ring-1 ring-gray-200 rounded outline-none" type="email" name="email" placeholder="E-mail" />
                         </div>
                         <div className="flex flex-col">
                             <label htmlFor="" className="">
                                 Password
                             </label>
-                            <input onChange={handleChange} className="py-2 px-3 my-2 ring-1 ring-gray-200 rounded outline-none" type="password" name="password" placeholder="Password" />
+                            <input required minLength={6} onChange={handleChange} className="py-2 px-3 my-2 ring-1 ring-gray-200 rounded outline-none" type="password" name="password" placeholder="Password" />
                         </div>
                         <button type="submit" className="w-full p-2 cursor-pointer text-white bg-[#003B6D]">SIGN UP</button>
                     </form>

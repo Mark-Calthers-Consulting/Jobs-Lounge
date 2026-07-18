@@ -1,6 +1,6 @@
 import { editUserDetails, fetchUser, getSavedJobs } from "@/api/users"
 import type { User } from "@/types/types"
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 type Options = {
     enabled?: boolean;
@@ -27,7 +27,9 @@ export const useGetSavedJobs = (options: Options = {}) => {
 }
 
 export const useEditUserDetails = ()=> {
+    const queryClient = useQueryClient()
     return useMutation({
-        mutationFn: editUserDetails
+        mutationFn: editUserDetails,
+        onSuccess: (user) => queryClient.setQueryData(['me'], user),
     })
  }

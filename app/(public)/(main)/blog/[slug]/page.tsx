@@ -1,10 +1,10 @@
-import { BlogPageProps } from '@/types/types'
+import type { ApiSuccess, BlogPageProps, BlogPost } from '@/types/types'
 import { notFound } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import { serverApiUrl } from '@/api/serverBase';
 
 
-const getSingleBlogPost = async (slug: string) => {
+const getSingleBlogPost = async (slug: string): Promise<BlogPost> => {
     const res = await fetch(
         serverApiUrl(`/blog/${encodeURIComponent(slug)}`),
         { cache: 'no-store' }
@@ -18,7 +18,7 @@ const getSingleBlogPost = async (slug: string) => {
         throw new Error('Failed to fetch post')
     }
 
-    const post = await res.json()
+    const post = await res.json() as ApiSuccess<BlogPost>
     return post.data
 }
 

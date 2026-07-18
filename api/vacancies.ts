@@ -1,12 +1,13 @@
 import { csrfFetch } from "./csrf"
 import { apiPath } from "./base"
+import type { ApiSuccess, Job, PaginatedResponse, SavedJobMutation } from '@/types/types'
 
 export const fetchVacancies = async (
     searchTerm: string,
     page = 1,
     limit = 20,
     signal?: AbortSignal,
-) => {
+): Promise<PaginatedResponse<Job>> => {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) })
 
     if (searchTerm) {
@@ -21,10 +22,10 @@ export const fetchVacancies = async (
     if (!res.ok) {
         throw new Error("Failed to fetch vacancies")
     }
-    return res.json()
+    return res.json() as Promise<PaginatedResponse<Job>>
 }
 
-export const saveJob = async (jobId: string) => {
+export const saveJob = async (jobId: string): Promise<SavedJobMutation> => {
     const res = await csrfFetch(apiPath(`/users/me/${encodeURIComponent(jobId)}/save`), {
         method: 'POST',
         credentials: 'include',
@@ -35,11 +36,11 @@ export const saveJob = async (jobId: string) => {
         throw new Error("Failed to save job")
     }
 
-    const result = await res.json()
+    const result = await res.json() as ApiSuccess<SavedJobMutation>
     return result.data
 }
 
-export const unsaveJob = async (jobId: string) => {
+export const unsaveJob = async (jobId: string): Promise<SavedJobMutation> => {
     const res = await csrfFetch(apiPath(`/users/me/${encodeURIComponent(jobId)}/save`), {
         method: 'DELETE',
         credentials: 'include',
@@ -50,28 +51,28 @@ export const unsaveJob = async (jobId: string) => {
         throw new Error("Failed to save job")
     }
 
-    const result = await res.json()
+    const result = await res.json() as ApiSuccess<SavedJobMutation>
     return result.data
 }
 
-export const checkApplicationStatus = async (jobId: string) => {
+export const checkApplicationStatus = async (jobId: string): Promise<boolean> => {
     const res = await fetch(apiPath(`/jobs/${encodeURIComponent(jobId)}/application-status`), {
         credentials: 'include',
     })
     if (!res.ok) {
         throw new Error("Failed to check application status")
     }
-    const vacancies = await res.json()
+    const vacancies = await res.json() as ApiSuccess<boolean>
     return vacancies.data
 }
 
-export const getRecommendedJobs = async () => {
+export const getRecommendedJobs = async (): Promise<Job[]> => {
     const res = await fetch(apiPath('/jobs/recommended'), {
         credentials: 'include',
     })
     if (!res.ok) {
         throw new Error("Failed to get recommended jobs")
     }
-    const recommended = await res.json()
+    const recommended = await res.json() as ApiSuccess<Job[]>
     return recommended.data
 }

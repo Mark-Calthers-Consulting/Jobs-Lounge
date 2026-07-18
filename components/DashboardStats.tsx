@@ -1,19 +1,15 @@
 'use client'
-import { useAdminDashboard, useAdminUsers, useAdminVacancies } from "@/hooks/useAdmin"
-import { useRouter } from "next/navigation"
+import { useAdminDashboard } from "@/hooks/useAdmin"
 import { BsGraphUpArrow } from "react-icons/bs"
 import { FaWpforms } from "react-icons/fa"
 import { HiOutlineUsers } from "react-icons/hi"
 import { PiSuitcase } from "react-icons/pi"
 
 const DashboardStats = () => {
-    const router = useRouter()
-    const { data: dashboardStats, isLoading, error, isError } = useAdminDashboard()
-    // if (!dashboardStats) {
-    //     router.replace('/auth')
-    // }
+    const { data: dashboardStats, isLoading, isError } = useAdminDashboard()
 
     if (isLoading) return <p>Loading...</p>
+    if (isError || !dashboardStats) return <p>Unable to load dashboard statistics.</p>
     return (
         <section className='gap-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 my-5'>
             <>

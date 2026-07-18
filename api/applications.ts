@@ -1,8 +1,18 @@
-import { ApplicationStatus, applyPayload } from "@/types/types"
+import type { ApplicationStatus } from "@/constants/enums"
+import type {
+    ApiSuccess,
+    ApplicationRecord,
+    ApplyPayload,
+    Job,
+    JobApplication,
+    JobApplicationsResponse,
+    PaginatedResponse,
+} from "@/types/types"
+import type { JobFormType } from "@/schemas/jobSchema"
 import { csrfFetch } from "./csrf"
 import { apiPath } from "./base"
 
-export const createJob = async (job: Record<string, unknown>) => {
+export const createJob = async (job: JobFormType): Promise<Job> => {
     const res = await csrfFetch(apiPath('/jobs'), {
         method: 'POST',
         headers: {
@@ -12,7 +22,7 @@ export const createJob = async (job: Record<string, unknown>) => {
         body: JSON.stringify(job)
     })
 
-    const result = await res.json()
+    const result = await res.json() as ApiSuccess<Job> & { message?: string }
 
     if (!res.ok) {
         throw new Error(result.message || 'Request failed');
@@ -21,7 +31,7 @@ export const createJob = async (job: Record<string, unknown>) => {
     return result.data
 }
 
-export const applyToJob = async (data: applyPayload) => {
+export const applyToJob = async (data: ApplyPayload): Promise<ApplicationRecord> => {
     const res = await csrfFetch(apiPath(`/applications/${encodeURIComponent(data.jobId)}`), {
         method: 'POST',
         headers: {
@@ -31,7 +41,7 @@ export const applyToJob = async (data: applyPayload) => {
         body: JSON.stringify(data)
     })
 
-    const result = await res.json()
+    const result = await res.json() as ApiSuccess<ApplicationRecord> & { message?: string }
 
     if (!res.ok) {
         throw new Error(result.message || 'Request failed');
@@ -40,14 +50,14 @@ export const applyToJob = async (data: applyPayload) => {
     return result.data
 }
 
-export const getMyApplications = async ({ page = 1, limit = 20 } = {}) => {
+export const getMyApplications = async ({ page = 1, limit = 20 } = {}): Promise<PaginatedResponse<JobApplication>> => {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) })
     const res = await fetch(`${apiPath('/applications/me')}?${params}`, {
         method: 'GET',
         credentials: 'include',
     })
 
-    const result = await res.json()
+    const result = await res.json() as PaginatedResponse<JobApplication> & { message?: string }
 
     if (!res.ok) {
         throw new Error(result.message || 'Request failed');
@@ -56,13 +66,13 @@ export const getMyApplications = async ({ page = 1, limit = 20 } = {}) => {
     return result
 }
 
-export const cancelApplication = async (applicationId: string) => {
+export const cancelApplication = async (applicationId: string): Promise<{ applicationId: string }> => {
     const res = await csrfFetch(apiPath(`/applications/${encodeURIComponent(applicationId)}`), {
         method: 'DELETE',
         credentials: 'include',
     })
 
-    const result = await res.json()
+    const result = await res.json() as ApiSuccess<{ applicationId: string }> & { message?: string }
 
     if (!res.ok) {
         throw new Error(result.message || 'Request failed');
@@ -85,7 +95,7 @@ export const getAllJobApplications = async ({
     page = 1,
     limit = 20,
     status,
-}: GetJobApplicationsOptions) => {
+}: GetJobApplicationsOptions): Promise<JobApplicationsResponse> => {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) })
     if (status) params.set('status', status)
 
@@ -94,7 +104,7 @@ export const getAllJobApplications = async ({
         credentials: 'include',
     })
 
-    const result = await res.json()
+    const result = await res.json() as JobApplicationsResponse & { message?: string }
 
     if (!res.ok) {
         throw new Error(result.message || 'Request failed');
@@ -109,7 +119,7 @@ export const updateApplicationStatus = async ({
 }: {
     applicationId: string
     status: ApplicationStatus
-}) => {
+}): Promise<ApplicationRecord> => {
     const res = await csrfFetch(apiPath(`/applications/admin/${encodeURIComponent(applicationId)}`), {
         method: 'PATCH',
         headers: {
@@ -119,7 +129,7 @@ export const updateApplicationStatus = async ({
         body: JSON.stringify({ status })
     })
 
-    const result = await res.json()
+    const result = await res.json() as ApiSuccess<ApplicationRecord> & { message?: string }
 
     if (!res.ok) {
         throw new Error(result.message || 'Request failed');

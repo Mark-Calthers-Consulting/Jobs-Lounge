@@ -9,8 +9,6 @@ import { toast } from "sonner"
 type formValues = {
     email: string,
     password: string,
-    name?: string,
-    phoneNumber?: string
 }
 
 const AdminAuthForm = ({ nextPath }: { nextPath?: string }) => {

@@ -5,7 +5,7 @@ export const useLogin = () => {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: loginUser,
-        onSuccess: (user) => queryClient.setQueryData(['me'], user),
+        onSuccess: () => queryClient.removeQueries({ queryKey: ['me'] }),
     })
 }
 
@@ -24,6 +24,6 @@ export const useRegister = () => {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: registerUser,
-        onSuccess: (user) => queryClient.setQueryData(['me'], { ...user, role: 'user' }),
+        onSuccess: () => queryClient.removeQueries({ queryKey: ['me'] }),
     })
 }

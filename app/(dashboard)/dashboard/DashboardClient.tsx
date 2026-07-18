@@ -93,7 +93,12 @@ const DashboardClient: React.FC = () => {
                             <h1 className='font-bold'>{rec.title}</h1>
                             <p className='text-[#797979] text-sm font-semibold'>{rec.company.name}</p>
                             <p className='flex items-center text-sm text-[#797979]'> <IoLocationOutline className='mr-2' />{rec.workMode}</p>
-                            <p className='flex items-center text-sm text-[#797979]'><CiMoneyBill className='mr-2' />{rec.salary.min} - {rec.salary.max}</p>
+                            <p className='flex items-center text-sm text-[#797979]'>
+                                <CiMoneyBill className='mr-2' />
+                                {rec.salary?.min !== undefined || rec.salary?.max !== undefined
+                                    ? `${rec.salary?.min ?? '—'} - ${rec.salary?.max ?? '—'}`
+                                    : 'Salary not disclosed'}
+                            </p>
                             <Link href={`/vacancies/${rec._id}`}>
                                 <button className='bg-[#184aa2] cursor-pointer hover:bg-[#496698] text-white text-sm px-3 py-2 rounded-sm'>View Details</button>
                             </Link>

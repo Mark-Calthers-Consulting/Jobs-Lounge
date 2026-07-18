@@ -1,6 +1,8 @@
 'use client';
 
 import { useCreatejob } from '@/hooks/useApplications';
+import { JOB_ENUMS } from '@/constants/enums';
+import { jobFormSchema } from '@/schemas/jobSchema';
 import { ChangeEvent, FormEvent, KeyboardEvent, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -25,46 +27,10 @@ type JobFormData = {
 type ListInputs = Record<ListFieldKey, string>;
 type ListValues = Record<ListFieldKey, string[]>;
 
-const categoryOptions = [
-    'FMCG',
-    'Manufacturing & Production',
-    'Oil, Gas & Energy',
-    'Banking, Finance & Insurance',
-    'Technology & ICT',
-    'Legal, Compliance & Audit',
-    'Real Estate & Construction',
-    'Consulting & Strategy',
-    'Supply Chain, Procurement & Logistics',
-    'Human Resources & Admin',
-    'Sales, Marketing & Retail',
-    'Customer Service & Support',
-    'Healthcare & Pharmaceuticals',
-    'Hospitality, Travel & Tourism',
-    'Education & Training',
-    'Engineering (Non-IT)',
-    'NGO & Non-Profit',
-    'Other',
-];
-
-const workModeOptions = ['On-site', 'Hybrid', 'Remote'];
-
-const jobTypeOptions = [
-    'Full-time',
-    'Part-time',
-    'Contract',
-    'Temporary',
-    'Internship',
-];
-
-const levelOptions = [
-    'Entry',
-    'Junior',
-    'Mid',
-    'Senior',
-    'Lead',
-    'Manager',
-    'Executive',
-];
+const categoryOptions = JOB_ENUMS.category;
+const workModeOptions = JOB_ENUMS.workMode;
+const jobTypeOptions = JOB_ENUMS.jobType;
+const levelOptions = JOB_ENUMS.level;
 
 const listFieldMeta: Record<
     ListFieldKey,
@@ -180,12 +146,12 @@ const CreateJobForm = () => {
 
         try {
             // Transform the flat form state into the schema's nested structure
-            const payload = {
+            const validation = jobFormSchema.safeParse({
                 title: formData.jobTitle,
                 description: formData.jobDescription,
                 company: {
                     name: formData.companyName,
-                    website: formData.companyWebsite,
+                    website: formData.companyWebsite || undefined,
                     // logo: "" // Add this if you implement image uploads later
                 },
                 category: formData.category,
@@ -204,14 +170,23 @@ const CreateJobForm = () => {
                 benefits: listValues.benefits,
                 requirements: listValues.requirements,
                 skills: listValues.skills,
-            };
+            });
 
-            await createJobMutation.mutateAsync(payload);
+            if (!validation.success) {
+                toast.error(validation.error.issues[0]?.message || 'Job data is invalid');
+                return;
+            }
+
+            await createJobMutation.mutateAsync(validation.data);
             toast.success("Job created successfully!");
 
             // Optional: Reset form here
-        } catch (error: any) {
-            toast.error(error?.response?.data?.message || "Could not create job");
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                toast.error(error.message || "Could not create job");
+                return;
+            }
+            toast.error("Could not create job");
         }
     };
 

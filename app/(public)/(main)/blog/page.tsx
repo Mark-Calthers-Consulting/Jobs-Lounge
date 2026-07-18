@@ -1,8 +1,6 @@
 'use client'
 import { useGetBlogPosts } from "@/hooks/useBlog";
 import Link from "next/link";
-import { IoLocation } from "react-icons/io5";
-import { IoMail } from "react-icons/io5";
 import { useState } from "react";
 import PaginationControls from "@/components/PaginationControls";
 
@@ -13,9 +11,8 @@ const Blog: React.FC = () => {
         <div className="max-w-7xl mx-auto">
             <h1>Blog Posts</h1>
 
-            {/* #TODO change type from any */}
             <div className="flex flex-col gap-3 py-5">
-                {data?.data.map((post: any) => (
+                {data?.data.map((post) => (
                     <div key={post._id} className="p-3 rounded border shadow border-[#e9e9e9] space-y-3">
                         <h2 className="font-semibold text-xl">{post.title}</h2>
                         <p className="text-sm text-[#797979]">{post.content.slice(0, 100)}...</p>
