@@ -1,48 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Jobs Lounge frontend
 
-## Getting Started
+Next.js application for public vacancies, candidate accounts, applications, and the administration centre. Browser API requests use a same-origin gateway at `/api/backend/*`; Next.js forwards those requests to the separately deployed Express API.
 
-First, run the development server:
+## Requirements
 
-```bash
+- Node.js 20 LTS or later
+- npm
+- A running Jobs Lounge backend
+
+## Local setup
+
+```sh
+npm ci
+cp .env.example .env.development
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Set `API_ORIGIN=http://localhost:5000` in `.env.development`, then open `http://localhost:3000`.
 
-Copy `.env.example` to `.env.development` and set `API_ORIGIN` to the backend origin.
-Browser requests use the same-origin `/api/backend/*` gateway; do not expose the API origin
-through a `NEXT_PUBLIC_*` variable. Builds fail when `API_ORIGIN` is missing so a deployment
-cannot silently target an obsolete backend.
+## Environment variables
 
-For production, set `API_ORIGIN` to the cPanel API origin without the `/api` suffix, for example:
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `API_ORIGIN` | Yes | Server-only backend origin without `/api`. Used by rewrites and Server Components. |
+| `NEXT_PUBLIC_ORIGIN` | Yes in production | Canonical frontend origin used for share links. |
+| `NEXT_PUBLIC_GA_ID` | No | Google Analytics measurement ID. |
 
-```dotenv
-API_ORIGIN=https://jobsapi.example.com
-NEXT_PUBLIC_ORIGIN=https://jobs.example.com
+Never replace `API_ORIGIN` with a `NEXT_PUBLIC_*` variable; backend topology and credentials must remain server-side.
+
+## Commands
+
+```sh
+npm run dev      # local development server
+npm run lint     # ESLint and accessibility rules
+npm run build    # production compile, type-check, and route generation
+npm run start    # run the compiled Next.js server
 ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+There is currently no frontend unit-test runner. Treat both `lint` and `build` as required pre-deployment checks.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Route groups
 
-## Learn More
+- `/`, `/vacancies`, `/vacancies/[jobId]`, `/blog`, `/contact`: public pages
+- `/auth`: candidate authentication
+- `/dashboard/*`: authenticated candidate area
+- `/admin-center/login`: administrator authentication
+- `/admin-center/*`: administrator-only area
+- `/api/backend/*`: same-origin proxy to the Express `/api/*` routes
 
-To learn more about Next.js, take a look at the following resources:
+Route protection is enforced in the dashboard/admin layouts and again by the backend authorization middleware. Frontend checks improve navigation but are not a security boundary.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Architecture
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Next.js App Router provides server-rendered public pages and client-side dashboard workflows.
+- TanStack Query owns remote server state and invalidation.
+- React Hook Form/Zod provide form handling and shared client validation where applicable.
+- Authentication uses the backend’s secure, HTTP-only cookie. Unsafe browser requests obtain and send a signed CSRF token through `csrfFetch`.
+- `next.config.ts` defines the backend gateway, security headers, CSP, and private-page cache controls.
 
-## Deploy on Vercel
+Backend architecture, API contracts, deployment steps, and incident procedures live in the backend repository documentation.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Production deployment
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Set `API_ORIGIN` to the cPanel API origin, for example `https://jobsapi.example.com`.
+2. Set `NEXT_PUBLIC_ORIGIN` to the public frontend origin.
+3. Run `npm ci`, `npm run lint`, and `npm run build`.
+4. Deploy the build and start it with `npm run start` using the hosting platform’s Node process manager.
+5. Confirm `/api/backend/health/ready` returns HTTP 200 through the frontend origin.
+
+Do not point production at Render or another legacy API origin.

@@ -29,7 +29,7 @@ const JobPage = async ({ params }: JobPageProps) => {
     const job = await getSingleJob(jobId)
 
     const baseUrl = process.env.NEXT_PUBLIC_ORIGIN || 'http://localhost:3000';
-    const currentUrl = `${baseUrl}/jobs/${jobId}`;
+    const currentUrl = `${baseUrl}/vacancies/${jobId}`;
     const encodedUrl = encodeURIComponent(currentUrl);
 
     return (
