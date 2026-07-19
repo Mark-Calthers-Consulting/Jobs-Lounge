@@ -26,10 +26,11 @@ export const useUnsaveJob = () => {
     })
 }
 
-export const useCheckApplicationStatus = (jobId: string) => {
+export const useCheckApplicationStatus = (jobId: string, enabled = true) => {
     return useQuery({
         queryKey: ["application-status", jobId],
-        queryFn: () => checkApplicationStatus(jobId)
+        queryFn: () => checkApplicationStatus(jobId),
+        enabled,
     })
 }
 

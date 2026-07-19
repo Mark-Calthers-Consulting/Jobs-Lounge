@@ -1,9 +1,12 @@
 'use client';
 
 import { useCreatejob } from '@/hooks/useApplications';
+import { useUpdateAdminJob } from '@/hooks/useAdmin'
 import { JOB_ENUMS } from '@/constants/enums';
 import { jobFormSchema } from '@/schemas/jobSchema';
+import type { Job } from '@/types/types'
 import { ChangeEvent, FormEvent, KeyboardEvent, useState } from 'react';
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner';
 
 type ListFieldKey = 'benefits' | 'responsibilities' | 'requirements' | 'skills';
@@ -22,6 +25,8 @@ type JobFormData = {
     maxSalary: string;
     yearsOfExperience: string;
     deadline: string;
+    applyLink: string;
+    status: string;
 };
 
 type ListInputs = Record<ListFieldKey, string>;
@@ -31,6 +36,7 @@ const categoryOptions = JOB_ENUMS.category;
 const workModeOptions = JOB_ENUMS.workMode;
 const jobTypeOptions = JOB_ENUMS.jobType;
 const levelOptions = JOB_ENUMS.level;
+const statusOptions = ['Draft', 'Open', 'Closed'] as const
 
 const listFieldMeta: Record<
     ListFieldKey,
@@ -58,21 +64,24 @@ const inputClassName =
     'w-full rounded-md border border-gray-300 px-4 py-2 transition focus:border-black';
 const labelClassName = 'mb-1 text-sm font-medium text-gray-800';
 
-const CreateJobForm = () => {
+const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
+    const router = useRouter()
     const [formData, setFormData] = useState<JobFormData>({
-        jobTitle: '',
-        jobDescription: '',
-        companyName: '',
-        companyWebsite: '',
-        category: '',
-        jobLocation: '',
-        workMode: '',
-        jobType: '',
-        level: '',
-        minSalary: '',
-        maxSalary: '',
-        yearsOfExperience: '',
-        deadline: '',
+        jobTitle: initialJob?.title ?? '',
+        jobDescription: initialJob?.description ?? '',
+        companyName: initialJob?.company.name ?? '',
+        companyWebsite: initialJob?.company.website ?? '',
+        category: initialJob?.category ?? '',
+        jobLocation: initialJob?.location ?? '',
+        workMode: initialJob?.workMode ?? '',
+        jobType: initialJob?.jobType ?? '',
+        level: initialJob?.level ?? '',
+        minSalary: initialJob?.salary?.min?.toString() ?? '',
+        maxSalary: initialJob?.salary?.max?.toString() ?? '',
+        yearsOfExperience: initialJob?.experience?.toString() ?? '',
+        deadline: initialJob?.deadline ? initialJob.deadline.slice(0, 10) : '',
+        applyLink: initialJob?.applyLink ?? '',
+        status: initialJob?.status ?? 'Open',
     });
 
     const [listInputs, setListInputs] = useState<ListInputs>({
@@ -83,12 +92,14 @@ const CreateJobForm = () => {
     });
 
     const createJobMutation = useCreatejob()
+    const updateJobMutation = useUpdateAdminJob()
+    const activeMutation = initialJob ? updateJobMutation : createJobMutation
 
     const [listValues, setListValues] = useState<ListValues>({
-        benefits: [],
-        responsibilities: [],
-        requirements: [],
-        skills: [],
+        benefits: initialJob?.benefits ?? [],
+        responsibilities: initialJob?.responsibilities ?? [],
+        requirements: initialJob?.requirements ?? [],
+        skills: initialJob?.skills ?? [],
     });
 
     const handleFieldChange = (
@@ -152,7 +163,7 @@ const CreateJobForm = () => {
                 company: {
                     name: formData.companyName,
                     website: formData.companyWebsite || undefined,
-                    // logo: "" // Add this if you implement image uploads later
+                    logo: initialJob?.company.logo,
                 },
                 category: formData.category,
                 location: formData.jobLocation,
@@ -166,6 +177,8 @@ const CreateJobForm = () => {
                 },
                 experience: Number(formData.yearsOfExperience),
                 deadline: formData.deadline ? new Date(formData.deadline).toISOString() : undefined,
+                applyLink: formData.applyLink || undefined,
+                status: formData.status,
                 responsibilities: listValues.responsibilities,
                 benefits: listValues.benefits,
                 requirements: listValues.requirements,
@@ -177,29 +190,33 @@ const CreateJobForm = () => {
                 return;
             }
 
-            await createJobMutation.mutateAsync(validation.data);
-            toast.success("Job created successfully!");
-
-            // Optional: Reset form here
+            if (initialJob) {
+                await updateJobMutation.mutateAsync({ jobId: initialJob._id, data: validation.data })
+                toast.success('Job updated successfully')
+            } else {
+                await createJobMutation.mutateAsync(validation.data)
+                toast.success('Job created successfully')
+            }
+            router.push('/admin-center/jobs')
         } catch (error: unknown) {
             if (error instanceof Error) {
-                toast.error(error.message || "Could not create job");
+                toast.error(error.message || 'Could not save job');
                 return;
             }
-            toast.error("Could not create job");
+            toast.error('Could not save job');
         }
     };
 
     return (
         <section className="w-full max-w-4xl mx-auto px-4 py-6">
             <div className="mb-6">
-                <h1 className="text-2xl font-bold">Create Job</h1>
+                <h1 className="text-2xl font-bold">{initialJob ? 'Edit Job' : 'Create Job'}</h1>
                 <p className="text-sm text-gray-600">
-                    Fill in the details below to create a new job listing.
+                    {initialJob ? 'Update the listing details below.' : 'Fill in the details below to create a new job listing.'}
                 </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-8" aria-busy={createJobMutation.isPending}>
+            <form onSubmit={handleSubmit} className="space-y-8" aria-busy={activeMutation.isPending}>
                 <div className="rounded-xl border border-gray-200 p-4 md:p-6">
                     <h2 className="mb-4 text-lg font-semibold">Job Overview</h2>
 
@@ -249,6 +266,18 @@ const CreateJobForm = () => {
                                 placeholder="e.g. Acme Inc."
                                 required
                             />
+                        </div>
+
+                        <div className="flex flex-col">
+                            <label htmlFor="applyLink" className={labelClassName}>External apply link</label>
+                            <input className={inputClassName} type="url" id="applyLink" name="applyLink" value={formData.applyLink} onChange={handleFieldChange} placeholder="https://example.com/apply" />
+                        </div>
+
+                        <div className="flex flex-col">
+                            <label htmlFor="status" className={labelClassName}>Status</label>
+                            <select id="status" name="status" value={formData.status} onChange={handleFieldChange} className={inputClassName}>
+                                {statusOptions.map((status) => <option key={status} value={status}>{status}</option>)}
+                            </select>
                         </div>
 
                         <div className="flex flex-col">
@@ -496,10 +525,10 @@ const CreateJobForm = () => {
                 <div className="flex justify-end">
                     <button
                         type="submit"
-                        disabled={createJobMutation.isPending}
+                        disabled={activeMutation.isPending}
                         className="rounded-md bg-black px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 transition disabled:cursor-wait disabled:opacity-70"
                     >
-                        {createJobMutation.isPending ? 'Creating job…' : 'Create job'}
+                        {activeMutation.isPending ? 'Saving…' : initialJob ? 'Save changes' : 'Create job'}
                     </button>
                 </div>
             </form>

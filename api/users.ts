@@ -1,6 +1,6 @@
 import { csrfFetch } from "./csrf"
 import { apiPath } from "./base"
-import type { ApiSuccess, PaginatedResponse, Job, User, UserUpdatePayload } from '@/types/types'
+import type { ApiSuccess, NotificationPreferences, PaginatedResponse, Job, User, UserUpdatePayload } from '@/types/types'
 import { readApiResponse } from './errors'
 
 export const fetchUser = async (): Promise<User | null> => {
@@ -45,5 +45,20 @@ export const editUserDetails = async (data: UserUpdatePayload): Promise<User | n
 
     const result = await readApiResponse<ApiSuccess<User>>(res, 'Unable to update profile')
 
+    return result.data
+}
+
+export const updateNotificationPreferences = async (
+    data: Partial<NotificationPreferences>,
+): Promise<NotificationPreferences> => {
+    const res = await csrfFetch(apiPath('/users/me/notification-preferences'), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    })
+    const result = await readApiResponse<ApiSuccess<NotificationPreferences>>(
+        res,
+        'Unable to update notification preferences',
+    )
     return result.data
 }

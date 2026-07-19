@@ -78,6 +78,7 @@ export type User = {
   postNyscExperience?: number
   cvLink?: string
   coverLetterLink?: string
+  notificationPreferences?: NotificationPreferences
   createdAt: string
   updatedAt: string
 }
@@ -124,6 +125,14 @@ export type BlogPageProps = {
 
 export type ApplyPayload = {
   jobId: string
+  cvLink: string
+  coverLetterLink?: string
+  note?: string
+}
+
+export type NotificationPreferences = {
+  jobAlerts: boolean
+  newsletter: boolean
 }
 
 export type ApplicationRecord = {
@@ -131,6 +140,9 @@ export type ApplicationRecord = {
   job: string | Partial<Pick<Job, '_id' | 'title' | 'company'>>
   applicant: string | Partial<Pick<User, '_id' | 'name' | 'firstName' | 'lastName' | 'email'>>
   status: ApplicationStatus
+  cvLink: string
+  coverLetterLink?: string
+  note?: string
   createdAt: string
   updatedAt: string
 }
@@ -140,6 +152,9 @@ export type JobApplication = {
   job: Pick<Job, '_id' | 'title' | 'company' | 'location' | 'workMode' | 'jobType' | 'status' | 'deadline'> | null
   applicant?: Pick<User, '_id' | 'name' | 'firstName' | 'middleName' | 'lastName' | 'email' | 'telephone' | 'cvLink' | 'coverLetterLink'> | null
   status: ApplicationStatus
+  cvLink?: string
+  coverLetterLink?: string
+  note?: string
   createdAt: string
   updatedAt: string
 }
@@ -176,10 +191,14 @@ export type AdminApplication = {
   applicantId: string
   name: string
   email: string
+  telephone?: string
   jobId: string
   title: string
   createdAt: string
   status: ApplicationStatus
+  cvLink?: string
+  coverLetterLink?: string
+  note?: string
 }
 
 export type DashboardStats = {

@@ -1,6 +1,6 @@
-import { fetchAdminDashboard, fetchAdminJobs, fetchAllApplications, fetchAllUsers, fetchJobCandidates, fetchTeamMembers } from "@/api/admin"
+import { deleteAdminJob, fetchAdminDashboard, fetchAdminJob, fetchAdminJobs, fetchAllApplications, fetchAllUsers, fetchJobCandidates, fetchTeamMembers, updateAdminJob } from "@/api/admin"
 import { AdminApplication, Job, PaginatedResponse, User } from "@/types/types"
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 
 export const useAdminDashboard = () => {
@@ -42,5 +42,34 @@ export const useAdminApplications = (page = 1, limit = 20) => {
     return useQuery<PaginatedResponse<AdminApplication>>({
         queryKey:['adminApplications', page, limit],
         queryFn: () => fetchAllApplications(page, limit)
+    })
+}
+
+export const useAdminJob = (jobId: string) => useQuery({
+    queryKey: ['adminJob', jobId],
+    queryFn: () => fetchAdminJob(jobId),
+    enabled: Boolean(jobId),
+})
+
+export const useUpdateAdminJob = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: updateAdminJob,
+        onSuccess: (job) => {
+            queryClient.setQueryData(['adminJob', job._id], job)
+            queryClient.invalidateQueries({ queryKey: ['adminVacancies'] })
+            queryClient.invalidateQueries({ queryKey: ['adminDashboard'] })
+        },
+    })
+}
+
+export const useDeleteAdminJob = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: deleteAdminJob,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['adminVacancies'] })
+            queryClient.invalidateQueries({ queryKey: ['adminDashboard'] })
+        },
     })
 }

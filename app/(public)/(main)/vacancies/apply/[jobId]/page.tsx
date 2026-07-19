@@ -2,6 +2,7 @@ import type { ApiSuccess, Job, JobPageProps } from '../../../../../../types/type
 import { notFound } from 'next/navigation'
 import { serverApiUrl } from '@/api/serverBase'
 import { readApiResponse } from '@/api/errors'
+import ApplicationForm from './ApplicationForm'
 
 const getSingleJob = async (id: string): Promise<Job> => {
     const res = await fetch(
@@ -21,8 +22,10 @@ const ApplicationPage = async ({ params }: JobPageProps) => {
     const { jobId } = await params
     const job = await getSingleJob(jobId)
     return (
-        <div>
-            <h1>Application for {job.title} </h1>
+        <div className="mx-auto max-w-3xl px-6 py-12">
+            <h1 className="mb-2 text-3xl font-bold">Application for {job.title}</h1>
+            <p className="mb-8 text-gray-600">Review your application details before submitting.</p>
+            <ApplicationForm jobId={jobId} jobTitle={job.title} />
         </div>
     )
 }
