@@ -60,6 +60,8 @@ Route protection is enforced in the dashboard/admin layouts and again by the bac
 
 Backend architecture, API contracts, deployment steps, and incident procedures live in the backend repository documentation.
 
+Deferred frontend product and design work is tracked in [BACKLOG.md](./BACKLOG.md).
+
 ## Production deployment
 
 1. Set `API_ORIGIN` to the cPanel API origin, for example `https://jobsapi.example.com`.

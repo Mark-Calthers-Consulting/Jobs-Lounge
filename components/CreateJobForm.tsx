@@ -64,6 +64,14 @@ const inputClassName =
     'w-full rounded-md border border-gray-300 px-4 py-2 transition focus:border-black';
 const labelClassName = 'mb-1 text-sm font-medium text-gray-800';
 
+const RequiredLabel = ({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) => (
+    <label htmlFor={htmlFor} className={labelClassName}>
+        {children} <span aria-hidden="true" className="text-red-600">*</span>
+    </label>
+)
+
+const deadlineAtEndOfDay = (date: string) => new Date(`${date}T23:59:59.999`).toISOString()
+
 const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
     const router = useRouter()
     const [formData, setFormData] = useState<JobFormData>({
@@ -83,6 +91,7 @@ const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
         applyLink: initialJob?.applyLink ?? '',
         status: initialJob?.status ?? 'Open',
     });
+    const [hasNoDeadline, setHasNoDeadline] = useState(!initialJob?.deadline)
 
     const [listInputs, setListInputs] = useState<ListInputs>({
         benefits: '',
@@ -119,6 +128,14 @@ const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
             [key]: value,
         }));
     };
+
+    const handleDeadlineModeChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const noDeadline = e.target.checked
+        setHasNoDeadline(noDeadline)
+        if (noDeadline) {
+            setFormData((previous) => ({ ...previous, deadline: '' }))
+        }
+    }
 
     const addListItem = (key: ListFieldKey) => {
         const trimmedValue = listInputs[key].trim();
@@ -176,7 +193,9 @@ const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
                     currency: "NGN",
                 },
                 experience: Number(formData.yearsOfExperience),
-                deadline: formData.deadline ? new Date(formData.deadline).toISOString() : undefined,
+                deadline: hasNoDeadline || !formData.deadline
+                    ? undefined
+                    : deadlineAtEndOfDay(formData.deadline),
                 applyLink: formData.applyLink || undefined,
                 status: formData.status,
                 responsibilities: listValues.responsibilities,
@@ -214,6 +233,9 @@ const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
                 <p className="text-sm text-gray-600">
                     {initialJob ? 'Update the listing details below.' : 'Fill in the details below to create a new job listing.'}
                 </p>
+                <p className="mt-2 text-xs text-gray-600">
+                    Fields marked with <span aria-hidden="true" className="font-semibold text-red-600">*</span> are required.
+                </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-8" aria-busy={activeMutation.isPending}>
@@ -222,9 +244,9 @@ const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
 
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div className="flex flex-col md:col-span-2">
-                            <label htmlFor="jobTitle" className={labelClassName}>
+                            <RequiredLabel htmlFor="jobTitle">
                                 Job Title
-                            </label>
+                            </RequiredLabel>
                             <input
                                 className={inputClassName}
                                 type="text"
@@ -238,9 +260,9 @@ const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
                         </div>
 
                         <div className="flex flex-col md:col-span-2">
-                            <label htmlFor="jobDescription" className={labelClassName}>
+                            <RequiredLabel htmlFor="jobDescription">
                                 Description
-                            </label>
+                            </RequiredLabel>
                             <textarea
                                 className={`${inputClassName} min-h-[120px]`}
                                 id="jobDescription"
@@ -253,9 +275,9 @@ const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
                         </div>
 
                         <div className="flex flex-col">
-                            <label htmlFor="companyName" className={labelClassName}>
+                            <RequiredLabel htmlFor="companyName">
                                 Company Name
-                            </label>
+                            </RequiredLabel>
                             <input
                                 className={inputClassName}
                                 type="text"
@@ -296,9 +318,9 @@ const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
                         </div>
 
                         <div className="flex flex-col">
-                            <label htmlFor="category" className={labelClassName}>
+                            <RequiredLabel htmlFor="category">
                                 Category
-                            </label>
+                            </RequiredLabel>
                             <select
                                 id="category"
                                 name="category"
@@ -317,9 +339,9 @@ const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
                         </div>
 
                         <div className="flex flex-col">
-                            <label htmlFor="jobLocation" className={labelClassName}>
+                            <RequiredLabel htmlFor="jobLocation">
                                 Job Location
-                            </label>
+                            </RequiredLabel>
                             <input
                                 className={inputClassName}
                                 type="text"
@@ -333,9 +355,9 @@ const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
                         </div>
 
                         <div className="flex flex-col">
-                            <label htmlFor="workMode" className={labelClassName}>
+                            <RequiredLabel htmlFor="workMode">
                                 Work Mode
-                            </label>
+                            </RequiredLabel>
                             <select
                                 id="workMode"
                                 name="workMode"
@@ -354,9 +376,9 @@ const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
                         </div>
 
                         <div className="flex flex-col">
-                            <label htmlFor="jobType" className={labelClassName}>
+                            <RequiredLabel htmlFor="jobType">
                                 Job Type
-                            </label>
+                            </RequiredLabel>
                             <select
                                 id="jobType"
                                 name="jobType"
@@ -375,9 +397,9 @@ const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
                         </div>
 
                         <div className="flex flex-col">
-                            <label htmlFor="level" className={labelClassName}>
+                            <RequiredLabel htmlFor="level">
                                 Job Level
-                            </label>
+                            </RequiredLabel>
                             <select
                                 id="level"
                                 name="level"
@@ -428,9 +450,9 @@ const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
                         </div>
 
                         <div className="flex flex-col">
-                            <label htmlFor="yearsOfExperience" className={labelClassName}>
+                            <RequiredLabel htmlFor="yearsOfExperience">
                                 Years of Experience
-                            </label>
+                            </RequiredLabel>
                             <input
                                 className={inputClassName}
                                 type="number"
@@ -446,16 +468,33 @@ const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
 
                         <div className="flex flex-col">
                             <label htmlFor="deadline" className={labelClassName}>
-                                Deadline
+                                Deadline {!hasNoDeadline ? <span aria-hidden="true" className="text-red-600">*</span> : null}
                             </label>
                             <input
-                                className={inputClassName}
+                                className={`${inputClassName} disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500`}
                                 type="date"
                                 id="deadline"
                                 name="deadline"
                                 value={formData.deadline}
                                 onChange={handleFieldChange}
+                                disabled={hasNoDeadline}
+                                required={!hasNoDeadline}
+                                aria-describedby="deadline-help"
                             />
+                            <label className="mt-3 flex w-fit cursor-pointer items-center gap-2 text-sm text-gray-700">
+                                <input
+                                    type="checkbox"
+                                    checked={hasNoDeadline}
+                                    onChange={handleDeadlineModeChange}
+                                    className="size-4 accent-[#003B6D]"
+                                />
+                                No application deadline
+                            </label>
+                            <p id="deadline-help" className="mt-1 text-xs text-gray-600">
+                                {hasNoDeadline
+                                    ? 'The vacancy remains open until an administrator closes it.'
+                                    : 'Applications remain open through the end of the selected day.'}
+                            </p>
                         </div>
                     </div>
                 </div>

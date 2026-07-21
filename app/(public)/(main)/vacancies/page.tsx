@@ -66,15 +66,17 @@ const Vacancies: React.FC = () => {
   }, [data, filterData])
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <header className="px-6 md:px-12 py-4 mb-8 bg-[#003B6D] flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-xl font-semibold text-white">Find jobs</h1>
-        <label htmlFor="job-search" className="sr-only">Search jobs by title</label>
-        <input id="job-search" type="search" maxLength={80} value={inputValue} onChange={handleSearchChange} className="bg-white placeholder:text-sm w-full sm:w-72 rounded px-4 py-2 text-black" placeholder="Search jobs by title (min. 3 letters)" aria-describedby="job-search-hint" />
-        <span id="job-search-hint" className="sr-only">Enter at least three letters to search.</span>
-        <p className="text-white hidden sm:block">Home <span className="">/ Vacancies</span></p>
+    <div>
+      <header className="mb-8 w-full bg-[#003B6D]">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-6 py-5 sm:flex-row sm:items-center sm:justify-between md:px-12">
+          <h1 className="text-xl font-semibold text-white">Find jobs</h1>
+          <label htmlFor="job-search" className="sr-only">Search jobs by title</label>
+          <input id="job-search" type="search" maxLength={80} value={inputValue} onChange={handleSearchChange} className="w-full rounded bg-white px-4 py-2 text-black placeholder:text-sm sm:w-72" placeholder="Search jobs by title (min. 3 letters)" aria-describedby="job-search-hint" />
+          <span id="job-search-hint" className="sr-only">Enter at least three letters to search.</span>
+          <p className="hidden text-white sm:block">Home <span>/ Vacancies</span></p>
+        </div>
       </header>
-      <div className="flex flex-col sm:flex-row px-6 md:px-12 gap-4 mb-6">
+      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 sm:flex-row md:px-12">
         <aside>
           <JobFilters
             filterData={filterData}
@@ -127,7 +129,9 @@ const Vacancies: React.FC = () => {
             ))}
         </section>
       </div>
-      <PaginationControls pagination={vacancyPage?.pagination} onPageChange={setPage} />
+      <div className="mx-auto max-w-7xl px-6 md:px-12">
+        <PaginationControls pagination={vacancyPage?.pagination} onPageChange={setPage} />
+      </div>
     </div>
   )
 }

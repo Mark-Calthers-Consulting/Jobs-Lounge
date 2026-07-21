@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { FaInstagram } from "react-icons/fa";
 import { FaFacebook } from "react-icons/fa";
 import { FaLinkedinIn } from "react-icons/fa";
@@ -26,6 +27,12 @@ export default function Footer(): React.JSX.Element {
                     <FaFacebook color="white" size={36} />
                     <FaLinkedinIn color="white" size={36} />
                 </div>
+                <Link
+                    href="/admin-center/login"
+                    className="mt-8 inline-block text-xs text-white/60 transition-colors hover:text-white focus-visible:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                >
+                    Staff access
+                </Link>
             </div>
         </footer>
     )
