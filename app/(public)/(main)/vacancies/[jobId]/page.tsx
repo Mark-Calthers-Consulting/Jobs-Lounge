@@ -8,6 +8,7 @@ import JobActions from './JobActions';
 import { notFound } from 'next/navigation';
 import { serverApiUrl } from '@/api/serverBase';
 import { readApiResponse } from '@/api/errors';
+import { formatJobDeadline, isJobDeadlinePast } from '@/utils/jobDeadline';
 
 
 const getSingleJob = async (id: string): Promise<Job> => {
@@ -31,6 +32,7 @@ const JobPage = async ({ params }: JobPageProps) => {
     const baseUrl = process.env.NEXT_PUBLIC_ORIGIN || 'http://localhost:3000';
     const currentUrl = `${baseUrl}/vacancies/${jobId}`;
     const encodedUrl = encodeURIComponent(currentUrl);
+    const deadlinePassed = isJobDeadlinePast(job)
 
     return (
         <section>
@@ -96,7 +98,17 @@ const JobPage = async ({ params }: JobPageProps) => {
                                 <span className="text-gray-600">Type:</span> {job.jobType}
                             </span>
                         </div>
+                        <div>
+                            <span className="text-gray-600">Application deadline:</span>{' '}
+                            {job.deadline ? formatJobDeadline(job.deadline) : 'No deadline'}
+                        </div>
                     </section>
+
+                    {deadlinePassed ? (
+                        <p role="status" className="mt-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
+                            The listed deadline has passed, but this vacancy remains open and applications are still being accepted.
+                        </p>
+                    ) : null}
 
                     <JobActions jobId={jobId} jobTitle={job?.title} />
 

@@ -110,6 +110,16 @@ export const updateAdminJob = async ({
     return result.data
 }
 
+export const closeAdminJob = async (jobId: string): Promise<Job> => {
+    const res = await csrfFetch(apiPath(`/jobs/${encodeURIComponent(jobId)}`), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'Closed' }),
+    })
+    const result = await readApiResponse<ApiSuccess<Job>>(res, 'Unable to close job')
+    return result.data
+}
+
 export const deleteAdminJob = async (jobId: string): Promise<{ jobId: string; deletedAt: string }> => {
     const res = await csrfFetch(apiPath(`/jobs/${encodeURIComponent(jobId)}`), {
         method: 'DELETE',

@@ -1,8 +1,9 @@
 'use client'
 
-import { useAdminVacancies, useDeleteAdminJob } from '@/hooks/useAdmin'
+import { useAdminVacancies, useCloseAdminJob, useDeleteAdminJob } from '@/hooks/useAdmin'
 import type { Job } from '@/types/types'
 import { downloadCsv } from '@/utils/csv'
+import { formatJobDeadline, isJobDeadlinePast } from '@/utils/jobDeadline'
 import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
@@ -15,8 +16,10 @@ const JobsPageTable = () => {
     const [page, setPage] = useState(1)
     const [search, setSearch] = useState('')
     const [jobToDelete, setJobToDelete] = useState<Job | null>(null)
+    const [jobToClose, setJobToClose] = useState<Job | null>(null)
     const { data: vacancies, isLoading, isError } = useAdminVacancies(page)
     const deleteJob = useDeleteAdminJob()
+    const closeJob = useCloseAdminJob()
     const rows = useMemo(() => {
         const query = search.trim().toLowerCase()
         return (vacancies?.data ?? []).filter((job) => !query || [
@@ -38,9 +41,40 @@ const JobsPageTable = () => {
         }
     }
 
+    const confirmClose = async () => {
+        if (!jobToClose) return
+        try {
+            await closeJob.mutateAsync(jobToClose._id)
+            toast.success('Vacancy closed')
+            setJobToClose(null)
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Unable to close vacancy')
+        }
+    }
+
     const columns = [
         { header: 'Job Title', accessorKey: 'title' },
-        { header: 'Status', accessorKey: 'status' },
+        {
+            header: 'Status',
+            accessorKey: 'status',
+            cell: ({ row }: { row: { original: Job } }) => (
+                <div className="flex flex-wrap items-center gap-2">
+                    <span>{row.original.status}</span>
+                    {isJobDeadlinePast(row.original) ? (
+                        <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-900">
+                            Deadline passed
+                        </span>
+                    ) : null}
+                </div>
+            ),
+        },
+        {
+            header: 'Deadline',
+            accessorKey: 'deadline',
+            cell: ({ row }: { row: { original: Job } }) => row.original.deadline
+                ? formatJobDeadline(row.original.deadline)
+                : 'No deadline',
+        },
         { header: 'Applicants', accessorKey: 'totalApplicants' },
         { header: 'Date Posted', accessorKey: 'createdAt', cell: ({ getValue }: { getValue: () => unknown }) => new Date(String(getValue())).toLocaleDateString('en-NG') },
         {
@@ -50,6 +84,9 @@ const JobsPageTable = () => {
                 <div className="flex flex-wrap gap-3">
                     <Link className="underline" href={`/vacancies/${row.original._id}`}>View</Link>
                     <Link className="underline" href={`/admin-center/jobs/${row.original._id}/edit`}>Edit</Link>
+                    {row.original.status === 'Open' ? (
+                        <button type="button" className="font-medium text-amber-800 underline" onClick={() => setJobToClose(row.original)}>Close</button>
+                    ) : null}
                     <button type="button" className="text-red-700 underline" onClick={() => setJobToDelete(row.original)}>Delete</button>
                 </div>
             ),
@@ -77,6 +114,15 @@ const JobsPageTable = () => {
                 </table>
                 <PaginationControls pagination={vacancies?.pagination} onPageChange={setPage} />
             </div>
+            <Modal
+                isOpen={Boolean(jobToClose)}
+                title="Close vacancy?"
+                body={<p><strong>{jobToClose?.title}</strong> will disappear from public listings and stop accepting applications. Its application history will be preserved.</p>}
+                actionLabel={closeJob.isPending ? 'Closing…' : 'Close vacancy'}
+                disabled={closeJob.isPending}
+                onClose={() => setJobToClose(null)}
+                onSubmit={() => void confirmClose()}
+            />
             <Modal
                 isOpen={Boolean(jobToDelete)}
                 title="Delete job?"

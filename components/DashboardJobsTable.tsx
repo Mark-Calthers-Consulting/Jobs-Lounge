@@ -2,6 +2,7 @@
 import { useAdminVacancies } from "@/hooks/useAdmin"
 import { CellContext } from '@tanstack/react-table'
 import type { Job } from '@/types/types'
+import { isJobDeadlinePast } from '@/utils/jobDeadline'
 import {
   flexRender,
   getCoreRowModel,
@@ -17,7 +18,7 @@ const columns = [
   {
     header: 'Status',
     accessorKey: 'status',
-    cell: ({ getValue }: CellContext<Job, unknown>) => {
+    cell: ({ getValue, row }: CellContext<Job, unknown>) => {
       const status = getValue() as Status
 
 
@@ -28,11 +29,18 @@ const columns = [
       }
 
       return (
-        <span
-          className={`px-3 py-1 rounded-full text-xs font-medium ${styles[status] || 'bg-gray-100 text-gray-700'}`}
-        >
-          {status}
-        </span>
+        <div className="flex flex-wrap gap-2">
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-medium ${styles[status] || 'bg-gray-100 text-gray-700'}`}
+          >
+            {status}
+          </span>
+          {isJobDeadlinePast(row.original) ? (
+            <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-900">
+              Deadline passed
+            </span>
+          ) : null}
+        </div>
       )
     },
   },
