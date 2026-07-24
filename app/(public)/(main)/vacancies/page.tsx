@@ -5,7 +5,6 @@ import JobFilters from "@/components/JobFilters"
 import { useVacancies } from "@/hooks/useVacancies"
 import { useEffect, useMemo, useState } from "react"
 import PaginationControls from "@/components/PaginationControls"
-import { isJobDeadlinePast } from "@/utils/jobDeadline"
 
 const Vacancies: React.FC = () => {
   const [inputValue, setInputValue] = useState("")
@@ -114,11 +113,6 @@ const Vacancies: React.FC = () => {
               <article key={job._id} className="ring-2 ring-gray-100 p-5 rounded">
                 <p className="text-gray-600 text-sm">{job.company.name}</p>
                 <h3 className="font-semibold ">{job.title}</h3>
-                {isJobDeadlinePast(job) ? (
-                  <p className="mt-2 w-fit rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-900">
-                    Deadline passed — still accepting applications
-                  </p>
-                ) : null}
                 <p className="text-gray-600 my-2 leading-5">{job.description.slice(0, 90)}...</p>
                 <div className="flex gap-2">
                   <p className="text-[#222] bg-[#e3e3e3] px-2 py-1 rounded text-sm ">{job.jobType}</p>

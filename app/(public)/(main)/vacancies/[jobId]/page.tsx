@@ -98,17 +98,13 @@ const JobPage = async ({ params }: JobPageProps) => {
                                 <span className="text-gray-600">Type:</span> {job.jobType}
                             </span>
                         </div>
-                        <div>
-                            <span className="text-gray-600">Application deadline:</span>{' '}
-                            {job.deadline ? formatJobDeadline(job.deadline) : 'No deadline'}
-                        </div>
+                        {!deadlinePassed ? (
+                            <div>
+                                <span className="text-gray-600">Application deadline:</span>{' '}
+                                {job.deadline ? formatJobDeadline(job.deadline) : 'No deadline'}
+                            </div>
+                        ) : null}
                     </section>
-
-                    {deadlinePassed ? (
-                        <p role="status" className="mt-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
-                            The listed deadline has passed, but this vacancy remains open and applications are still being accepted.
-                        </p>
-                    ) : null}
 
                     <JobActions jobId={jobId} jobTitle={job?.title} />
 

@@ -1,5 +1,4 @@
 import { Job } from "@/types/types";
-import { isJobDeadlinePast } from "@/utils/jobDeadline";
 type JobCardProps = {
   job: Job;
 };
@@ -49,12 +48,6 @@ const JobCard = ({ job }:JobCardProps) => {
       <p className="mt-4 text-sm text-gray-700 leading-relaxed">
         {job.description}
       </p>
-
-      {isJobDeadlinePast(job) ? (
-        <p className="mt-4 w-fit rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-900">
-          Deadline passed — still accepting applications
-        </p>
-      ) : null}
 
       {/* Footer */}
       <div className="mt-6 flex items-center justify-between">
