@@ -1,6 +1,8 @@
 import type {
     ApiSuccess,
     AuthUser,
+    EmailVerificationConfirmPayload,
+    EmailVerificationResult,
     LoginPayload,
     PasswordResetConfirmPayload,
     PasswordResetRequestPayload,
@@ -84,4 +86,30 @@ export const confirmPasswordReset = async (
     )
     clearCsrfToken()
     return result.message || 'Password changed. Sign in with your new password.'
+}
+
+export const requestEmailVerification = async (): Promise<string> => {
+    const res = await csrfFetch(apiPath('/auth/email-verification/request'), {
+        method: 'POST',
+    })
+    const result = await readApiResponse<ApiSuccess<null>>(
+        res,
+        'Unable to send verification email',
+    )
+    return result.message || 'If your email still needs verification, we’ll send a new link.'
+}
+
+export const confirmEmailVerification = async (
+    data: EmailVerificationConfirmPayload,
+): Promise<EmailVerificationResult> => {
+    const res = await csrfFetch(apiPath('/auth/email-verification/confirm'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    })
+    const result = await readApiResponse<ApiSuccess<EmailVerificationResult>>(
+        res,
+        'Unable to verify email',
+    )
+    return result.data
 }

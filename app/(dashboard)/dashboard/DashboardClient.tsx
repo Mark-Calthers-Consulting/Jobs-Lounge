@@ -6,11 +6,15 @@ import Link from 'next/link'
 import { CiBookmark, CiCalendarDate, CiMoneyBill } from 'react-icons/ci'
 import { IoCheckmarkCircleOutline, IoLocationOutline } from 'react-icons/io5'
 import { FiArrowRight, FiCheck } from 'react-icons/fi'
+import { useState } from 'react'
+import { useEmailVerificationRequest } from '@/hooks/useAuth'
 
 
 const DashboardClient: React.FC = () => {
     const userQuery = useUser()
     const userRecommendations = useRecommendedJobs()
+    const verificationRequest = useEmailVerificationRequest()
+    const [verificationMessage, setVerificationMessage] = useState('')
 
     const savedJobsQuery = useGetSavedJobs({
         enabled: !!userQuery.data,
@@ -34,6 +38,42 @@ const DashboardClient: React.FC = () => {
             <p className='text-gray-600 my-3'>
                 Here&apos;s what&apos;s happening with your job search today.
             </p>
+
+            {userQuery.data && !userQuery.data.emailVerified && (
+                <aside className="my-5 rounded-xl border border-sky-200 bg-sky-50 px-5 py-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <h2 className="font-semibold text-sky-950">Verify your email address</h2>
+                            <p className="mt-1 text-sm leading-6 text-sky-900">
+                                Use the link in your welcome email to confirm that this account belongs to you.
+                            </p>
+                            {verificationMessage ? (
+                                <p role="status" className="mt-2 text-sm font-medium text-sky-950">
+                                    {verificationMessage}
+                                </p>
+                            ) : null}
+                        </div>
+                        <button
+                            type="button"
+                            disabled={verificationRequest.isPending}
+                            onClick={() => {
+                                setVerificationMessage('')
+                                verificationRequest.mutate(undefined, {
+                                    onSuccess: (message) => setVerificationMessage(message),
+                                    onError: (error) => setVerificationMessage(
+                                        error instanceof Error
+                                            ? error.message
+                                            : 'Unable to send a new link.',
+                                    ),
+                                })
+                            }}
+                            className="inline-flex shrink-0 justify-center rounded-md border border-sky-300 bg-white px-4 py-2 text-sm font-semibold text-[#003B6D] transition hover:bg-sky-100 disabled:cursor-wait disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003B6D] focus-visible:ring-offset-2"
+                        >
+                            {verificationRequest.isPending ? 'Sending…' : 'Send a new link'}
+                        </button>
+                    </div>
+                </aside>
+            )}
 
             {userQuery.data?.profileCompletion && (
                 <section aria-labelledby="dashboard-profile-progress" className="my-5 rounded-xl border border-blue-100 bg-white p-5 shadow-sm">

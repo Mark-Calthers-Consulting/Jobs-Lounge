@@ -88,6 +88,10 @@ const nextConfig: NextConfig = {
         headers: privateResponseHeaders,
       },
       {
+        source: '/verify-email',
+        headers: privateResponseHeaders,
+      },
+      {
         source: '/dashboard/:path*',
         headers: privateResponseHeaders,
       },

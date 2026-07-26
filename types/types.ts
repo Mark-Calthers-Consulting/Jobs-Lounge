@@ -61,6 +61,8 @@ export type User = {
   dob?: string
   maritalStatus?: UserMaritalStatus
   email: string
+  emailVerified: boolean
+  emailVerifiedAt?: string
   telephone: string
   whatsapp?: string
   residentialAddress?: string
@@ -100,7 +102,7 @@ export type ProfileCompletion = {
   steps: ProfileCompletionStep[]
 }
 
-export type AuthUser = Pick<User, '_id' | 'name' | 'email' | 'role'>
+export type AuthUser = Pick<User, '_id' | 'name' | 'email' | 'emailVerified' | 'role'>
 
 export type LoginPayload = {
   email: string
@@ -120,6 +122,15 @@ export type PasswordResetRequestPayload = {
 export type PasswordResetConfirmPayload = {
   token: string
   password: string
+}
+
+export type EmailVerificationConfirmPayload = {
+  token: string
+}
+
+export type EmailVerificationResult = {
+  emailVerified: true
+  emailVerifiedAt: string
 }
 
 type EditableUserProfile = Pick<User,

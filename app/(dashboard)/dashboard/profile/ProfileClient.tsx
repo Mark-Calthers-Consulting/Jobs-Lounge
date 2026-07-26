@@ -318,10 +318,10 @@ const ProfileClient = () => {
                     ))}
                 >
                     <Field id="profile-cv" label="CV link" error={documentsForm.formState.errors.cvLink?.message}>
-                        <input id="profile-cv" type="url" inputMode="url" placeholder="https://example.com/my-cv" className={inputClass} {...documentsForm.register('cvLink')} />
+                        <input id="profile-cv" type="url" inputMode="url" placeholder="https://drive.google.com/file/d/your-cv-file-id/view" className={inputClass} {...documentsForm.register('cvLink')} />
                     </Field>
                     <Field id="profile-cover-letter" label="Cover-letter link" optional error={documentsForm.formState.errors.coverLetterLink?.message}>
-                        <input id="profile-cover-letter" type="url" inputMode="url" placeholder="https://example.com/my-cover-letter" className={inputClass} {...documentsForm.register('coverLetterLink')} />
+                        <input id="profile-cover-letter" type="url" inputMode="url" placeholder="https://drive.google.com/file/d/your-cover-letter-file-id/view" className={inputClass} {...documentsForm.register('coverLetterLink')} />
                     </Field>
                     <div className="flex flex-wrap items-center gap-3">
                         <SaveButton pending={documentsMutation.isPending} />
