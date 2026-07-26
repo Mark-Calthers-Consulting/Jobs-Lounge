@@ -3,7 +3,7 @@ import { z } from 'zod'
 export const AUTH_LIMITS = {
     nameCharacters: 80,
     emailCharacters: 254,
-    passwordCharacters: 12,
+    passwordCharacters: 8,
     passwordBytes: 72,
 } as const
 

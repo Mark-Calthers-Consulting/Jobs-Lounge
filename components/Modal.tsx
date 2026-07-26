@@ -13,10 +13,11 @@ interface ModalProps {
     footer?: React.ReactElement
     actionLabel: string
     disabled?: boolean
+    size?: 'default' | 'compact'
 }
 
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onSubmit, title, body, footer, actionLabel, disabled }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onSubmit, title, body, footer, actionLabel, disabled, size = 'default' }) => {
     const titleId = useId()
     const bodyId = useId()
     const dialogRef = useRef<HTMLDivElement>(null)
@@ -83,7 +84,9 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onSubmit, title, body, f
     if (!isOpen) {
         return null
     }
-    
+
+    const isCompact = size === 'compact'
+
     return (
         <div
             className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 bg-black/70"
@@ -96,7 +99,9 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onSubmit, title, body, f
                 disabled={disabled}
                 className="absolute inset-0 cursor-default"
             />
-            <div className="relative w-full md:w-3/6 my-6 mx-auto lg:max-w-3xl h-full md:h-auto">
+            <div className={isCompact
+                ? 'relative mx-4 w-full max-w-md'
+                : 'relative my-6 mx-auto h-full w-full md:h-auto md:w-3/6 lg:max-w-3xl'}>
                 {/* Modal Content */}
                 <div
                     ref={dialogRef}
@@ -105,18 +110,25 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onSubmit, title, body, f
                     aria-labelledby={titleId}
                     aria-describedby={body ? bodyId : undefined}
                     tabIndex={-1}
-                    className="h-full lg:h-auto border-0 rounded-lg shadow-lg relative flex flex-col w-full bg-[#222]"
+                    className={`relative flex w-full flex-col border-0 bg-[#222] shadow-lg ${isCompact ? 'rounded-xl' : 'h-full rounded-lg lg:h-auto'}`}
                 >
                     {/* Header */}
-                    <div className="flex items-center justify-between p-10 rounded-t">
-                        <h2 id={titleId} className="text-3xl font-semibold text-white">{title}</h2>
+                    <div className={`flex items-center justify-between rounded-t ${isCompact ? 'p-5 pb-3' : 'p-10'}`}>
+                        <h2 id={titleId} className={`font-semibold text-white ${isCompact ? 'text-xl' : 'text-3xl'}`}>{title}</h2>
                         <button ref={closeButtonRef} type="button" aria-label="Close dialog" onClick={handleClose} disabled={disabled} className="p-1 ml-auto border-0 text-white hover:opacity-70 transition disabled:cursor-wait disabled:opacity-50"><AiOutlineClose aria-hidden="true" size={24} /></button>
                     </div>
                     {/* Body */}
-                    <div id={bodyId} className="relative p-10 flex-auto text-white">{body}</div>
+                    <div id={bodyId} className={`relative flex-auto text-white ${isCompact ? 'px-5 py-3' : 'p-10'}`}>{body}</div>
                     {/* Footer */}
-                    <div className="flex flex-col gap-2 p-10">
-                        <Button disabled={disabled} label={actionLabel} secondary fullwidth large onClick={handleSubmit} />{footer}
+                    <div className={`flex flex-col gap-2 ${isCompact ? 'p-5 pt-3' : 'p-10'}`}>
+                        {isCompact ? (
+                            <button type="button" disabled={disabled} onClick={handleSubmit} className="w-full rounded-md bg-white px-4 py-2.5 text-sm font-semibold text-black transition hover:bg-gray-100 disabled:cursor-wait disabled:opacity-60">
+                                {actionLabel}
+                            </button>
+                        ) : (
+                            <Button disabled={disabled} label={actionLabel} secondary fullwidth large onClick={handleSubmit} />
+                        )}
+                        {footer}
                     </div>
                 </div>
             </div>

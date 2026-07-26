@@ -29,13 +29,14 @@ export const createJob = async (job: JobFormType): Promise<Job> => {
 }
 
 export const applyToJob = async (data: ApplyPayload): Promise<ApplicationRecord> => {
-    const res = await csrfFetch(apiPath(`/applications/${encodeURIComponent(data.jobId)}`), {
+    const { jobId, ...application } = data
+    const res = await csrfFetch(apiPath(`/applications/${encodeURIComponent(jobId)}`), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
         credentials: 'include',
-        body: JSON.stringify(data)
+        body: JSON.stringify(application)
     })
 
     const result = await readApiResponse<ApiSuccess<ApplicationRecord>>(res, 'Unable to apply for job')

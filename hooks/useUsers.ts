@@ -30,7 +30,9 @@ export const useEditUserDetails = ()=> {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: editUserDetails,
-        onSuccess: (user) => queryClient.setQueryData(['me'], user),
+        onSuccess: (user) => queryClient.setQueryData<User | null>(['me'], (current) => (
+            user ? { ...current, ...user } : current
+        )),
     })
  }
 

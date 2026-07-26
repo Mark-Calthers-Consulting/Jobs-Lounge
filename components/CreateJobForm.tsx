@@ -41,8 +41,25 @@ const categoryOptions = JOB_ENUMS.category;
 const workModeOptions = JOB_ENUMS.workMode;
 const jobTypeOptions = JOB_ENUMS.jobType;
 const levelOptions = JOB_ENUMS.level;
-const statusOptions = ['Draft', 'Open', 'Closed'] as const
 const maxJsonCharacters = 250_000
+
+const publishingStatusOptions = [
+    {
+        value: 'Draft',
+        label: 'Draft',
+        description: 'Only administrators can see it. Publish it later from the Jobs page.',
+    },
+    {
+        value: 'Open',
+        label: 'Open',
+        description: 'Publish immediately and begin accepting applications.',
+    },
+    {
+        value: 'Closed',
+        label: 'Closed',
+        description: 'Hide the listing and stop accepting applications.',
+    },
+] as const
 
 const listFieldMeta: Record<
     ListFieldKey,
@@ -217,6 +234,14 @@ const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
                 return
             }
 
+            if (!initialJob && job.status === 'Closed') {
+                setImportFeedback({
+                    type: 'error',
+                    message: 'status: new jobs must be created as Draft or Open.',
+                })
+                return
+            }
+
             setFormData({
                 jobTitle: job.title,
                 jobDescription: job.description,
@@ -330,7 +355,7 @@ const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
                 toast.success('Job updated successfully')
             } else {
                 await createJobMutation.mutateAsync(validation.data)
-                toast.success('Job created successfully')
+                toast.success(validation.data.status === 'Draft' ? 'Draft saved successfully' : 'Job published successfully')
             }
             router.push('/admin-center/jobs')
         } catch (error: unknown) {
@@ -352,6 +377,16 @@ const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
         : importFeedback?.type === 'error'
             ? 'bg-red-50 text-red-700 ring-red-200'
             : 'bg-gray-100 text-gray-600 ring-gray-200'
+    const availablePublishingStatuses = initialJob
+        ? publishingStatusOptions
+        : publishingStatusOptions.filter((option) => option.value !== 'Closed')
+    const submitLabel = activeMutation.isPending
+        ? initialJob
+            ? 'Saving…'
+            : formData.status === 'Draft' ? 'Saving draft…' : 'Publishing…'
+        : initialJob
+            ? 'Save changes'
+            : formData.status === 'Draft' ? 'Save draft' : 'Publish job'
 
     return (
         <section className="w-full max-w-4xl mx-auto px-4 py-6">
@@ -461,6 +496,7 @@ const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
                 onSubmit={confirmDevMode}
                 title="Enable Dev Mode?"
                 actionLabel="Enable dev mode"
+                size="compact"
                 body={(
                     <div className="space-y-3 text-base leading-7 text-gray-200">
                         <p>Dev Mode lets you paste structured job JSON and use it to overwrite the current form values.</p>
@@ -529,13 +565,6 @@ const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
                         <div className="flex flex-col">
                             <label htmlFor="applyLink" className={labelClassName}>External apply link</label>
                             <input className={inputClassName} type="url" id="applyLink" name="applyLink" value={formData.applyLink} onChange={handleFieldChange} placeholder="https://example.com/apply" />
-                        </div>
-
-                        <div className="flex flex-col">
-                            <label htmlFor="status" className={labelClassName}>Status</label>
-                            <select id="status" name="status" value={formData.status} onChange={handleFieldChange} className={inputClassName}>
-                                {statusOptions.map((status) => <option key={status} value={status}>{status}</option>)}
-                            </select>
                         </div>
 
                         <div className="flex flex-col">
@@ -797,13 +826,48 @@ const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
                     </div>
                 </div>
 
+                <fieldset className="rounded-xl border border-gray-200 p-4 md:p-6">
+                    <legend className="px-1 text-lg font-semibold">Publishing</legend>
+                    <p className="mb-4 text-sm text-gray-600">
+                        {initialJob ? 'Choose how this vacancy should appear to candidates.' : 'Choose whether to save privately or publish immediately.'}
+                    </p>
+                    <div className={`grid gap-3 ${availablePublishingStatuses.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
+                        {availablePublishingStatuses.map((option) => {
+                            const isSelected = formData.status === option.value
+
+                            return (
+                                <label
+                                    key={option.value}
+                                    htmlFor={`status-${option.value.toLowerCase()}`}
+                                    className={`flex cursor-pointer gap-3 rounded-lg border p-4 transition ${isSelected ? 'border-[#003B6D] bg-[#F4F9FD] ring-1 ring-[#003B6D]' : 'border-gray-200 bg-white hover:border-gray-400'}`}
+                                >
+                                    <span className="sr-only">Select job status:</span>
+                                    <input
+                                        id={`status-${option.value.toLowerCase()}`}
+                                        type="radio"
+                                        name="status"
+                                        value={option.value}
+                                        checked={isSelected}
+                                        onChange={handleFieldChange}
+                                        className="mt-1 size-4 shrink-0 accent-[#003B6D]"
+                                    />
+                                    <span>
+                                        <span className="block text-sm font-semibold text-gray-900">{option.label}</span>
+                                        <span className="mt-1 block text-xs leading-5 text-gray-600">{option.description}</span>
+                                    </span>
+                                </label>
+                            )
+                        })}
+                    </div>
+                </fieldset>
+
                 <div className="flex justify-end">
                     <button
                         type="submit"
                         disabled={activeMutation.isPending}
                         className="rounded-md bg-black px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 transition disabled:cursor-wait disabled:opacity-70"
                     >
-                        {activeMutation.isPending ? 'Saving…' : initialJob ? 'Save changes' : 'Create job'}
+                        {submitLabel}
                     </button>
                 </div>
             </form>

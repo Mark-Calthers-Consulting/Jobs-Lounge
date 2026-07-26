@@ -1,6 +1,6 @@
 'use client'
 
-import { useAdminVacancies, useCloseAdminJob, useDeleteAdminJob } from '@/hooks/useAdmin'
+import { useAdminVacancies, useDeleteAdminJob, useUpdateAdminJobStatus } from '@/hooks/useAdmin'
 import type { Job } from '@/types/types'
 import { downloadCsv } from '@/utils/csv'
 import { formatJobDeadline, isJobDeadlinePast } from '@/utils/jobDeadline'
@@ -17,9 +17,10 @@ const JobsPageTable = () => {
     const [search, setSearch] = useState('')
     const [jobToDelete, setJobToDelete] = useState<Job | null>(null)
     const [jobToClose, setJobToClose] = useState<Job | null>(null)
+    const [jobToPublish, setJobToPublish] = useState<Job | null>(null)
     const { data: vacancies, isLoading, isError } = useAdminVacancies(page)
     const deleteJob = useDeleteAdminJob()
-    const closeJob = useCloseAdminJob()
+    const updateJobStatus = useUpdateAdminJobStatus()
     const rows = useMemo(() => {
         const query = search.trim().toLowerCase()
         return (vacancies?.data ?? []).filter((job) => !query || [
@@ -44,11 +45,22 @@ const JobsPageTable = () => {
     const confirmClose = async () => {
         if (!jobToClose) return
         try {
-            await closeJob.mutateAsync(jobToClose._id)
+            await updateJobStatus.mutateAsync({ jobId: jobToClose._id, status: 'Closed' })
             toast.success('Vacancy closed')
             setJobToClose(null)
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Unable to close vacancy')
+        }
+    }
+
+    const confirmPublish = async () => {
+        if (!jobToPublish) return
+        try {
+            await updateJobStatus.mutateAsync({ jobId: jobToPublish._id, status: 'Open' })
+            toast.success('Vacancy published')
+            setJobToPublish(null)
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Unable to publish vacancy')
         }
     }
 
@@ -81,13 +93,18 @@ const JobsPageTable = () => {
             header: 'Actions',
             id: 'actions',
             cell: ({ row }: { row: { original: Job } }) => (
-                <div className="flex flex-wrap gap-3">
-                    <Link className="underline" href={`/vacancies/${row.original._id}`}>View</Link>
-                    <Link className="underline" href={`/admin-center/jobs/${row.original._id}/edit`}>Edit</Link>
+                <div className="flex flex-wrap items-center gap-2" aria-label={`Actions for ${row.original.title}`}>
                     {row.original.status === 'Open' ? (
-                        <button type="button" className="font-medium text-amber-800 underline" onClick={() => setJobToClose(row.original)}>Close</button>
+                        <Link className="rounded-md border border-gray-300 px-2.5 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50" href={`/vacancies/${row.original._id}`}>View</Link>
                     ) : null}
-                    <button type="button" className="text-red-700 underline" onClick={() => setJobToDelete(row.original)}>Delete</button>
+                    <Link className="rounded-md border border-gray-300 px-2.5 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50" href={`/admin-center/jobs/${row.original._id}/edit`}>Edit</Link>
+                    {row.original.status === 'Draft' ? (
+                        <button type="button" className="rounded-md bg-[#003B6D] px-2.5 py-1.5 text-xs font-medium text-white transition hover:bg-[#002B50]" onClick={() => setJobToPublish(row.original)}>Publish</button>
+                    ) : null}
+                    {row.original.status === 'Open' ? (
+                        <button type="button" className="rounded-md border border-amber-300 px-2.5 py-1.5 text-xs font-medium text-amber-800 transition hover:bg-amber-50" onClick={() => setJobToClose(row.original)}>Close</button>
+                    ) : null}
+                    <button type="button" className="rounded-md px-2.5 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-50" onClick={() => setJobToDelete(row.original)}>Delete</button>
                 </div>
             ),
         },
@@ -115,11 +132,21 @@ const JobsPageTable = () => {
                 <PaginationControls pagination={vacancies?.pagination} onPageChange={setPage} />
             </div>
             <Modal
+                isOpen={Boolean(jobToPublish)}
+                title="Publish vacancy?"
+                body={<p><strong>{jobToPublish?.title}</strong> will become visible in public vacancies and begin accepting applications.</p>}
+                actionLabel={updateJobStatus.isPending ? 'Publishing…' : 'Publish vacancy'}
+                disabled={updateJobStatus.isPending}
+                size="compact"
+                onClose={() => setJobToPublish(null)}
+                onSubmit={() => void confirmPublish()}
+            />
+            <Modal
                 isOpen={Boolean(jobToClose)}
                 title="Close vacancy?"
                 body={<p><strong>{jobToClose?.title}</strong> will disappear from public listings and stop accepting applications. Its application history will be preserved.</p>}
-                actionLabel={closeJob.isPending ? 'Closing…' : 'Close vacancy'}
-                disabled={closeJob.isPending}
+                actionLabel={updateJobStatus.isPending ? 'Closing…' : 'Close vacancy'}
+                disabled={updateJobStatus.isPending}
                 onClose={() => setJobToClose(null)}
                 onSubmit={() => void confirmClose()}
             />

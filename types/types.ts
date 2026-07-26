@@ -72,6 +72,7 @@ export type User = {
     device?: string
   }
   profileCompleted: boolean
+  profileCompletion?: ProfileCompletion
   highestEducation?: string
   yearCompletedNysc?: number
   nyscStatus?: UserNyscStatus
@@ -81,6 +82,22 @@ export type User = {
   notificationPreferences?: NotificationPreferences
   createdAt: string
   updatedAt: string
+}
+
+export type ProfileCompletionStep = {
+  id: 'identity' | 'education' | 'experience' | 'cv'
+  label: string
+  complete: boolean
+  missingFields: string[]
+}
+
+export type ProfileCompletion = {
+  complete: boolean
+  completedSteps: number
+  totalSteps: number
+  percentage: number
+  missingFields: string[]
+  steps: ProfileCompletionStep[]
 }
 
 export type AuthUser = Pick<User, '_id' | 'name' | 'email' | 'role'>
@@ -96,7 +113,7 @@ export type RegisterPayload = LoginPayload & {
   telephone: string
 }
 
-export type UserUpdatePayload = Partial<Pick<User,
+type EditableUserProfile = Pick<User,
   | 'firstName'
   | 'middleName'
   | 'lastName'
@@ -113,7 +130,11 @@ export type UserUpdatePayload = Partial<Pick<User,
   | 'postNyscExperience'
   | 'cvLink'
   | 'coverLetterLink'
->>
+>
+
+export type UserUpdatePayload = {
+  [Field in keyof EditableUserProfile]?: EditableUserProfile[Field] | null
+}
 
 export type JobPageProps = {
   params: Promise<{ jobId: string }>
@@ -199,6 +220,66 @@ export type AdminApplication = {
   cvLink?: string
   coverLetterLink?: string
   note?: string
+}
+
+export type CandidateSummary = {
+  _id: string
+  name?: string
+  email: string
+  telephone: string
+  highestEducation?: string
+  postNyscExperience?: number
+  profileCompleted: boolean
+  applicationCount: number
+  latestApplicationAt?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type CandidateListFilters = {
+  page?: number
+  limit?: number
+  search?: string
+  profileCompleted?: boolean
+  applicationStatus?: ApplicationStatus
+  jobId?: string
+  education?: string
+  experienceMin?: number
+  experienceMax?: number
+  joinedFrom?: string
+  joinedTo?: string
+  sort?: 'newest' | 'oldest' | 'name' | 'applications'
+}
+
+export type CandidateFilterOptions = {
+  educationLevels: string[]
+  jobs: Array<{
+    _id: string
+    title: string
+    company?: string
+  }>
+}
+
+export type AdminCandidateDetail = {
+  candidate: Omit<User, 'role' | 'lastLogin' | 'notificationPreferences'> & {
+    profileCompletion: ProfileCompletion
+  }
+  applicationSummary: {
+    total: number
+    byStatus: Record<ApplicationStatus, number>
+    latestApplicationAt?: string
+  }
+}
+
+export type CandidateApplication = {
+  _id: string
+  job: Pick<Job, '_id' | 'title' | 'company' | 'status'> | null
+  status: ApplicationStatus
+  cvLink?: string
+  coverLetterLink?: string
+  note?: string
+  createdAt: string
+  updatedAt: string
 }
 
 export type DashboardStats = {

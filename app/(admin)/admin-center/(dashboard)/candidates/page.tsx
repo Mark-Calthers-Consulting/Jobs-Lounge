@@ -1,4 +1,5 @@
 import CandidatesGrid from "@/components/CandidatesGrid"
+import { Suspense } from "react"
 
 const Candidates: React.FC = () => {
     return (
@@ -11,7 +12,9 @@ const Candidates: React.FC = () => {
             </div>
 
             <div className="">
+            <Suspense fallback={<p role="status">Loading candidates…</p>}>
                 <CandidatesGrid />
+            </Suspense>
             </div>
         </div>
     )

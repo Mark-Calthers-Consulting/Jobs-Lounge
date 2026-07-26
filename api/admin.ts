@@ -1,7 +1,12 @@
 import { apiPath } from './base'
 import type {
     AdminApplication,
+    AdminCandidateDetail,
     ApiSuccess,
+    CandidateApplication,
+    CandidateFilterOptions,
+    CandidateListFilters,
+    CandidateSummary,
     DashboardStats,
     Job,
     PaginatedResponse,
@@ -10,6 +15,7 @@ import type {
 import { readApiResponse } from './errors'
 import { csrfFetch } from './csrf'
 import type { JobFormType } from '@/schemas/jobSchema'
+import type { JobStatus } from '@/constants/enums'
 
 export const fetchAdminDashboard = async (): Promise<DashboardStats> => {
     const res = await fetch(apiPath('/admin/dashboard'),
@@ -60,14 +66,70 @@ export const fetchTeamMembers = async (page = 1, limit = 20): Promise<PaginatedR
     return readApiResponse<PaginatedResponse<User>>(res, 'Failed to fetch team')
 }
 
-export const fetchJobCandidates = async (page = 1, limit = 20): Promise<PaginatedResponse<User>> => {
-    const res = await fetch(`${apiPath('/admin/getCandidates')}?${pageQuery(page, limit)}`,
+export const fetchJobCandidates = async (
+    filters: CandidateListFilters = {},
+): Promise<PaginatedResponse<CandidateSummary>> => {
+    const params = new URLSearchParams()
+    Object.entries({ page: 1, limit: 20, ...filters }).forEach(([key, value]) => {
+        if (value !== undefined && value !== '') params.set(key, String(value))
+    })
+    const res = await fetch(`${apiPath('/admin/candidates')}?${params}`,
         {
             method: 'GET',
-            credentials: 'include'
+            credentials: 'include',
+            cache: 'no-store',
         }
     )
-    return readApiResponse<PaginatedResponse<User>>(res, 'Failed to fetch candidates')
+    return readApiResponse<PaginatedResponse<CandidateSummary>>(res, 'Failed to fetch candidates')
+}
+
+export const fetchCandidateFilterOptions = async (
+    jobSearch?: string,
+): Promise<CandidateFilterOptions> => {
+    const params = new URLSearchParams()
+    if (jobSearch) params.set('jobSearch', jobSearch)
+    const suffix = params.size ? `?${params}` : ''
+    const res = await fetch(apiPath(`/admin/candidates/filter-options${suffix}`), {
+        credentials: 'include',
+        cache: 'no-store',
+    })
+    const result = await readApiResponse<ApiSuccess<CandidateFilterOptions>>(
+        res,
+        'Unable to load candidate filters',
+    )
+    return result.data
+}
+
+export const fetchAdminCandidate = async (
+    candidateId: string,
+): Promise<AdminCandidateDetail> => {
+    const res = await fetch(apiPath(`/admin/candidates/${encodeURIComponent(candidateId)}`), {
+        credentials: 'include',
+        cache: 'no-store',
+    })
+    const result = await readApiResponse<ApiSuccess<AdminCandidateDetail>>(
+        res,
+        'Unable to load candidate',
+    )
+    return result.data
+}
+
+export const fetchCandidateApplications = async (
+    candidateId: string,
+    page = 1,
+    limit = 10,
+    status?: string,
+): Promise<PaginatedResponse<CandidateApplication>> => {
+    const params = pageQuery(page, limit)
+    if (status) params.set('status', status)
+    const res = await fetch(
+        `${apiPath(`/admin/candidates/${encodeURIComponent(candidateId)}/applications`)}?${params}`,
+        { credentials: 'include', cache: 'no-store' },
+    )
+    return readApiResponse<PaginatedResponse<CandidateApplication>>(
+        res,
+        'Unable to load candidate applications',
+    )
 }
 
 export const fetchAllApplications = async (page = 1, limit = 20): Promise<PaginatedResponse<AdminApplication>> => {
@@ -110,13 +172,19 @@ export const updateAdminJob = async ({
     return result.data
 }
 
-export const closeAdminJob = async (jobId: string): Promise<Job> => {
+export const updateAdminJobStatus = async ({
+    jobId,
+    status,
+}: {
+    jobId: string
+    status: JobStatus
+}): Promise<Job> => {
     const res = await csrfFetch(apiPath(`/jobs/${encodeURIComponent(jobId)}`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'Closed' }),
+        body: JSON.stringify({ status }),
     })
-    const result = await readApiResponse<ApiSuccess<Job>>(res, 'Unable to close job')
+    const result = await readApiResponse<ApiSuccess<Job>>(res, 'Unable to update job status')
     return result.data
 }
 

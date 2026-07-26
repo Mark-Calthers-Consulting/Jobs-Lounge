@@ -60,7 +60,8 @@ const AuthForm = ({ nextPath }: { nextPath?: string }) => {
     const loginForm = useForm<LoginFormValues>({
         resolver: zodResolver(loginSchema),
         defaultValues: { email: '', password: '' },
-        mode: 'onBlur',
+        mode: 'onSubmit',
+        reValidateMode: 'onChange',
     })
     const registerForm = useForm<RegistrationFormInput, unknown, RegistrationFormValues>({
         resolver: zodResolver(registrationSchema),
@@ -72,7 +73,8 @@ const AuthForm = ({ nextPath }: { nextPath?: string }) => {
             password: '',
             confirmPassword: '',
         },
-        mode: 'onBlur',
+        mode: 'onSubmit',
+        reValidateMode: 'onChange',
     })
 
     const changeMode = () => {
@@ -260,7 +262,7 @@ const AuthForm = ({ nextPath }: { nextPath?: string }) => {
                                 onToggle={() => setRegisterPasswordVisible((visible) => !visible)}
                             />
                         </div>
-                        <p id="register-password-help" className="mt-1 text-sm text-gray-600">Use a passphrase of at least 12 characters. Spaces are allowed.</p>
+                        <p id="register-password-help" className="mt-1 text-sm text-gray-600">Use at least 8 characters.</p>
                         <FieldError id="register-password-error" message={registerErrors.password?.message} />
                     </div>
 
