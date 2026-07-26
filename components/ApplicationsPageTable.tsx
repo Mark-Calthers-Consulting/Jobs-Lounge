@@ -4,7 +4,6 @@ import { APPLICATION_STATUSES, type ApplicationStatus } from '@/constants/enums'
 import { useAdminApplications } from '@/hooks/useAdmin'
 import { useUpdateApplicationStatus } from '@/hooks/useApplications'
 import type { AdminApplication } from '@/types/types'
-import { downloadCsv } from '@/utils/csv'
 import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
@@ -69,15 +68,7 @@ const ApplicationsPageTable = () => {
 
     return (
         <div>
-            <TableToolbar label="applications" value={search} onChange={setSearch} exportDisabled={rows.length === 0} onExport={() => downloadCsv('applications-current-page.csv', [
-                { header: 'Applicant', value: (row: AdminApplication) => row.name },
-                { header: 'Email', value: (row: AdminApplication) => row.email },
-                { header: 'Job', value: (row: AdminApplication) => row.title },
-                { header: 'Status', value: (row: AdminApplication) => row.status },
-                { header: 'Applied', value: (row: AdminApplication) => row.createdAt },
-                { header: 'CV', value: (row: AdminApplication) => row.cvLink ?? '' },
-                { header: 'Note', value: (row: AdminApplication) => row.note ?? '' },
-            ], rows)} />
+            <TableToolbar label="applications" value={search} onChange={setSearch} />
             <div className="w-full overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
                 <table className="w-full border-collapse text-left">
                     <caption className="sr-only">Candidate applications</caption>

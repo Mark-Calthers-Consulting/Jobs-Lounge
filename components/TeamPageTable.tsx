@@ -2,7 +2,6 @@
 
 import { useGetTeamMembers } from '@/hooks/useAdmin'
 import type { User } from '@/types/types'
-import { downloadCsv } from '@/utils/csv'
 import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import { useMemo, useState } from 'react'
 import PaginationControls from './PaginationControls'
@@ -33,12 +32,7 @@ const TeamPageTable = () => {
 
     return (
         <div>
-            <TableToolbar label="team" value={search} onChange={setSearch} exportDisabled={!rows.length} onExport={() => downloadCsv('team-current-page.csv', [
-                { header: 'Name', value: (member: User) => member.name ?? '' },
-                { header: 'Role', value: (member: User) => member.role },
-                { header: 'Email', value: (member: User) => member.email },
-                { header: 'Joined', value: (member: User) => member.createdAt },
-            ], rows)} />
+            <TableToolbar label="team" value={search} onChange={setSearch} />
             <div className="w-full overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
                 <table className="w-full border-collapse text-left">
                     <caption className="sr-only">Administration team members</caption>

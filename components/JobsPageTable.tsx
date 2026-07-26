@@ -2,7 +2,6 @@
 
 import { useAdminVacancies, useDeleteAdminJob, useUpdateAdminJobStatus } from '@/hooks/useAdmin'
 import type { Job } from '@/types/types'
-import { downloadCsv } from '@/utils/csv'
 import { formatJobDeadline, isJobDeadlinePast } from '@/utils/jobDeadline'
 import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import Link from 'next/link'
@@ -116,13 +115,7 @@ const JobsPageTable = () => {
 
     return (
         <div>
-            <TableToolbar label="jobs" value={search} onChange={setSearch} exportDisabled={!rows.length} onExport={() => downloadCsv('jobs-current-page.csv', [
-                { header: 'Title', value: (job: Job) => job.title },
-                { header: 'Company', value: (job: Job) => job.company.name },
-                { header: 'Status', value: (job: Job) => job.status },
-                { header: 'Applicants', value: (job: Job) => job.totalApplicants ?? 0 },
-                { header: 'Created', value: (job: Job) => job.createdAt },
-            ], rows)} />
+            <TableToolbar label="jobs" value={search} onChange={setSearch} />
             <div className="w-full overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
                 <table className="w-full border-collapse text-left">
                     <caption className="sr-only">Job listings</caption>

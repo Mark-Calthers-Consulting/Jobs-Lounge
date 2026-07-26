@@ -2,8 +2,7 @@
 
 import { APPLICATION_STATUSES, type ApplicationStatus } from '@/constants/enums'
 import { useCandidateFilterOptions, useGetJobCandidates } from '@/hooks/useAdmin'
-import type { CandidateListFilters, CandidateSummary } from '@/types/types'
-import { downloadCsv } from '@/utils/csv'
+import type { CandidateListFilters } from '@/types/types'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
@@ -140,7 +139,9 @@ const CandidatesGrid = () => {
             <div className="rounded-xl border border-gray-200 bg-white p-4">
                 <div className="flex flex-col gap-3 lg:flex-row">
                     <div className="relative flex-1">
-                        <FiSearch aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 flex w-10 items-center justify-center text-gray-400">
+                            <FiSearch size={18} />
+                        </span>
                         <label htmlFor="candidate-search" className="sr-only">Search candidates</label>
                         <input
                             id="candidate-search"
@@ -174,23 +175,6 @@ const CandidatesGrid = () => {
                             <option value="name">Name A–Z</option>
                             <option value="applications">Most applications</option>
                         </select>
-                        <button
-                            type="button"
-                            disabled={!rows.length}
-                            onClick={() => downloadCsv('candidates-visible-page.csv', [
-                                { header: 'Name', value: (candidate: CandidateSummary) => candidate.name ?? '' },
-                                { header: 'Email', value: (candidate: CandidateSummary) => candidate.email },
-                                { header: 'Telephone', value: (candidate: CandidateSummary) => candidate.telephone },
-                                { header: 'Education', value: (candidate: CandidateSummary) => candidate.highestEducation ?? '' },
-                                { header: 'Experience', value: (candidate: CandidateSummary) => candidate.postNyscExperience ?? '' },
-                                { header: 'Profile complete', value: (candidate: CandidateSummary) => candidate.profileCompleted ? 'Yes' : 'No' },
-                                { header: 'Applications', value: (candidate: CandidateSummary) => candidate.applicationCount },
-                                { header: 'Joined', value: (candidate: CandidateSummary) => candidate.createdAt },
-                            ], rows)}
-                            className="hidden rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 sm:block"
-                        >
-                            Export page
-                        </button>
                     </div>
                 </div>
                 {searchValue.trim().length > 0 && searchValue.trim().length < 3 && (
