@@ -80,6 +80,14 @@ const nextConfig: NextConfig = {
         headers: privateResponseHeaders,
       },
       {
+        source: '/forgot-password',
+        headers: privateResponseHeaders,
+      },
+      {
+        source: '/reset-password',
+        headers: privateResponseHeaders,
+      },
+      {
         source: '/dashboard/:path*',
         headers: privateResponseHeaders,
       },

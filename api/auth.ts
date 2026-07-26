@@ -1,4 +1,11 @@
-import type { ApiSuccess, AuthUser, LoginPayload, RegisterPayload } from "@/types/types";
+import type {
+    ApiSuccess,
+    AuthUser,
+    LoginPayload,
+    PasswordResetConfirmPayload,
+    PasswordResetRequestPayload,
+    RegisterPayload,
+} from "@/types/types";
 import { clearCsrfToken, csrfFetch } from "./csrf";
 import { apiPath } from "./base";
 import { readApiResponse } from './errors';
@@ -45,4 +52,36 @@ export const registerUser = async (data: RegisterPayload): Promise<AuthUser> => 
     const result = await readApiResponse<ApiSuccess<AuthUser>>(res, 'Unable to create account')
     clearCsrfToken()
     return result.data
+}
+
+export const requestPasswordReset = async (
+    data: PasswordResetRequestPayload,
+): Promise<string> => {
+    const res = await csrfFetch(apiPath('/auth/password-reset/request'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    })
+    const result = await readApiResponse<ApiSuccess<null>>(
+        res,
+        'Unable to request password reset instructions',
+    )
+    return result.message
+        || 'If an account exists for that email, we’ll send password reset instructions.'
+}
+
+export const confirmPasswordReset = async (
+    data: PasswordResetConfirmPayload,
+): Promise<string> => {
+    const res = await csrfFetch(apiPath('/auth/password-reset/confirm'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    })
+    const result = await readApiResponse<ApiSuccess<null>>(
+        res,
+        'Unable to reset password',
+    )
+    clearCsrfToken()
+    return result.message || 'Password changed. Sign in with your new password.'
 }

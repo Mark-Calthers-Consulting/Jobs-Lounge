@@ -7,9 +7,14 @@ import { safeNextPath } from "@/utils/authRouting"
 const Auth = async ({
     searchParams,
 }: {
-    searchParams: Promise<{ next?: string | string[] }>
+    searchParams: Promise<{
+        next?: string | string[]
+        passwordReset?: string | string[]
+    }>
 }) => {
-    const nextPath = safeNextPath((await searchParams).next, 'candidate')
+    const query = await searchParams
+    const nextPath = safeNextPath(query.next, 'candidate')
+    const passwordResetComplete = query.passwordReset === 'success'
 
     return (
         <GuestOnlyRoute area="candidate" nextPath={nextPath}>
@@ -23,7 +28,10 @@ const Auth = async ({
                 {/* <Image src='/auth2.jpg' fill priority sizes="50vw" alt="office setting" className="object-cover" /> */}
             </section>
             <section className="bg-white rounded flex min-h-[580px]  borde flex-col justify-center gap-3 w-full sm:w-5/12 py-6 px-8 md:py-10 md:px-10">
-                <AuthForm nextPath={nextPath} />
+                <AuthForm
+                    nextPath={nextPath}
+                    passwordResetComplete={passwordResetComplete}
+                />
             </section>
           </main>
         </GuestOnlyRoute>

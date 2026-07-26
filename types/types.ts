@@ -113,6 +113,15 @@ export type RegisterPayload = LoginPayload & {
   telephone: string
 }
 
+export type PasswordResetRequestPayload = {
+  email: string
+}
+
+export type PasswordResetConfirmPayload = {
+  token: string
+  password: string
+}
+
 type EditableUserProfile = Pick<User,
   | 'firstName'
   | 'middleName'

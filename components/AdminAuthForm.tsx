@@ -11,7 +11,13 @@ type formValues = {
     password: string,
 }
 
-const AdminAuthForm = ({ nextPath }: { nextPath?: string }) => {
+const AdminAuthForm = ({
+    nextPath,
+    passwordResetComplete = false,
+}: {
+    nextPath?: string
+    passwordResetComplete?: boolean
+}) => {
     const [authData, setAuthData] = useState<formValues>({
         email: '',
         password: '',
@@ -62,6 +68,13 @@ const AdminAuthForm = ({ nextPath }: { nextPath?: string }) => {
             <Link href='/' aria-label="Jobs Lounge home"><Image width={70} height={70} src='/logo.svg' alt="" /></Link>
             <h1 id="admin-auth-title" className="text-[#003B6D] text-2xl font-bold">Jobs Lounge Admin Panel</h1>
             <p>Sign in to access the Jobs Lounge administration dashboard and manage the platform.</p>
+            {passwordResetComplete
+                ? (
+                    <p role="status" className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
+                        Your password has been changed. Sign in with your new password.
+                    </p>
+                )
+                : null}
             <form onSubmit={handleSubmit} aria-labelledby="admin-auth-title" aria-busy={loginMutation.isPending}>
                 <label htmlFor="admin-email" className="flex flex-col">
                     Email Address
@@ -71,6 +84,14 @@ const AdminAuthForm = ({ nextPath }: { nextPath?: string }) => {
                     Password
                     <input id="admin-password" required autoComplete="current-password" onChange={handleChange} name="password" className="px-4 py-2 my-2 ring-1 ring-gray-300 shadow rounded" type="password" />
                 </label>
+                <div className="text-right">
+                    <Link
+                        href="/forgot-password?area=admin"
+                        className="rounded text-sm font-semibold text-[#003B6D] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003B6D]"
+                    >
+                        Forgot password?
+                    </Link>
+                </div>
                 <button disabled={loginMutation.isPending} type="submit" className="w-full p-3 my-4 rounded cursor-pointer text-white bg-[#003B6D] disabled:cursor-wait disabled:opacity-70">{loginMutation.isPending ? 'Signing in…' : 'Sign in'}</button>
             </form>
         </div>

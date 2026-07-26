@@ -56,6 +56,26 @@ export const registrationSchema = z.object({
     path: ['confirmPassword'],
 })
 
+export const forgotPasswordSchema = z.object({
+    email: z.string()
+        .trim()
+        .min(1, 'Enter your email address.')
+        .max(AUTH_LIMITS.emailCharacters, 'Email address is too long.')
+        .email('Enter a valid email address.')
+        .transform((value) => value.toLowerCase()),
+})
+
+export const passwordResetSchema = z.object({
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, 'Confirm your password.'),
+}).refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match.',
+    path: ['confirmPassword'],
+})
+
 export type LoginFormValues = z.infer<typeof loginSchema>
 export type RegistrationFormInput = z.input<typeof registrationSchema>
 export type RegistrationFormValues = z.output<typeof registrationSchema>
+export type ForgotPasswordFormInput = z.input<typeof forgotPasswordSchema>
+export type ForgotPasswordFormValues = z.output<typeof forgotPasswordSchema>
+export type PasswordResetFormValues = z.infer<typeof passwordResetSchema>

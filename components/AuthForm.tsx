@@ -10,6 +10,7 @@ import { FiEye, FiEyeOff } from 'react-icons/fi'
 import { toast } from 'sonner'
 
 import { useLogin, useRegister } from '@/hooks/useAuth'
+import { ApiError } from '@/api/errors'
 import {
     LoginFormValues,
     loginSchema,
@@ -22,6 +23,13 @@ type FormMode = 'login' | 'register'
 
 const inputClassName = 'mt-2 rounded px-3 py-2 ring-1 ring-gray-300 aria-invalid:ring-2 aria-invalid:ring-red-600 focus:outline-none focus:ring-2 focus:ring-[#003B6D]'
 const errorClassName = 'mt-1 text-sm text-red-700'
+const registrationFieldMessages = {
+    firstName: 'Check your first name.',
+    lastName: 'Check your last name.',
+    telephone: 'Enter 7 to 15 digits, optionally beginning with +.',
+    email: 'Enter a valid email address.',
+    password: 'Use at least 8 characters.',
+} as const
 
 const FieldError = ({ id, message }: { id: string, message?: string }) => message
     ? <p id={id} className={errorClassName}>{message}</p>
@@ -47,7 +55,13 @@ const PasswordVisibilityButton = ({
     </button>
 )
 
-const AuthForm = ({ nextPath }: { nextPath?: string }) => {
+const AuthForm = ({
+    nextPath,
+    passwordResetComplete = false,
+}: {
+    nextPath?: string
+    passwordResetComplete?: boolean
+}) => {
     const [mode, setMode] = useState<FormMode>('login')
     const [loginPasswordVisible, setLoginPasswordVisible] = useState(false)
     const [registerPasswordVisible, setRegisterPasswordVisible] = useState(false)
@@ -118,9 +132,38 @@ const AuthForm = ({ nextPath }: { nextPath?: string }) => {
             toast.success('Account created.', { id: toastId })
             router.replace(nextPath || '/dashboard')
         } catch (error) {
-            const message = (error as Error).message || 'Unable to create account.'
-            setServerError(message)
-            toast.error(message, { id: toastId })
+            const message = error instanceof Error ? error.message : 'Unable to create account.'
+            let handledInline = false
+            if (error instanceof ApiError && error.code === 'EMAIL_ALREADY_REGISTERED') {
+                registerForm.setError('email', { type: 'server', message }, { shouldFocus: true })
+                setServerError(null)
+                handledInline = true
+            } else if (
+                error instanceof ApiError
+                && error.code === 'INVALID_REGISTRATION'
+                && typeof error.details === 'object'
+                && error.details !== null
+                && 'fields' in error.details
+                && Array.isArray(error.details.fields)
+            ) {
+                let mappedFieldCount = 0
+                for (const field of error.details.fields) {
+                    if (typeof field === 'string' && field in registrationFieldMessages) {
+                        const typedField = field as keyof typeof registrationFieldMessages
+                        registerForm.setError(typedField, {
+                            type: 'server',
+                            message: registrationFieldMessages[typedField],
+                        })
+                        mappedFieldCount += 1
+                    }
+                }
+                setServerError(mappedFieldCount > 0 ? null : message)
+                handledInline = mappedFieldCount > 0
+            } else {
+                setServerError(message)
+            }
+            if (handledInline) toast.dismiss(toastId)
+            else toast.error(message, { id: toastId })
         }
     })
 
@@ -141,6 +184,13 @@ const AuthForm = ({ nextPath }: { nextPath?: string }) => {
                     ? 'Access your account and continue your job search.'
                     : 'Create your account to start applying for opportunities.'}
             </p>
+            {passwordResetComplete && mode === 'login'
+                ? (
+                    <p role="status" className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
+                        Your password has been changed. Sign in with your new password.
+                    </p>
+                )
+                : null}
 
             {mode === 'login' ? (
                 <form onSubmit={submitLogin} onChange={() => setServerError(null)} aria-labelledby="auth-title" aria-busy={loginMutation.isPending} noValidate className="space-y-3">
@@ -177,6 +227,12 @@ const AuthForm = ({ nextPath }: { nextPath?: string }) => {
                         </div>
                         <FieldError id="login-password-error" message={loginErrors.password?.message} />
                         {serverError ? <p role="alert" className={errorClassName}>{serverError}</p> : null}
+                        <Link
+                            href="/forgot-password?area=candidate"
+                            className="mt-2 self-end rounded text-sm font-semibold text-[#003B6D] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003B6D]"
+                        >
+                            Forgot password?
+                        </Link>
                     </div>
 
                     <button disabled={loginMutation.isPending} type="submit" className="my-3 w-full cursor-pointer rounded bg-[#003B6D] p-3 text-white disabled:cursor-wait disabled:opacity-70">
@@ -185,6 +241,7 @@ const AuthForm = ({ nextPath }: { nextPath?: string }) => {
                 </form>
             ) : (
                 <form onSubmit={submitRegistration} onChange={() => setServerError(null)} aria-labelledby="auth-title" aria-busy={registerMutation.isPending} noValidate className="space-y-3">
+                    {serverError ? <p role="alert" className={errorClassName}>{serverError}</p> : null}
                     <div className="flex flex-col gap-3 lg:flex-row">
                         <div className="flex min-w-0 flex-1 flex-col">
                             <label htmlFor="register-first-name">First name</label>
@@ -284,7 +341,6 @@ const AuthForm = ({ nextPath }: { nextPath?: string }) => {
                             />
                         </div>
                         <FieldError id="register-confirm-password-error" message={registerErrors.confirmPassword?.message} />
-                        {serverError ? <p role="alert" className={errorClassName}>{serverError}</p> : null}
                     </div>
 
                     <button disabled={registerMutation.isPending} type="submit" className="w-full cursor-pointer rounded bg-[#003B6D] p-3 text-white disabled:cursor-wait disabled:opacity-70">

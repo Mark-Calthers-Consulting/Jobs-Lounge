@@ -1,4 +1,10 @@
-import { loginUser, logoutUser, registerUser } from "@/api/auth"
+import {
+    confirmPasswordReset,
+    loginUser,
+    logoutUser,
+    registerUser,
+    requestPasswordReset,
+} from "@/api/auth"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 export const useLogin = () => {
@@ -25,5 +31,20 @@ export const useRegister = () => {
     return useMutation({
         mutationFn: registerUser,
         onSuccess: () => queryClient.removeQueries({ queryKey: ['me'] }),
+    })
+}
+
+export const usePasswordResetRequest = () => useMutation({
+    mutationFn: requestPasswordReset,
+})
+
+export const usePasswordResetConfirmation = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: confirmPasswordReset,
+        onSuccess: () => {
+            queryClient.removeQueries()
+            queryClient.setQueryData(['me'], null)
+        },
     })
 }
