@@ -227,6 +227,39 @@ export type PageOptions = {
   limit?: number
 }
 
+export type VacancySort = 'newest' | 'oldest'
+export type VacancyDatePosted = '24h' | '7d' | '30d'
+
+export type VacancyFilters = {
+  page?: number
+  limit?: number
+  search?: string
+  category?: Category[]
+  workMode?: WorkMode[]
+  jobType?: JobType[]
+  level?: Level[]
+  location?: string[]
+  datePosted?: VacancyDatePosted
+  experienceMin?: number
+  experienceMax?: number
+  salaryMin?: number
+  salaryDisclosed?: boolean
+  sort?: VacancySort
+}
+
+export type JobFilterOption = {
+  value: string
+  count: number
+}
+
+export type JobFilterOptions = {
+  categories: JobFilterOption[]
+  workModes: JobFilterOption[]
+  jobTypes: JobFilterOption[]
+  levels: JobFilterOption[]
+  locations: JobFilterOption[]
+}
+
 export type AdminApplication = {
   applicationId: string
   applicantId: string

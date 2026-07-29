@@ -1,14 +1,45 @@
-import { checkApplicationStatus, fetchVacancies, getRecommendedJobs, saveJob, unsaveJob } from "@/api/vacancies"
-import { Job, PaginatedResponse } from "@/types/types"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+    checkApplicationStatus,
+    fetchJobFilterOptions,
+    fetchVacancies,
+    getRecommendedJobs,
+    saveJob,
+    unsaveJob,
+} from "@/api/vacancies"
+import { Job, PaginatedResponse, VacancyFilters } from "@/types/types"
+import {
+    keepPreviousData,
+    useMutation,
+    useQuery,
+    useQueryClient,
+} from "@tanstack/react-query"
 
-export const useVacancies = (searchTerm: string, page = 1, limit = 20) => {
+export const useVacancies = (
+    filtersOrSearch: VacancyFilters | string = {},
+    legacyPage = 1,
+    legacyLimit = 20,
+) => {
+    const filters: VacancyFilters = typeof filtersOrSearch === 'string'
+        ? {
+            search: filtersOrSearch || undefined,
+            page: legacyPage,
+            limit: legacyLimit,
+        }
+        : filtersOrSearch
+
     return useQuery<PaginatedResponse<Job>>({
-        queryKey: ['vacancies', searchTerm, page, limit],
-        queryFn: ({ signal }) => fetchVacancies(searchTerm, page, limit, signal),
+        queryKey: ['vacancies', filters],
+        queryFn: ({ signal }) => fetchVacancies(filters, signal),
+        placeholderData: keepPreviousData,
         staleTime: 30_000,
     })
 }
+
+export const useJobFilterOptions = () => useQuery({
+    queryKey: ['vacancyFilterOptions'],
+    queryFn: ({ signal }) => fetchJobFilterOptions(signal),
+    staleTime: 5 * 60_000,
+})
 
 export const useSaveJob = () => {
     const queryClient = useQueryClient()
@@ -37,6 +68,6 @@ export const useCheckApplicationStatus = (jobId: string, enabled = true) => {
 export const useRecommendedJobs = () => {
     return useQuery({
         queryKey: ['recommendations'],
-        queryFn: getRecommendedJobs
+        queryFn: getRecommendedJobs,
     })
 }
