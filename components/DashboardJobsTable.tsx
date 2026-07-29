@@ -63,7 +63,7 @@ const columns = [
 ]
 
 const DashboardJobsTable = () => {
-  const { data: vacancies, isLoading, isError } = useAdminVacancies(1, 5)
+  const { data: vacancies, isLoading, isError } = useAdminVacancies({ page: 1, limit: 5 })
 
   const table = useReactTable({
     data: vacancies?.data || [],

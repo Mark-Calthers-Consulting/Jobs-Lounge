@@ -1,4 +1,5 @@
 import ApplicationsPageTable from "@/components/ApplicationsPageTable"
+import { Suspense } from "react"
 
 const AdminApplications: React.FC = () => {
     return (
@@ -11,7 +12,9 @@ const AdminApplications: React.FC = () => {
             </div>
 
             <div className="">
-                <ApplicationsPageTable />
+                <Suspense fallback={<p role="status">Loading applications…</p>}>
+                    <ApplicationsPageTable />
+                </Suspense>
             </div>
         </div>
     )

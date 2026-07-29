@@ -45,6 +45,11 @@ export type Job = {
   status: JobStatus
   views: number
   totalApplicants?: number
+  archivedAt?: string
+  applicationSummary?: {
+    total: number
+    byStatus: Record<ApplicationStatus, number>
+  }
   createdAt: string
   updatedAt: string
   __v?: number
@@ -268,11 +273,57 @@ export type AdminApplication = {
   telephone?: string
   jobId: string
   title: string
+  jobStatus?: JobStatus
+  jobArchivedAt?: string
   createdAt: string
   status: ApplicationStatus
   cvLink?: string
   coverLetterLink?: string
   note?: string
+}
+
+export type AdminJobView = 'all' | 'open' | 'draft' | 'closed' | 'deadline-passed' | 'archived'
+export type AdminJobSort = 'newest' | 'oldest' | 'deadline' | 'applicants'
+
+export type AdminJobListFilters = {
+  page?: number
+  limit?: number
+  search?: string
+  view?: AdminJobView
+  sort?: AdminJobSort
+}
+
+export type AdminJobSummary = {
+  all: number
+  open: number
+  draft: number
+  closed: number
+  deadlinePassed: number
+  archived: number
+}
+
+export type AdminJobsResponse = PaginatedResponse<Job> & {
+  summary: AdminJobSummary
+}
+
+export type AdminApplicationListFilters = {
+  page?: number
+  limit?: number
+  jobId?: string
+  status?: ApplicationStatus
+}
+
+export type AdminApplicationsResponse = PaginatedResponse<AdminApplication> & {
+  filterContext: {
+    status: ApplicationStatus | null
+    job: {
+      _id: string
+      title: string
+      company?: string
+      status: JobStatus
+      archivedAt?: string
+    } | null
+  }
 }
 
 export type CandidateSummary = {
@@ -283,6 +334,15 @@ export type CandidateSummary = {
   highestEducation?: string
   postNyscExperience?: number
   profileCompleted: boolean
+  profileCompletion: {
+    complete: boolean
+    percentage: number
+    missingSectionCount: number
+  }
+  duplicateSignal: {
+    possibleDuplicate: boolean
+    matchFields: Array<'email' | 'telephone'>
+  }
   applicationCount: number
   latestApplicationAt?: string
   createdAt: string
@@ -301,7 +361,7 @@ export type CandidateListFilters = {
   experienceMax?: number
   joinedFrom?: string
   joinedTo?: string
-  sort?: 'newest' | 'oldest' | 'name' | 'applications'
+  sort?: 'newest' | 'oldest' | 'name' | 'name-desc' | 'applications' | 'applications-asc'
 }
 
 export type CandidateFilterOptions = {
@@ -321,6 +381,10 @@ export type AdminCandidateDetail = {
     total: number
     byStatus: Record<ApplicationStatus, number>
     latestApplicationAt?: string
+  }
+  duplicateSignal: {
+    possibleDuplicate: boolean
+    matchFields: Array<'email' | 'telephone'>
   }
 }
 

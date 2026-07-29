@@ -5,7 +5,7 @@ import { useAdminCandidate, useCandidateApplications } from '@/hooks/useAdmin'
 import PaginationControls from '@/components/PaginationControls'
 import Link from 'next/link'
 import { useState } from 'react'
-import { FiArrowLeft, FiExternalLink, FiMail, FiPhone } from 'react-icons/fi'
+import { FiAlertTriangle, FiArrowLeft, FiExternalLink, FiMail, FiPhone } from 'react-icons/fi'
 
 const formatDate = (value?: string, options?: Intl.DateTimeFormatOptions) => value
     ? new Date(value).toLocaleDateString('en-NG', options || { day: 'numeric', month: 'short', year: 'numeric' })
@@ -63,7 +63,7 @@ const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
         )
     }
 
-    const { candidate, applicationSummary } = candidateQuery.data
+    const { candidate, applicationSummary, duplicateSignal } = candidateQuery.data
     const completion = candidate.profileCompletion
 
     return (
@@ -90,6 +90,22 @@ const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
                     </div>
                 </div>
             </header>
+
+            {duplicateSignal.possibleDuplicate && (
+                <section
+                    aria-labelledby="possible-duplicate-title"
+                    className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-950"
+                >
+                    <FiAlertTriangle aria-hidden="true" className="mt-0.5 shrink-0" />
+                    <div>
+                        <h2 id="possible-duplicate-title" className="font-semibold">Possible duplicate candidate</h2>
+                        <p className="mt-1 text-sm">
+                            Another candidate profile has the same {duplicateSignal.matchFields.join(' and ')}.
+                            Review the records manually; no profiles have been linked or merged.
+                        </p>
+                    </div>
+                </section>
+            )}
 
             <section aria-labelledby="application-summary-title" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 <div className="rounded-xl border border-gray-200 bg-white p-4">

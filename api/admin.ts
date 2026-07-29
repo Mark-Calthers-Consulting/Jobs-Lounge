@@ -1,7 +1,10 @@
 import { apiPath } from './base'
 import type {
-    AdminApplication,
+    AdminApplicationListFilters,
+    AdminApplicationsResponse,
     AdminCandidateDetail,
+    AdminJobListFilters,
+    AdminJobsResponse,
     ApiSuccess,
     CandidateApplication,
     CandidateFilterOptions,
@@ -36,14 +39,22 @@ const pageQuery = (page = 1, limit = 20) => new URLSearchParams({
     limit: String(limit),
 })
 
-export const fetchAdminJobs = async (page = 1, limit = 20): Promise<PaginatedResponse<Job>> => {
-    const res = await fetch(`${apiPath('/admin/getAllJobs')}?${pageQuery(page, limit)}`,
+export const fetchAdminJobs = async (
+    filters: AdminJobListFilters = {},
+): Promise<AdminJobsResponse> => {
+    const params = new URLSearchParams()
+    Object.entries({ page: 1, limit: 20, view: 'all', sort: 'newest', ...filters })
+        .forEach(([key, value]) => {
+            if (value !== undefined && value !== '') params.set(key, String(value))
+        })
+    const res = await fetch(`${apiPath('/admin/jobs')}?${params}`,
         {
             method: 'GET',
-            credentials: 'include'
+            credentials: 'include',
+            cache: 'no-store',
         }
     )
-    return readApiResponse<PaginatedResponse<Job>>(res, 'Failed to fetch vacancies')
+    return readApiResponse<AdminJobsResponse>(res, 'Failed to fetch vacancies')
 }
 
 export const fetchAllUsers = async (page = 1, limit = 20): Promise<PaginatedResponse<User>> => {
@@ -85,9 +96,11 @@ export const fetchJobCandidates = async (
 
 export const fetchCandidateFilterOptions = async (
     jobSearch?: string,
+    selectedJobId?: string,
 ): Promise<CandidateFilterOptions> => {
     const params = new URLSearchParams()
     if (jobSearch) params.set('jobSearch', jobSearch)
+    if (selectedJobId) params.set('selectedJobId', selectedJobId)
     const suffix = params.size ? `?${params}` : ''
     const res = await fetch(apiPath(`/admin/candidates/filter-options${suffix}`), {
         credentials: 'include',
@@ -132,14 +145,20 @@ export const fetchCandidateApplications = async (
     )
 }
 
-export const fetchAllApplications = async (page = 1, limit = 20): Promise<PaginatedResponse<AdminApplication>> => {
-    const res = await fetch(`${apiPath('/admin/getApplications')}?${pageQuery(page, limit)}`,
+export const fetchAllApplications = async (
+    filters: AdminApplicationListFilters = {},
+): Promise<AdminApplicationsResponse> => {
+    const params = pageQuery(filters.page ?? 1, filters.limit ?? 20)
+    if (filters.jobId) params.set('jobId', filters.jobId)
+    if (filters.status) params.set('status', filters.status)
+    const res = await fetch(`${apiPath('/admin/applications')}?${params}`,
         {
             method: 'GET',
-            credentials: 'include'
+            credentials: 'include',
+            cache: 'no-store',
         }
     )
-    return readApiResponse<PaginatedResponse<AdminApplication>>(res, 'Failed to fetch applications')
+    return readApiResponse<AdminApplicationsResponse>(res, 'Failed to fetch applications')
 
 }
 
@@ -194,7 +213,15 @@ export const deleteAdminJob = async (jobId: string): Promise<{ jobId: string; de
     })
     const result = await readApiResponse<ApiSuccess<{ jobId: string; deletedAt: string }>>(
         res,
-        'Unable to delete job',
+        'Unable to archive job',
     )
+    return result.data
+}
+
+export const restoreAdminJob = async (jobId: string): Promise<Job> => {
+    const res = await csrfFetch(apiPath(`/jobs/${encodeURIComponent(jobId)}/restore`), {
+        method: 'POST',
+    })
+    const result = await readApiResponse<ApiSuccess<Job>>(res, 'Unable to restore job')
     return result.data
 }

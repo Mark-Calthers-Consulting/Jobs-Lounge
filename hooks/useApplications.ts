@@ -47,6 +47,10 @@ export const useUpdateApplicationStatus = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['getAllApplications'] })
             queryClient.invalidateQueries({ queryKey: ['adminApplications'] })
+            queryClient.invalidateQueries({ queryKey: ['adminVacancies'] })
+            queryClient.invalidateQueries({ queryKey: ['adminJob'] })
+            queryClient.invalidateQueries({ queryKey: ['adminCandidate'] })
+            queryClient.invalidateQueries({ queryKey: ['candidateApplications'] })
         }
     })
 }

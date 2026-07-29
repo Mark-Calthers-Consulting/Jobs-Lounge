@@ -1,5 +1,5 @@
-import { deleteAdminJob, fetchAdminCandidate, fetchAdminDashboard, fetchAdminJob, fetchAdminJobs, fetchAllApplications, fetchAllUsers, fetchCandidateApplications, fetchCandidateFilterOptions, fetchJobCandidates, fetchTeamMembers, updateAdminJob, updateAdminJobStatus } from "@/api/admin"
-import { AdminApplication, CandidateListFilters, Job, PaginatedResponse, User } from "@/types/types"
+import { deleteAdminJob, fetchAdminCandidate, fetchAdminDashboard, fetchAdminJob, fetchAdminJobs, fetchAllApplications, fetchAllUsers, fetchCandidateApplications, fetchCandidateFilterOptions, fetchJobCandidates, fetchTeamMembers, restoreAdminJob, updateAdminJob, updateAdminJobStatus } from "@/api/admin"
+import { AdminApplicationListFilters, AdminJobListFilters, CandidateListFilters, Job, PaginatedResponse, User } from "@/types/types"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 
@@ -10,10 +10,10 @@ export const useAdminDashboard = () => {
     })
 }
 
-export const useAdminVacancies = (page = 1, limit = 20) => {
-    return useQuery<PaginatedResponse<Job>>({
-        queryKey: ['adminVacancies', page, limit],
-        queryFn: () => fetchAdminJobs(page, limit)
+export const useAdminVacancies = (filters: AdminJobListFilters = {}) => {
+    return useQuery({
+        queryKey: ['adminVacancies', filters],
+        queryFn: () => fetchAdminJobs(filters)
     })
 }
 
@@ -38,9 +38,9 @@ export const useGetJobCandidates = (filters: CandidateListFilters = {}) => {
     })
 }
 
-export const useCandidateFilterOptions = (jobSearch?: string) => useQuery({
-    queryKey: ['candidateFilterOptions', jobSearch || ''],
-    queryFn: () => fetchCandidateFilterOptions(jobSearch),
+export const useCandidateFilterOptions = (jobSearch?: string, selectedJobId?: string) => useQuery({
+    queryKey: ['candidateFilterOptions', jobSearch || '', selectedJobId || ''],
+    queryFn: () => fetchCandidateFilterOptions(jobSearch, selectedJobId),
 })
 
 export const useAdminCandidate = (candidateId: string) => useQuery({
@@ -59,10 +59,10 @@ export const useCandidateApplications = (
     enabled: Boolean(candidateId),
 })
 
-export const useAdminApplications = (page = 1, limit = 20) => {
-    return useQuery<PaginatedResponse<AdminApplication>>({
-        queryKey:['adminApplications', page, limit],
-        queryFn: () => fetchAllApplications(page, limit)
+export const useAdminApplications = (filters: AdminApplicationListFilters = {}) => {
+    return useQuery({
+        queryKey:['adminApplications', filters],
+        queryFn: () => fetchAllApplications(filters)
     })
 }
 
@@ -90,8 +90,38 @@ export const useDeleteAdminJob = () => {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: deleteAdminJob,
-        onSuccess: () => {
+        onSuccess: (result, jobId) => {
+            queryClient.setQueryData<Job | undefined>(['adminJob', jobId], (current) => (
+                current
+                    ? {
+                        ...current,
+                        status: 'Closed',
+                        archivedAt: result.deletedAt,
+                    }
+                    : current
+            ))
             queryClient.invalidateQueries({ queryKey: ['adminVacancies'] })
+            queryClient.invalidateQueries({ queryKey: ['adminApplications'] })
+            queryClient.invalidateQueries({ queryKey: ['adminDashboard'] })
+            queryClient.invalidateQueries({ queryKey: ['vacancies'] })
+            queryClient.invalidateQueries({ queryKey: ['recommendations'] })
+            queryClient.invalidateQueries({ queryKey: ['savedJobs'] })
+        },
+    })
+}
+
+export const useRestoreAdminJob = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: restoreAdminJob,
+        onSuccess: (job) => {
+            queryClient.setQueryData<Job | undefined>(['adminJob', job._id], (current) => (
+                current
+                    ? { ...current, ...job, archivedAt: undefined }
+                    : { ...job, archivedAt: undefined }
+            ))
+            queryClient.invalidateQueries({ queryKey: ['adminVacancies'] })
+            queryClient.invalidateQueries({ queryKey: ['adminApplications'] })
             queryClient.invalidateQueries({ queryKey: ['adminDashboard'] })
         },
     })
