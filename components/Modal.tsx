@@ -12,12 +12,13 @@ interface ModalProps {
     body?: React.ReactElement
     footer?: React.ReactElement
     actionLabel: string
+    actionTone?: 'default' | 'danger'
     disabled?: boolean
     size?: 'default' | 'compact'
 }
 
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onSubmit, title, body, footer, actionLabel, disabled, size = 'default' }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onSubmit, title, body, footer, actionLabel, actionTone = 'default', disabled, size = 'default' }) => {
     const titleId = useId()
     const bodyId = useId()
     const dialogRef = useRef<HTMLDivElement>(null)
@@ -122,7 +123,16 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onSubmit, title, body, f
                     {/* Footer */}
                     <div className={`flex flex-col gap-2 ${isCompact ? 'p-5 pt-3' : 'p-10'}`}>
                         {isCompact ? (
-                            <button type="button" disabled={disabled} onClick={handleSubmit} className="w-full rounded-md bg-white px-4 py-2.5 text-sm font-semibold text-black transition hover:bg-gray-100 disabled:cursor-wait disabled:opacity-60">
+                            <button
+                                type="button"
+                                disabled={disabled}
+                                onClick={handleSubmit}
+                                className={`w-full rounded-md px-4 py-2.5 text-sm font-semibold transition disabled:cursor-wait disabled:opacity-60 ${
+                                    actionTone === 'danger'
+                                        ? 'bg-red-600 text-white hover:bg-red-500'
+                                        : 'bg-white text-black hover:bg-gray-100'
+                                }`}
+                            >
                                 {actionLabel}
                             </button>
                         ) : (

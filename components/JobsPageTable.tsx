@@ -41,6 +41,17 @@ const JobsPageTable = () => {
         }
     }
 
+    const closeJobInstead = async () => {
+        if (!jobToDelete || jobToDelete.status !== 'Open') return
+        try {
+            await updateJobStatus.mutateAsync({ jobId: jobToDelete._id, status: 'Closed' })
+            toast.success('Vacancy closed and kept in admin')
+            setJobToDelete(null)
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Unable to close vacancy')
+        }
+    }
+
     const confirmClose = async () => {
         if (!jobToClose) return
         try {
@@ -146,11 +157,55 @@ const JobsPageTable = () => {
             <Modal
                 isOpen={Boolean(jobToDelete)}
                 title="Delete job?"
-                body={<p>This removes <strong>{jobToDelete?.title}</strong> from all listings while preserving its application history.</p>}
-                actionLabel={deleteJob.isPending ? 'Deleting…' : 'Delete job'}
-                disabled={deleteJob.isPending}
+                body={(
+                    <div className="space-y-4">
+                        <p>
+                            Are you sure you want to delete <strong>{jobToDelete?.title}</strong>?
+                        </p>
+                        <div className="rounded-lg border border-white/20 bg-white/10 px-4 py-3">
+                            <p className="text-xs font-medium text-white/70">Applicants for this job</p>
+                            <p className="mt-1 text-2xl font-semibold">
+                                {(jobToDelete?.totalApplicants ?? 0).toLocaleString()}
+                            </p>
+                        </div>
+                        <p className="text-sm leading-6 text-white/75">
+                            Deleting removes the job from all listings. Its existing application history will be preserved.
+                        </p>
+                        {jobToDelete?.status === 'Open' ? (
+                            <p className="text-sm leading-6 text-white/75">
+                                To stop new applications while keeping the job available in admin, close the vacancy instead.
+                            </p>
+                        ) : null}
+                    </div>
+                )}
+                actionLabel={deleteJob.isPending ? 'Deleting…' : 'Yes, delete job'}
+                actionTone="danger"
+                disabled={deleteJob.isPending || updateJobStatus.isPending}
+                size="compact"
                 onClose={() => setJobToDelete(null)}
                 onSubmit={() => void confirmDelete()}
+                footer={(
+                    <>
+                        {jobToDelete?.status === 'Open' ? (
+                            <button
+                                type="button"
+                                disabled={deleteJob.isPending || updateJobStatus.isPending}
+                                onClick={() => void closeJobInstead()}
+                                className="w-full rounded-md border border-blue-300/60 px-4 py-2.5 text-sm font-semibold text-blue-100 transition hover:bg-blue-500/15 disabled:cursor-wait disabled:opacity-60"
+                            >
+                                {updateJobStatus.isPending ? 'Closing…' : 'Close vacancy instead'}
+                            </button>
+                        ) : null}
+                        <button
+                            type="button"
+                            disabled={deleteJob.isPending || updateJobStatus.isPending}
+                            onClick={() => setJobToDelete(null)}
+                            className="w-full rounded-md border border-white/30 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10 disabled:cursor-wait disabled:opacity-60"
+                        >
+                            No, keep job
+                        </button>
+                    </>
+                )}
             />
         </div>
     )
