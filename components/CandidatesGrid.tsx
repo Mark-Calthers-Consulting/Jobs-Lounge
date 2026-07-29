@@ -15,6 +15,8 @@ import {
     FiX,
 } from 'react-icons/fi'
 import PaginationControls from './PaginationControls'
+import { usePlatformSettings } from './PlatformSettingsProvider'
+import { formatDateInTimeZone } from '@/utils/dateTime'
 
 const inputClass = 'w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-[#184aa2] focus:ring-2 focus:ring-[#184aa2]/20'
 type CandidateSort = NonNullable<CandidateListFilters['sort']>
@@ -25,8 +27,8 @@ const numberParam = (value: string | null) => {
     return Number(value)
 }
 
-const formatDate = (value?: string) => value
-    ? new Date(value).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })
+const formatDate = (value: string | undefined, timeZone: string) => value
+    ? formatDateInTimeZone(value, timeZone)
     : '—'
 
 const experienceLabel = (years?: number) => {
@@ -262,6 +264,7 @@ const VacancyCombobox = ({
 }
 
 const CandidatesGrid = () => {
+    const { timeZone } = usePlatformSettings()
     const router = useRouter()
     const pathname = usePathname()
     const searchParams = useSearchParams()
@@ -540,7 +543,7 @@ const CandidatesGrid = () => {
                                         >
                                             <td className="px-4 py-4">
                                                 <p className="font-semibold text-gray-950">{candidate.name || 'Unnamed candidate'}</p>
-                                                <p className="mt-0.5 text-xs text-gray-500">Updated {formatDate(candidate.updatedAt)}</p>
+                                                <p className="mt-0.5 text-xs text-gray-500">Updated {formatDate(candidate.updatedAt, timeZone)}</p>
                                                 <div className="mt-2"><DuplicateBadge signal={candidate.duplicateSignal} /></div>
                                             </td>
                                             <td className="px-4 py-4 text-sm">
@@ -554,9 +557,9 @@ const CandidatesGrid = () => {
                                             <td className="px-4 py-4"><Completion candidate={candidate} /></td>
                                             <td className="px-4 py-4 text-sm">
                                                 <span className="font-semibold">{candidate.applicationCount}</span>
-                                                <p className="mt-1 text-xs text-gray-500">Latest {formatDate(candidate.latestApplicationAt)}</p>
+                                                <p className="mt-1 text-xs text-gray-500">Latest {formatDate(candidate.latestApplicationAt, timeZone)}</p>
                                             </td>
-                                            <td className="px-4 py-4 text-sm text-gray-600">{formatDate(candidate.createdAt)}</td>
+                                            <td className="px-4 py-4 text-sm text-gray-600">{formatDate(candidate.createdAt, timeZone)}</td>
                                             <td className="px-4 py-4 text-right">
                                                 <Link href={`/admin-center/candidates/${candidate._id}`} className="whitespace-nowrap text-sm font-semibold text-[#184aa2] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]">
                                                     View candidate
@@ -584,7 +587,7 @@ const CandidatesGrid = () => {
                                 <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
                                     <div><dt className="text-gray-500">Experience</dt><dd className="mt-0.5 font-medium">{experienceLabel(candidate.postNyscExperience)}</dd></div>
                                     <div><dt className="text-gray-500">Applications</dt><dd className="mt-0.5 font-medium">{candidate.applicationCount}</dd></div>
-                                    <div><dt className="text-gray-500">Joined</dt><dd className="mt-0.5 font-medium">{formatDate(candidate.createdAt)}</dd></div>
+                                    <div><dt className="text-gray-500">Joined</dt><dd className="mt-0.5 font-medium">{formatDate(candidate.createdAt, timeZone)}</dd></div>
                                 </dl>
                                 <Link href={`/admin-center/candidates/${candidate._id}`} className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-md bg-[#184aa2] px-4 text-sm font-semibold text-white">
                                     View candidate

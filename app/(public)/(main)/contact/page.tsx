@@ -1,8 +1,12 @@
+'use client'
+
 import { IoLocation } from "react-icons/io5";
 import { IoMail } from "react-icons/io5";
 import ContactForm from '@/components/ContactForm'
+import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
 
 const Contact: React.FC = () => {
+    const { supportEmail } = usePlatformSettings()
     return (
         <div className="max-w-7xl mx-auto">
             <section className="text-center px-12 my-12">
@@ -13,7 +17,9 @@ const Contact: React.FC = () => {
                 <address className="space-y-5 not-italic">
                     <div className="flex gap-4">
                         <IoMail aria-hidden="true" size={32} color="#473BF0" className="mt-1" />
-                        <p className="text-xl"><a className="underline" href="mailto:support@markcaltherconsulting.com">support@markcaltherconsulting.com</a><br /><a className="underline" href="mailto:contact@mccjobslounge.com">contact@mccjobslounge.com</a></p>
+                        <p className="text-xl">
+                            <a className="underline" href={`mailto:${supportEmail}`}>{supportEmail}</a>
+                        </p>
                     </div>
                     <div className="flex gap-3">
                         <IoLocation aria-hidden="true" size={32} color="#473BF0" className="mt-1" />

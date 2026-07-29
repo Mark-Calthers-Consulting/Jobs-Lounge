@@ -10,8 +10,10 @@ import {
   StageCounts,
   StatusBadge,
 } from './workspaceUi'
+import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
 
 export default function ApplicationsOverview() {
+  const { timeZone } = usePlatformSettings()
   const overview = useApplicationsOverview()
 
   if (overview.isLoading) return <LoadingState label="Preparing the recruitment workspace…" />
@@ -57,7 +59,7 @@ export default function ApplicationsOverview() {
                   </span>
                   <span className="text-right text-sm">
                     <span className="block font-medium text-blue-800">{job.byStatus.pending} new</span>
-                    <span className="text-xs text-slate-500">Latest {formatDate(job.latestApplicationAt)}</span>
+                    <span className="text-xs text-slate-500">Latest {formatDate(job.latestApplicationAt, timeZone)}</span>
                   </span>
                 </div>
               </Link>
@@ -86,7 +88,7 @@ export default function ApplicationsOverview() {
                     </span>
                     <span className="truncate text-sm text-slate-700">{application.title}</span>
                     <StatusBadge status={application.status} />
-                    <span className="text-sm text-slate-500">{formatDate(application.createdAt)}</span>
+                    <span className="text-sm text-slate-500">{formatDate(application.createdAt, timeZone)}</span>
                   </Link>
                 </li>
               ))}

@@ -6,8 +6,10 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useApplicationJobs } from '@/hooks/useApplicationWorkspace'
 import PaginationControls from '@/components/PaginationControls'
 import { EmptyState, ErrorState, formatDate, LoadingState, STAGES } from './workspaceUi'
+import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
 
 export default function ApplicationJobDirectory() {
+  const { timeZone } = usePlatformSettings()
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const router = useRouter()
@@ -72,7 +74,7 @@ export default function ApplicationJobDirectory() {
                     </span>
                     <span className="text-right">
                       <span className="block text-xl font-semibold">{job.total}</span>
-                      <span className="text-xs text-slate-500">total · latest {formatDate(job.latestApplicationAt)}</span>
+                      <span className="text-xs text-slate-500">total · latest {formatDate(job.latestApplicationAt, timeZone)}</span>
                     </span>
                   </div>
                 </Link>

@@ -1,7 +1,5 @@
-const AdminSettingsPage = () => (
-    <div>
-        <h1 className="text-3xl font-bold tracking-tight text-gray-950">Settings</h1>
-    </div>
-)
+import AdminSettingsClient from './AdminSettingsClient'
+
+const AdminSettingsPage = () => <AdminSettingsClient />
 
 export default AdminSettingsPage

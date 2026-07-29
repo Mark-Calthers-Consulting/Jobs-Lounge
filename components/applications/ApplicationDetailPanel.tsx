@@ -12,6 +12,7 @@ import {
 } from '@/hooks/useApplicationWorkspace'
 import Modal from '@/components/Modal'
 import { ErrorState, formatDate, LoadingState, STAGES, StatusBadge } from './workspaceUi'
+import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
 
 const safeDocumentLink = (value?: string) => {
   if (!value) return undefined
@@ -30,6 +31,7 @@ export default function ApplicationDetailPanel({
   applicationId?: string
   onClose?: () => void
 }) {
+  const { timeZone } = usePlatformSettings()
   const detail = useApplicationDetail(applicationId)
   const activity = useApplicationActivity(applicationId)
   const update = useUpdateApplicationWorkflow()
@@ -123,7 +125,7 @@ export default function ApplicationDetailPanel({
             <StatusBadge status={application.status} />
             {application.priority ? <span className="text-sm font-medium text-amber-700">★ Priority</span> : null}
           </div>
-          <p className="mt-1 text-sm text-slate-500">Applied {formatDate(application.createdAt)}</p>
+          <p className="mt-1 text-sm text-slate-500">Applied {formatDate(application.createdAt, timeZone)}</p>
         </div>
         <div className="flex gap-2">
           <button type="button" onClick={() => void togglePriority()} disabled={update.isPending} className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold hover:bg-slate-50 disabled:opacity-50">
@@ -219,7 +221,7 @@ export default function ApplicationDetailPanel({
                     item.type === 'undo' ? 'Previous change undone' : 'Application submitted'}
                 </p>
                 {item.note ? <p className="mt-1 whitespace-pre-wrap text-slate-600">{item.note}</p> : null}
-                <p className="mt-1 text-xs text-slate-500">{item.actor?.name || 'System'} · {formatDate(item.createdAt)}</p>
+                <p className="mt-1 text-xs text-slate-500">{item.actor?.name || 'System'} · {formatDate(item.createdAt, timeZone)}</p>
               </li>
             ))}
           </ol>

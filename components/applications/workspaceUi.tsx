@@ -1,5 +1,9 @@
+'use client'
+
 import type { ApplicationStatus } from '@/constants/enums'
 import type { AdminApplication, ApplicationStageTotals } from '@/types/types'
+import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
+import { formatDateInTimeZone } from '@/utils/dateTime'
 
 export const STAGES: Array<{ value: ApplicationStatus; label: string }> = [
   { value: 'pending', label: 'New' },
@@ -19,8 +23,8 @@ export const stageTone: Record<ApplicationStatus, string> = {
   rejected: 'bg-red-50 text-red-800 border-red-200',
 }
 
-export const formatDate = (value?: string) => value
-  ? new Intl.DateTimeFormat('en-NG', { dateStyle: 'medium' }).format(new Date(value))
+export const formatDate = (value?: string, timeZone = 'Africa/Lagos') => value
+  ? formatDateInTimeZone(value, timeZone, { dateStyle: 'medium' })
   : 'Not available'
 
 export const StageCounts = ({
@@ -60,7 +64,9 @@ export const ApplicationCard = ({
   selectable?: boolean
   checked?: boolean
   onChecked?: (checked: boolean) => void
-}) => (
+}) => {
+  const { timeZone } = usePlatformSettings()
+  return (
   <article className={`rounded-xl border bg-white p-4 transition-colors ${
     selected ? 'border-blue-700 bg-blue-50/30' : 'border-slate-200 hover:border-slate-300'
   }`}>
@@ -84,12 +90,13 @@ export const ApplicationCard = ({
         </span>
         <span className="mt-3 flex flex-wrap items-center justify-between gap-2">
           <StatusBadge status={application.status} />
-          <span className="text-xs text-slate-500">{formatDate(application.createdAt)}</span>
+          <span className="text-xs text-slate-500">{formatDate(application.createdAt, timeZone)}</span>
         </span>
       </button>
     </div>
   </article>
-)
+  )
+}
 
 export const LoadingState = ({ label = 'Loading applications…' }: { label?: string }) => (
   <div role="status" className="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-600">{label}</div>

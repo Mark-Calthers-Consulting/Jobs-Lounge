@@ -33,6 +33,8 @@ import {
 import { toast } from 'sonner'
 import Modal from './Modal'
 import PaginationControls from './PaginationControls'
+import { usePlatformSettings } from './PlatformSettingsProvider'
+import { formatDateInTimeZone } from '@/utils/dateTime'
 
 const ADMIN_JOB_VIEWS: AdminJobView[] = [
     'all',
@@ -82,12 +84,6 @@ const numberParam = (value: string | null) => {
     const parsed = Number(value)
     return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : 1
 }
-
-const formatDate = (value: string) => new Date(value).toLocaleDateString('en-NG', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-})
 
 const JobStatus = ({ job }: { job: Job }) => (
     <div className="flex flex-wrap items-center gap-2">
@@ -184,6 +180,8 @@ const JobActions = ({
 }
 
 const JobsPageTable = () => {
+    const { timeZone } = usePlatformSettings()
+    const formatDate = (value: string) => formatDateInTimeZone(value, timeZone)
     const { data: user } = useUser()
     const canReviewApplications = hasStaffPermission(user?.role, 'applications:review')
     const canArchive = hasStaffPermission(user?.role, 'jobs:archive')
@@ -481,7 +479,7 @@ const JobsPageTable = () => {
                                             </td>
                                             <td className="px-4 py-4"><JobStatus job={job} /></td>
                                             <td className="px-4 py-4 text-sm text-gray-700">
-                                                {job.deadline ? formatJobDeadline(job.deadline) : 'No deadline'}
+                                                {job.deadline ? formatJobDeadline(job.deadline, timeZone) : 'No deadline'}
                                             </td>
                                             <td className="px-4 py-4">
                                                 {canReviewApplications ? (
@@ -532,7 +530,7 @@ const JobsPageTable = () => {
                                     <div>
                                         <dt className="text-gray-500">Deadline</dt>
                                         <dd className="mt-0.5 font-medium text-gray-900">
-                                            {job.deadline ? formatJobDeadline(job.deadline) : 'No deadline'}
+                                            {job.deadline ? formatJobDeadline(job.deadline, timeZone) : 'No deadline'}
                                         </dd>
                                     </div>
                                     <div>

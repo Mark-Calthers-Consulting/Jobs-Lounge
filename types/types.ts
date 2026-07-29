@@ -549,6 +549,41 @@ export type CreateStaffPayload = {
   password?: string
 }
 
+export type PublicPlatformSettings = {
+    supportEmail: string
+    timeZone: string
+}
+
+export type VacancyCreationDefaults = {
+    defaultJobStatus: 'Draft' | 'Open'
+    defaultDeadlineMode: 'none' | 'required'
+    timeZone: string
+}
+
+export type OrganizationSettings = PublicPlatformSettings & {
+  defaultJobStatus: Extract<JobStatus, 'Draft' | 'Open'>
+  defaultDeadlineMode: 'none' | 'required'
+  revision: number
+  updatedAt?: string
+  updatedBy?: {
+    _id: string
+    name?: string
+  }
+}
+
+export type OrganizationSettingsUpdate = Partial<Pick<
+  OrganizationSettings,
+  'supportEmail' | 'timeZone' | 'defaultJobStatus' | 'defaultDeadlineMode'
+>> & {
+  revision: number
+}
+
+export type StaffProfilePayload = {
+  firstName: string
+  lastName: string
+  telephone: string
+}
+
 export type SavedJobMutation = {
   jobId: string
   saved: boolean

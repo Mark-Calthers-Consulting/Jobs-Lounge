@@ -9,9 +9,9 @@ export const isJobDeadlinePast = (job: DeadlineJob, now = Date.now()) => {
     return Number.isFinite(deadline) && deadline < now
 }
 
-export const formatJobDeadline = (deadline: string) => new Intl.DateTimeFormat('en-NG', {
+export const formatJobDeadline = (deadline: string, timeZone = 'Africa/Lagos') => new Intl.DateTimeFormat('en-NG', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
-    timeZone: 'Africa/Lagos',
+    timeZone,
 }).format(new Date(deadline))

@@ -7,9 +7,14 @@ const optionalUrl = z.preprocess(
   z.string().url().optional(),
 )
 
-const optionalIsoDate = z.preprocess(
+const dateOnlyPattern = /^\d{4}-\d{2}-\d{2}$/
+
+const optionalDeadline = z.preprocess(
   (value) => value === '' ? undefined : value,
-  z.string().datetime().optional(),
+  z.string().refine(
+    (value) => dateOnlyPattern.test(value) || z.string().datetime().safeParse(value).success,
+    'Deadline must be a calendar date or ISO timestamp',
+  ).optional(),
 )
 
 export const jobFormSchema = z.object({
@@ -34,8 +39,8 @@ export const jobFormSchema = z.object({
   experience: z.number().int().min(0, "Experience must be zero or greater"),
   skills: z.array(z.string()).default([]),
   applyLink: optionalUrl,
-  deadline: optionalIsoDate,
-  status: z.enum(JOB_STATUSES).default("Open"),
+  deadline: optionalDeadline,
+  status: z.enum(JOB_STATUSES).default("Draft"),
   company: z.object({
     name: z.string().min(1, "Company name is required"),
     logo: optionalUrl,

@@ -8,9 +8,12 @@ import { IoCheckmarkCircleOutline, IoLocationOutline } from 'react-icons/io5'
 import { FiArrowRight, FiCheck } from 'react-icons/fi'
 import { useState } from 'react'
 import { useEmailVerificationRequest } from '@/hooks/useAuth'
+import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
+import { formatDateInTimeZone } from '@/utils/dateTime'
 
 
 const DashboardClient: React.FC = () => {
+    const { timeZone } = usePlatformSettings()
     const userQuery = useUser()
     const userRecommendations = useRecommendedJobs()
     const verificationRequest = useEmailVerificationRequest()
@@ -26,11 +29,9 @@ const DashboardClient: React.FC = () => {
     }
     if (userQuery.isError) return <p role="alert" className="text-red-700">Unable to load your dashboard.</p>
 
-    const dateJoined = userQuery.data?.createdAt ? new Date(userQuery.data.createdAt).toLocaleDateString('en-GB', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-    }) : ''
+    const dateJoined = userQuery.data?.createdAt
+        ? formatDateInTimeZone(userQuery.data.createdAt, timeZone)
+        : ''
 
     return (
         <div>

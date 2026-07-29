@@ -1,8 +1,11 @@
+'use client'
+
 import type { ReactNode } from 'react'
 import { FaLocationDot } from 'react-icons/fa6'
 import { MdOutlineWorkOutline, MdWorkspacePremium } from 'react-icons/md'
 
 import type { Job } from '@/types/types'
+import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
 import { formatJobDeadline, isJobDeadlinePast } from '@/utils/jobDeadline'
 
 type JobDetailContentProps = {
@@ -11,6 +14,7 @@ type JobDetailContentProps = {
 }
 
 const JobDetailContent = ({ job, sidebarContent }: JobDetailContentProps) => {
+    const { timeZone } = usePlatformSettings()
     const deadlinePassed = isJobDeadlinePast(job)
 
     return (
@@ -84,7 +88,7 @@ const JobDetailContent = ({ job, sidebarContent }: JobDetailContentProps) => {
                     {!deadlinePassed ? (
                         <div>
                             <span className="text-gray-600">Application deadline:</span>{' '}
-                            {job.deadline ? formatJobDeadline(job.deadline) : 'No deadline'}
+                            {job.deadline ? formatJobDeadline(job.deadline, timeZone) : 'No deadline'}
                         </div>
                     ) : null}
                 </section>

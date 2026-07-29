@@ -13,6 +13,8 @@ import { FiEye, FiEyeOff, FiPlus, FiX } from 'react-icons/fi'
 import { toast } from 'sonner'
 
 import PaginationControls from './PaginationControls'
+import { usePlatformSettings } from './PlatformSettingsProvider'
+import { formatDateInTimeZone } from '@/utils/dateTime'
 
 const roleLabel = (role: StaffMember['role']) => {
     if (role === 'super-admin') return 'Super administrator'
@@ -32,6 +34,7 @@ const emptyForm: CreateStaffPayload & { confirmPassword: string } = {
 }
 
 const TeamPageTable = () => {
+    const { timeZone } = usePlatformSettings()
     const [page, setPage] = useState(1)
     const [searchInput, setSearchInput] = useState('')
     const [search, setSearch] = useState('')
@@ -331,7 +334,7 @@ const TeamPageTable = () => {
                                                 {member.setupStatus === 'active' ? 'Active' : 'Invitation pending'}
                                             </span>
                                         </td>
-                                        <td className="p-4 text-sm text-gray-600">{new Date(member.createdAt).toLocaleDateString('en-NG')}</td>
+                                        <td className="p-4 text-sm text-gray-600">{formatDateInTimeZone(member.createdAt, timeZone)}</td>
                                         <td className="p-4">
                                             {member.setupStatus === 'invited' ? (
                                                 <button type="button" disabled={resendMutation.isPending} onClick={() => void resend(member)} className="text-sm font-semibold text-blue-800 hover:underline disabled:opacity-50">

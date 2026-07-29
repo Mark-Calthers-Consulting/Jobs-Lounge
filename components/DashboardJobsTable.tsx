@@ -3,6 +3,8 @@ import { useAdminVacancies } from "@/hooks/useAdmin"
 import { CellContext } from '@tanstack/react-table'
 import type { Job } from '@/types/types'
 import { isJobDeadlinePast } from '@/utils/jobDeadline'
+import { usePlatformSettings } from './PlatformSettingsProvider'
+import { formatDateInTimeZone } from '@/utils/dateTime'
 import {
   flexRender,
   getCoreRowModel,
@@ -10,6 +12,11 @@ import {
 } from '@tanstack/react-table'
 
 type Status = 'Open' | 'Closed' | 'Draft'
+const PostedDate = ({ value }: { value: string }) => {
+  const { timeZone } = usePlatformSettings()
+  return <>{formatDateInTimeZone(value, timeZone)}</>
+}
+
 const columns = [
   {
     header: 'Job Title',
@@ -51,14 +58,9 @@ const columns = [
   {
     header: 'Date Posted',
     accessorKey: 'createdAt',
-    cell: ({ getValue }: CellContext<Job, unknown>) => {
-      const date = new Date(getValue() as string)
-      return date.toLocaleDateString('en-NG', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      })
-    },
+    cell: ({ getValue }: CellContext<Job, unknown>) => (
+      <PostedDate value={getValue() as string} />
+    ),
   },
 ]
 

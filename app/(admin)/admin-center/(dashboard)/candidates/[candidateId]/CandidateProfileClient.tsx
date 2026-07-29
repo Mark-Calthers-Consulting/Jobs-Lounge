@@ -6,10 +6,24 @@ import PaginationControls from '@/components/PaginationControls'
 import Link from 'next/link'
 import { useState } from 'react'
 import { FiAlertTriangle, FiArrowLeft, FiExternalLink, FiMail, FiPhone } from 'react-icons/fi'
+import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
+import { formatDateInTimeZone } from '@/utils/dateTime'
 
-const formatDate = (value?: string, options?: Intl.DateTimeFormatOptions) => value
-    ? new Date(value).toLocaleDateString('en-NG', options || { day: 'numeric', month: 'short', year: 'numeric' })
+const formatDate = (value: string | undefined, timeZone: string, options?: Intl.DateTimeFormatOptions) => value
+    ? formatDateInTimeZone(value, timeZone, options)
     : 'Not provided'
+
+const formatCalendarDate = (value?: string) => {
+    if (!value) return 'Not provided'
+    const [year, month, day] = value.slice(0, 10).split('-').map(Number)
+    if (!year || !month || !day) return 'Not provided'
+    return new Intl.DateTimeFormat('en-NG', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'UTC',
+    }).format(new Date(Date.UTC(year, month - 1, day)))
+}
 
 const displayValue = (value: unknown) => {
     if (value === null || value === undefined || value === '') return 'Not provided'
@@ -44,6 +58,7 @@ const DocumentLink = ({ href, children }: { href?: string; children: string }) =
 }
 
 const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
+    const { timeZone } = usePlatformSettings()
     const [applicationPage, setApplicationPage] = useState(1)
     const [applicationStatus, setApplicationStatus] = useState('')
     const candidateQuery = useAdminCandidate(candidateId)
@@ -81,7 +96,7 @@ const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
                                 {completion.complete ? 'Profile complete' : `${completion.percentage}% complete`}
                             </span>
                         </div>
-                        <p className="mt-2 text-sm text-gray-600">Joined {formatDate(candidate.createdAt)} · Updated {formatDate(candidate.updatedAt)}</p>
+                        <p className="mt-2 text-sm text-gray-600">Joined {formatDate(candidate.createdAt, timeZone)} · Updated {formatDate(candidate.updatedAt, timeZone)}</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                         <a href={`mailto:${candidate.email}`} className="inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50"><FiMail aria-hidden="true" />Email</a>
@@ -160,7 +175,7 @@ const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
                                             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                                                 <div>
                                                     <h3 className="font-semibold text-gray-950">{application.job?.title || 'Vacancy no longer available'}</h3>
-                                                    <p className="mt-1 text-sm text-gray-600">{application.job?.company?.name || 'Company not available'} · Applied {formatDate(application.createdAt)}</p>
+                                                    <p className="mt-1 text-sm text-gray-600">{application.job?.company?.name || 'Company not available'} · Applied {formatDate(application.createdAt, timeZone)}</p>
                                                 </div>
                                                 <span className="w-fit rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold capitalize text-gray-700">{application.status}</span>
                                             </div>
@@ -201,7 +216,7 @@ const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
                         <dl className="mt-5 space-y-4">
                             <Detail label="Other name" value={candidate.otherName} />
                             <Detail label="Gender" value={candidate.gender} />
-                            <Detail label="Date of birth" value={candidate.dob ? formatDate(candidate.dob) : undefined} />
+                            <Detail label="Date of birth" value={candidate.dob ? formatCalendarDate(candidate.dob) : undefined} />
                             <Detail label="Marital status" value={candidate.maritalStatus} />
                             <Detail label="Residential address" value={candidate.residentialAddress} />
                         </dl>

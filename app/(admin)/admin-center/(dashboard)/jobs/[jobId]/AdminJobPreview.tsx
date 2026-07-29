@@ -13,6 +13,8 @@ import Modal from '@/components/Modal'
 import type { Job } from '@/types/types'
 import { formatJobDeadline } from '@/utils/jobDeadline'
 import { hasStaffPermission } from '@/utils/staffPermissions'
+import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
+import { formatDateInTimeZone } from '@/utils/dateTime'
 import Link from 'next/link'
 import { useState } from 'react'
 import {
@@ -41,6 +43,7 @@ const statusLabels: Record<ApplicationStatus, string> = {
 }
 
 const AdminJobPreview = ({ jobId }: { jobId: string }) => {
+    const { timeZone } = usePlatformSettings()
     const { data: user } = useUser()
     const canReviewApplications = hasStaffPermission(user?.role, 'applications:review')
     const canArchive = hasStaffPermission(user?.role, 'jobs:archive')
@@ -162,21 +165,21 @@ const AdminJobPreview = ({ jobId }: { jobId: string }) => {
                             <div className="flex gap-1.5">
                                 <dt className="text-gray-500">Updated:</dt>
                                 <dd className="font-medium text-gray-800">
-                                    {new Date(job.updatedAt).toLocaleDateString('en-NG')}
+                                    {formatDateInTimeZone(job.updatedAt, timeZone)}
                                 </dd>
                             </div>
                             {archived && job.archivedAt ? (
                                 <div className="flex gap-1.5">
                                     <dt className="text-gray-500">Archived:</dt>
                                     <dd className="font-medium text-gray-800">
-                                        {new Date(job.archivedAt).toLocaleDateString('en-NG')}
+                                        {formatDateInTimeZone(job.archivedAt, timeZone)}
                                     </dd>
                                 </div>
                             ) : (
                                 <div className="flex gap-1.5">
                                     <dt className="text-gray-500">Deadline:</dt>
                                     <dd className="font-medium text-gray-800">
-                                        {job.deadline ? formatJobDeadline(job.deadline) : 'No deadline'}
+                                        {job.deadline ? formatJobDeadline(job.deadline, timeZone) : 'No deadline'}
                                     </dd>
                                 </div>
                             )}

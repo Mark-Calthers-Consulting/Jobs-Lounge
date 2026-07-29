@@ -1,4 +1,4 @@
-import { editUserDetails, fetchUser, getSavedJobs, updateNotificationPreferences } from "@/api/users"
+import { editUserDetails, fetchUser, getSavedJobs, updateNotificationPreferences, updateStaffProfile } from "@/api/users"
 import type { User } from "@/types/types"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
@@ -42,6 +42,16 @@ export const useUpdateNotificationPreferences = () => {
         mutationFn: updateNotificationPreferences,
         onSuccess: (preferences) => queryClient.setQueryData<User | null>(['me'], (user) => (
             user ? { ...user, notificationPreferences: preferences } : user
+        )),
+    })
+}
+
+export const useUpdateStaffProfile = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: updateStaffProfile,
+        onSuccess: (user) => queryClient.setQueryData<User | null>(['me'], (current) => (
+            current ? { ...current, ...user } : user
         )),
     })
 }

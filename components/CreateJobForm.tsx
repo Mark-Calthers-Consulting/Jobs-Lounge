@@ -2,10 +2,13 @@
 
 import { useCreatejob } from '@/hooks/useApplications';
 import { useUpdateAdminJob } from '@/hooks/useAdmin'
+import { useVacancyCreationDefaults } from '@/hooks/useSettings'
 import { JOB_ENUMS } from '@/constants/enums';
 import { jobFormSchema } from '@/schemas/jobSchema';
-import type { Job } from '@/types/types'
+import type { Job, VacancyCreationDefaults } from '@/types/types'
 import Modal from '@/components/Modal';
+import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
+import { dateInputValueInTimeZone } from '@/utils/dateTime'
 import { ChangeEvent, FormEvent, KeyboardEvent, useState } from 'react';
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner';
@@ -93,15 +96,20 @@ const RequiredLabel = ({ htmlFor, children }: { htmlFor: string; children: React
     </label>
 )
 
-const deadlineAtEndOfDay = (date: string) => new Date(`${date}T23:59:59.999`).toISOString()
-
 const formatImportIssue = (path: PropertyKey[], message: string) => {
     const field = path.length > 0 ? path.join('.') : 'job'
     return `${field}: ${message}`
 }
 
-const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
+const CreateJobFormContent = ({
+    initialJob,
+    creationDefaults,
+}: {
+    initialJob?: Job
+    creationDefaults?: VacancyCreationDefaults
+}) => {
     const router = useRouter()
+    const platformSettings = usePlatformSettings()
     const [formData, setFormData] = useState<JobFormData>({
         jobTitle: initialJob?.title ?? '',
         jobDescription: initialJob?.description ?? '',
@@ -115,12 +123,16 @@ const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
         minSalary: initialJob?.salary?.min?.toString() ?? '',
         maxSalary: initialJob?.salary?.max?.toString() ?? '',
         yearsOfExperience: initialJob?.experience?.toString() ?? '',
-        deadline: initialJob?.deadline ? initialJob.deadline.slice(0, 10) : '',
+        deadline: initialJob?.deadline
+            ? dateInputValueInTimeZone(initialJob.deadline, platformSettings.timeZone)
+            : '',
         applyLink: initialJob?.applyLink ?? '',
-        status: initialJob?.status ?? 'Open',
+        status: initialJob?.status ?? creationDefaults?.defaultJobStatus ?? 'Draft',
     });
     const [companyLogo, setCompanyLogo] = useState(initialJob?.company.logo ?? '')
-    const [hasNoDeadline, setHasNoDeadline] = useState(!initialJob?.deadline)
+    const [hasNoDeadline, setHasNoDeadline] = useState(
+        initialJob ? !initialJob.deadline : creationDefaults?.defaultDeadlineMode !== 'required',
+    )
     const [isDevModeEnabled, setIsDevModeEnabled] = useState(false)
     const [isDevModeConfirmationOpen, setIsDevModeConfirmationOpen] = useState(false)
     const [isJsonPanelExpanded, setIsJsonPanelExpanded] = useState(true)
@@ -255,7 +267,12 @@ const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
                 minSalary: job.salary.min?.toString() ?? '',
                 maxSalary: job.salary.max?.toString() ?? '',
                 yearsOfExperience: job.experience.toString(),
-                deadline: job.deadline?.slice(0, 10) ?? '',
+                deadline: job.deadline
+                    ? dateInputValueInTimeZone(
+                        job.deadline,
+                        creationDefaults?.timeZone || platformSettings.timeZone,
+                    )
+                    : '',
                 applyLink: job.applyLink ?? '',
                 status: job.status,
             })
@@ -336,7 +353,7 @@ const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
                 experience: Number(formData.yearsOfExperience),
                 deadline: hasNoDeadline || !formData.deadline
                     ? undefined
-                    : deadlineAtEndOfDay(formData.deadline),
+                    : formData.deadline,
                 applyLink: formData.applyLink || undefined,
                 status: formData.status,
                 responsibilities: listValues.responsibilities,
@@ -874,5 +891,18 @@ const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
         </section>
     );
 };
+
+const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
+    const defaultsQuery = useVacancyCreationDefaults(!initialJob)
+    if (!initialJob && defaultsQuery.isLoading) {
+        return <p role="status" className="px-4 py-6">Loading vacancy defaults…</p>
+    }
+    return (
+        <CreateJobFormContent
+            initialJob={initialJob}
+            creationDefaults={defaultsQuery.data}
+        />
+    )
+}
 
 export default CreateJobForm;

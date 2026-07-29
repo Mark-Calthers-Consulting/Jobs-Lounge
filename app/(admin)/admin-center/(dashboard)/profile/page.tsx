@@ -1,7 +1,5 @@
-const AdminProfile:React.FC = () => {
-    return (
-        <div className="">Profile</div>
-    )
-}
+import AdminProfileClient from './AdminProfileClient'
 
-export default AdminProfile
+const AdminProfilePage = () => <AdminProfileClient />
+
+export default AdminProfilePage
