@@ -1,12 +1,5 @@
-import React from 'react'
 import SettingsClient from './SettingsClient'
 
-const Settings = () => {
-  return (
-    <div>
-      <SettingsClient />
-    </div>
-  )
-}
+const SettingsPage = () => <SettingsClient />
 
-export default Settings
+export default SettingsPage

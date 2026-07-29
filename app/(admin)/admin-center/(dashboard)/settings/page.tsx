@@ -1,12 +1,7 @@
-import SettingsClient from '@/app/(dashboard)/dashboard/settings/SettingsClient'
-import React from 'react'
-
-const AdminSettinga = () => {
-  return (
+const AdminSettingsPage = () => (
     <div>
-      <SettingsClient />
+        <h1 className="text-3xl font-bold tracking-tight text-gray-950">Settings</h1>
     </div>
-  )
-}
+)
 
-export default AdminSettinga
+export default AdminSettingsPage
