@@ -117,9 +117,6 @@ const JobsPageTable = () => {
             id: 'actions',
             cell: ({ row }: { row: { original: Job } }) => (
                 <div className="flex flex-wrap items-center gap-2" aria-label={`Actions for ${row.original.title}`}>
-                    {row.original.status === 'Open' ? (
-                        <Link className="rounded-md border border-gray-300 px-2.5 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50" href={`/vacancies/${row.original._id}`}>View</Link>
-                    ) : null}
                     <Link className="rounded-md border border-gray-300 px-2.5 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50" href={`/admin-center/jobs/${row.original._id}/edit`}>Edit</Link>
                     {row.original.status === 'Draft' ? (
                         <button type="button" className="rounded-md bg-[#003B6D] px-2.5 py-1.5 text-xs font-medium text-white transition hover:bg-[#002B50]" onClick={() => setJobToPublish(row.original)}>Publish</button>
