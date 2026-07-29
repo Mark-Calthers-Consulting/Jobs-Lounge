@@ -1,9 +1,11 @@
 "use client"
 
 import { useLogout } from "@/hooks/useAuth"
+import { useUser } from "@/hooks/useUsers"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+import SidebarAccount from "@/components/SidebarAccount"
 import { FaWpforms } from "react-icons/fa"
 import {
     LuLayoutDashboard,
@@ -17,6 +19,7 @@ import { PiSuitcase, PiUsersThree } from "react-icons/pi"
 const AdminSidebar = () => {
     const pathname = usePathname()
     const router = useRouter()
+    const { data: user } = useUser()
 
     const logoutMutation = useLogout()
 
@@ -96,13 +99,20 @@ const AdminSidebar = () => {
                 })}
             </nav>
 
-            {/* 3. Logout Area */}
-            <div className="p-4 border-t border-gray-100">
+            {/* 3. Account and logout area */}
+            <div className="border-t border-gray-100 p-3">
+                {user ? (
+                    <SidebarAccount
+                        user={user}
+                        profileHref="/admin-center/profile"
+                        showRole
+                    />
+                ) : null}
                 <button
                     type="button"
                     onClick={handleLogout}
                     disabled={logoutMutation.isPending}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-colors disabled:cursor-wait disabled:opacity-70"
+                    className="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-500 transition-colors hover:bg-red-50 hover:text-red-700 disabled:cursor-wait disabled:opacity-70"
                 >
                     <LuLogOut aria-hidden="true" size={20} />
                     {logoutMutation.isPending ? 'Signing out…' : 'Sign out'}

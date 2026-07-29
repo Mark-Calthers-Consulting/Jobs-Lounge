@@ -163,8 +163,15 @@ const ProfileClient = () => {
         payload: Record<string, unknown>,
     ) => {
         try {
-            await mutation.mutateAsync(payload)
-            toast.success('Profile section updated')
+            const profileWasComplete = user?.profileCompletion?.complete === true
+            const updatedUser = await mutation.mutateAsync(payload)
+            const profileIsNowComplete = updatedUser?.profileCompletion?.complete === true
+
+            toast.success(
+                !profileWasComplete && profileIsNowComplete
+                    ? 'Profile complete — recruiters now have your essential information.'
+                    : 'Profile section updated',
+            )
         } catch (caught) {
             const message = caught instanceof Error ? caught.message : 'Unable to update profile'
             setRootError(message)

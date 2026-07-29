@@ -75,43 +75,37 @@ const DashboardClient: React.FC = () => {
                 </aside>
             )}
 
-            {userQuery.data?.profileCompletion && (
+            {userQuery.data?.profileCompletion && !userQuery.data.profileCompletion.complete && (
                 <section aria-labelledby="dashboard-profile-progress" className="my-5 rounded-xl border border-blue-100 bg-white p-5 shadow-sm">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                         <div className="max-w-2xl">
                             <div className="flex items-center gap-2">
                                 <h2 id="dashboard-profile-progress" className="font-semibold text-gray-950">
-                                    {userQuery.data.profileCompletion.complete
-                                        ? 'Your profile is ready'
-                                        : 'Complete your candidate profile'}
+                                    Complete your candidate profile
                                 </h2>
                                 <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-[#184aa2]">
                                     {userQuery.data.profileCompletion.percentage}%
                                 </span>
                             </div>
                             <p className="mt-1 text-sm text-gray-600">
-                                {userQuery.data.profileCompletion.complete
-                                    ? 'Recruiters have the essential information they need to review your applications.'
-                                    : 'A complete profile gives recruiters useful context when reviewing your applications. You can finish it at your own pace.'}
+                                A complete profile gives recruiters useful context when reviewing your applications. You can finish it at your own pace.
                             </p>
-                            {!userQuery.data.profileCompletion.complete && (
-                                <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
-                                    {userQuery.data.profileCompletion.steps.map((step) => (
-                                        <li key={step.id} className="flex items-center gap-1.5 text-xs text-gray-600">
-                                            <span className={`grid h-4 w-4 place-items-center rounded-full ${step.complete ? 'bg-emerald-100 text-emerald-700' : 'border border-gray-300 text-transparent'}`}>
-                                                <FiCheck aria-hidden="true" size={11} />
-                                            </span>
-                                            {step.label}
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
+                            <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
+                                {userQuery.data.profileCompletion.steps.map((step) => (
+                                    <li key={step.id} className="flex items-center gap-1.5 text-xs text-gray-600">
+                                        <span className={`grid h-4 w-4 place-items-center rounded-full ${step.complete ? 'bg-emerald-100 text-emerald-700' : 'border border-gray-300 text-transparent'}`}>
+                                            <FiCheck aria-hidden="true" size={11} />
+                                        </span>
+                                        {step.label}
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
                         <Link
                             href="/dashboard/profile"
                             className="inline-flex shrink-0 items-center gap-2 rounded-md bg-[#184aa2] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#123d87] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2] focus-visible:ring-offset-2"
                         >
-                            {userQuery.data.profileCompletion.complete ? 'Review profile' : 'Continue profile'}
+                            Continue profile
                             <FiArrowRight aria-hidden="true" />
                         </Link>
                     </div>
