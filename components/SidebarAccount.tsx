@@ -28,6 +28,7 @@ const initialsFor = (name: string) => {
 
 const roleLabelFor = (role: User['role']) => {
     if (role === 'super-admin') return 'Super administrator'
+    if (role === 'recruiter') return 'Recruiter'
     if (role === 'admin') return 'Administrator'
     return 'Candidate'
 }

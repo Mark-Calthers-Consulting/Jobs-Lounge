@@ -3,7 +3,7 @@ import type { User } from '@/types/types'
 export type ProtectedArea = 'candidate' | 'admin'
 
 export const landingPageForRole = (role?: User['role']) => {
-  if (role === 'admin' || role === 'super-admin') return '/admin-center'
+  if (role === 'admin' || role === 'recruiter' || role === 'super-admin') return '/admin-center'
   return '/dashboard'
 }
 
@@ -13,7 +13,7 @@ export const loginPageForArea = (area: ProtectedArea) => (
 
 export const roleCanAccessArea = (role: User['role'] | undefined, area: ProtectedArea) => (
   area === 'admin'
-    ? role === 'admin' || role === 'super-admin'
+    ? role === 'admin' || role === 'recruiter' || role === 'super-admin'
     : role === 'user'
 )
 

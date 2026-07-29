@@ -1,11 +1,9 @@
-import type { ApplicationStatus } from "@/constants/enums"
 import type {
     ApiSuccess,
-    ApplicationRecord,
+    ApplicationSubmission,
     ApplyPayload,
     Job,
     JobApplication,
-    JobApplicationsResponse,
     PaginatedResponse,
 } from "@/types/types"
 import type { JobFormType } from "@/schemas/jobSchema"
@@ -28,7 +26,7 @@ export const createJob = async (job: JobFormType): Promise<Job> => {
     return result.data
 }
 
-export const applyToJob = async (data: ApplyPayload): Promise<ApplicationRecord> => {
+export const applyToJob = async (data: ApplyPayload): Promise<ApplicationSubmission> => {
     const { jobId, ...application } = data
     const res = await csrfFetch(apiPath(`/applications/${encodeURIComponent(jobId)}`), {
         method: 'POST',
@@ -39,7 +37,7 @@ export const applyToJob = async (data: ApplyPayload): Promise<ApplicationRecord>
         body: JSON.stringify(application)
     })
 
-    const result = await readApiResponse<ApiSuccess<ApplicationRecord>>(res, 'Unable to apply for job')
+    const result = await readApiResponse<ApiSuccess<ApplicationSubmission>>(res, 'Unable to apply for job')
 
     return result.data
 }
@@ -68,61 +66,6 @@ export const cancelApplication = async (applicationId: string): Promise<{ applic
     const result = await readApiResponse<ApiSuccess<{ applicationId: string }>>(
         res,
         'Unable to cancel application',
-    )
-
-    return result.data
-}
-
-
-
-type GetJobApplicationsOptions = {
-    jobId: string
-    page?: number
-    limit?: number
-    status?: ApplicationStatus
-}
-
-export const getAllJobApplications = async ({
-    jobId,
-    page = 1,
-    limit = 20,
-    status,
-}: GetJobApplicationsOptions): Promise<JobApplicationsResponse> => {
-    const params = new URLSearchParams({ page: String(page), limit: String(limit) })
-    if (status) params.set('status', status)
-
-    const res = await fetch(`${apiPath(`/applications/admin/${encodeURIComponent(jobId)}`)}?${params}`, {
-        method: 'GET',
-        credentials: 'include',
-    })
-
-    const result = await readApiResponse<JobApplicationsResponse>(
-        res,
-        'Unable to load job applications',
-    )
-
-    return result
-}
-
-export const updateApplicationStatus = async ({
-    applicationId,
-    status,
-}: {
-    applicationId: string
-    status: ApplicationStatus
-}): Promise<ApplicationRecord> => {
-    const res = await csrfFetch(apiPath(`/applications/admin/${encodeURIComponent(applicationId)}`), {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({ status })
-    })
-
-    const result = await readApiResponse<ApiSuccess<ApplicationRecord>>(
-        res,
-        'Unable to update application status',
     )
 
     return result.data

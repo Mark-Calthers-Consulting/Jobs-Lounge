@@ -92,6 +92,10 @@ const nextConfig: NextConfig = {
         headers: privateResponseHeaders,
       },
       {
+        source: '/accept-staff-invitation',
+        headers: privateResponseHeaders,
+      },
+      {
         source: '/dashboard/:path*',
         headers: privateResponseHeaders,
       },

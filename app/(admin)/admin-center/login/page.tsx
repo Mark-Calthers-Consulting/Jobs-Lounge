@@ -8,11 +8,13 @@ const AdminLogin = async ({
   searchParams: Promise<{
     next?: string | string[]
     passwordReset?: string | string[]
+    invitation?: string | string[]
   }>
 }) => {
   const query = await searchParams
   const nextPath = safeNextPath(query.next, 'admin')
   const passwordResetComplete = query.passwordReset === 'success'
+  const invitationAccepted = query.invitation === 'accepted'
 
   return (
     <GuestOnlyRoute area="admin" nextPath={nextPath}>
@@ -21,6 +23,7 @@ const AdminLogin = async ({
           <AdminAuthForm
             nextPath={nextPath}
             passwordResetComplete={passwordResetComplete}
+            invitationAccepted={invitationAccepted}
           />
         </div>
       </main>

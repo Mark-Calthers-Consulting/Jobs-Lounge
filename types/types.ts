@@ -48,7 +48,7 @@ export type Job = {
   archivedAt?: string
   applicationSummary?: {
     total: number
-    byStatus: Record<ApplicationStatus, number>
+    byStatus?: Record<ApplicationStatus, number>
   }
   createdAt: string
   updatedAt: string
@@ -129,6 +129,11 @@ export type PasswordResetConfirmPayload = {
   password: string
 }
 
+export type StaffInvitationConfirmPayload = {
+  token: string
+  password: string
+}
+
 export type EmailVerificationConfirmPayload = {
   token: string
 }
@@ -181,23 +186,16 @@ export type NotificationPreferences = {
   newsletter: boolean
 }
 
-export type ApplicationRecord = {
-  _id: string
-  job: string | Partial<Pick<Job, '_id' | 'title' | 'company'>>
-  applicant: string | Partial<Pick<User, '_id' | 'name' | 'firstName' | 'lastName' | 'email'>>
-  status: ApplicationStatus
-  cvLink: string
-  coverLetterLink?: string
-  note?: string
-  createdAt: string
-  updatedAt: string
+export type ApplicationSubmission = {
+  applicationId: string
+  jobId: string
+  submittedAt: string
 }
 
 export type JobApplication = {
   _id: string
   job: Pick<Job, '_id' | 'title' | 'company' | 'location' | 'workMode' | 'jobType' | 'status' | 'deadline'> | null
   applicant?: Pick<User, '_id' | 'name' | 'firstName' | 'middleName' | 'lastName' | 'email' | 'telephone' | 'cvLink' | 'coverLetterLink'> | null
-  status: ApplicationStatus
   cvLink?: string
   coverLetterLink?: string
   note?: string
@@ -277,9 +275,150 @@ export type AdminApplication = {
   jobArchivedAt?: string
   createdAt: string
   status: ApplicationStatus
+  priority: boolean
+  workflowVersion: number
+  statusUpdatedAt?: string
+  highestEducation?: string
+  nyscStatus?: UserNyscStatus
+  yearCompletedNysc?: number
+  postNyscExperience?: number
+  profileCompleted?: boolean
   cvLink?: string
   coverLetterLink?: string
   note?: string
+}
+
+export type ApplicationWorkspaceSort =
+  | 'newest'
+  | 'oldest'
+  | 'name'
+  | 'experience-desc'
+  | 'experience-asc'
+  | 'priority'
+  | 'updated'
+
+export type ApplicationWorkspaceFilters = {
+  cursor?: string
+  limit?: number
+  jobId?: string
+  applicantId?: string
+  status?: ApplicationStatus[]
+  priority?: boolean
+  education?: string
+  nyscStatus?: UserNyscStatus
+  experienceMin?: number
+  experienceMax?: number
+  profileCompleted?: boolean
+  appliedFrom?: string
+  appliedTo?: string
+  hasCv?: boolean
+  hasCoverLetter?: boolean
+  sort?: ApplicationWorkspaceSort
+}
+
+export type ApplicationStageTotals = Record<ApplicationStatus, number>
+
+export type CursorResponse<T> = {
+  status: 'success'
+  count: number
+  data: T[]
+  pageInfo: {
+    nextCursor: string | null
+    hasNextPage: boolean
+  }
+}
+
+export type ApplicationListResponse = CursorResponse<AdminApplication> & {
+  stageTotals: ApplicationStageTotals
+}
+
+export type ApplicationWorkload = {
+  jobId: string
+  title: string
+  company?: string
+  jobStatus?: JobStatus
+  archivedAt?: string
+  total: number
+  latestApplicationAt?: string
+  byStatus: ApplicationStageTotals
+}
+
+export type ApplicationOverview = {
+  totals: ApplicationStageTotals
+  vacancyWorkloads: ApplicationWorkload[]
+  recentApplications: AdminApplication[]
+}
+
+export type ApplicationJobDirectoryFilters = {
+  page?: number
+  limit?: number
+  search?: string
+  view?: 'all' | 'open' | 'draft' | 'closed' | 'archived'
+  sort?: 'newest-application' | 'applications' | 'new' | 'name'
+}
+
+export type ApplicationJobDirectoryResponse = PaginatedResponse<ApplicationWorkload>
+
+export type ApplicationJobSummary = {
+  job: {
+    _id: string
+    title: string
+    company?: string
+    status: JobStatus
+    archivedAt?: string
+  }
+  total: number
+  byStatus: ApplicationStageTotals
+}
+
+export type ApplicationDetail = {
+  application: {
+    applicationId: string
+    applicantId: string
+    jobId: string
+    status: ApplicationStatus
+    priority: boolean
+    workflowVersion: number
+    statusUpdatedAt?: string
+    cvLink?: string
+    coverLetterLink?: string
+    note?: string
+    candidateSnapshot?: Partial<User>
+    createdAt: string
+    updatedAt: string
+  }
+  job: Partial<Job> | null
+  candidate: (Omit<User, 'role' | 'lastLogin' | 'notificationPreferences'> & {
+    profileCompletion: ProfileCompletion
+  }) | null
+  duplicateSignal: {
+    possibleDuplicate: boolean
+    matchFields: Array<'email' | 'telephone'>
+  }
+}
+
+export type ApplicationActivity = {
+  _id: string
+  type: 'submitted' | 'status_changed' | 'priority_changed' | 'note_added' | 'undo'
+  previousStatus?: ApplicationStatus
+  newStatus?: ApplicationStatus
+  previousPriority?: boolean
+  newPriority?: boolean
+  note?: string
+  actor?: { _id: string; name?: string; role?: UserRole }
+  createdAt: string
+}
+
+export type ApplicationFilterOptions = {
+  candidates: Array<Pick<User, '_id' | 'name' | 'email' | 'telephone'>>
+  jobs: Array<{
+    _id: string
+    title: string
+    company?: string
+    status: JobStatus
+    archivedAt?: string
+  }>
+  educationLevels: string[]
 }
 
 export type AdminJobView = 'all' | 'open' | 'draft' | 'closed' | 'deadline-passed' | 'archived'
@@ -304,26 +443,6 @@ export type AdminJobSummary = {
 
 export type AdminJobsResponse = PaginatedResponse<Job> & {
   summary: AdminJobSummary
-}
-
-export type AdminApplicationListFilters = {
-  page?: number
-  limit?: number
-  jobId?: string
-  status?: ApplicationStatus
-}
-
-export type AdminApplicationsResponse = PaginatedResponse<AdminApplication> & {
-  filterContext: {
-    status: ApplicationStatus | null
-    job: {
-      _id: string
-      title: string
-      company?: string
-      status: JobStatus
-      archivedAt?: string
-    } | null
-  }
 }
 
 export type CandidateSummary = {
@@ -402,8 +521,32 @@ export type CandidateApplication = {
 export type DashboardStats = {
   totalJobs: number
   activeJobs: number
-  totalApplications: number
-  totalUsers: number
+  totalApplications?: number
+  totalCandidates?: number
+  totalTeamMembers?: number
+}
+
+export type StaffMember = {
+  _id: string
+  name: string
+  firstName?: string
+  lastName?: string
+  email: string
+  telephone: string
+  role: Extract<UserRole, 'admin' | 'recruiter' | 'super-admin'>
+  setupStatus: 'active' | 'invited'
+  createdAt: string
+  updatedAt: string
+}
+
+export type CreateStaffPayload = {
+  firstName: string
+  lastName: string
+  email: string
+  telephone: string
+  role: Extract<UserRole, 'admin' | 'recruiter'>
+  setupMode: 'password' | 'invitation'
+  password?: string
 }
 
 export type SavedJobMutation = {
@@ -425,8 +568,4 @@ export type BlogPost = {
 
 export type CreateBlogPostPayload = Pick<BlogPost, 'title' | 'slug' | 'content'> & {
   status?: BlogStatus
-}
-
-export type JobApplicationsResponse = PaginatedResponse<JobApplication> & {
-  job: Pick<Job, '_id' | 'title'>
 }

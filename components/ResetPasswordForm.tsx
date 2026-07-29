@@ -41,7 +41,7 @@ const PasswordInput = ({
                     autoComplete="new-password"
                     aria-invalid={Boolean(error)}
                     aria-describedby={error ? errorId : undefined}
-                    className="w-full rounded-md px-3 py-3 pr-11 ring-1 ring-gray-300 focus:outline-none focus:ring-2 focus:ring-[#003B6D] aria-invalid:ring-2 aria-invalid:ring-red-600"
+                    className="w-full rounded-md border border-gray-300 px-3 py-3 pr-11 focus:outline-none aria-invalid:border-red-600"
                     {...register}
                 />
                 <button

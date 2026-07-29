@@ -6,6 +6,7 @@ import {
     useRestoreAdminJob,
     useUpdateAdminJobStatus,
 } from '@/hooks/useAdmin'
+import { useUser } from '@/hooks/useUsers'
 import type {
     AdminJobSort,
     AdminJobSummary,
@@ -13,6 +14,7 @@ import type {
     Job,
 } from '@/types/types'
 import { formatJobDeadline, isJobDeadlinePast } from '@/utils/jobDeadline'
+import { hasStaffPermission } from '@/utils/staffPermissions'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import {
@@ -105,9 +107,11 @@ const JobStatus = ({ job }: { job: Job }) => (
 const JobActions = ({
     job,
     onAction,
+    canArchive,
 }: {
     job: Job
     onAction: (type: NonNullable<Confirmation>['type'], job: Job) => void
+    canArchive: boolean
 }) => {
     const menuRef = useRef<HTMLDetailsElement>(null)
     const choose = (type: NonNullable<Confirmation>['type']) => {
@@ -116,6 +120,7 @@ const JobActions = ({
     }
 
     if (job.archivedAt) {
+        if (!canArchive) return null
         return (
             <button
                 type="button"
@@ -162,14 +167,16 @@ const JobActions = ({
                             Publish vacancy
                         </button>
                     )}
-                    <button
-                        type="button"
-                        onClick={() => choose('archive')}
-                        className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm font-medium text-red-700 hover:bg-red-50"
-                    >
-                        <FiArchive aria-hidden="true" />
-                        Archive job
-                    </button>
+                    {canArchive ? (
+                        <button
+                            type="button"
+                            onClick={() => choose('archive')}
+                            className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm font-medium text-red-700 hover:bg-red-50"
+                        >
+                            <FiArchive aria-hidden="true" />
+                            Archive job
+                        </button>
+                    ) : null}
                 </div>
             </details>
         </div>
@@ -177,6 +184,9 @@ const JobActions = ({
 }
 
 const JobsPageTable = () => {
+    const { data: user } = useUser()
+    const canReviewApplications = hasStaffPermission(user?.role, 'applications:review')
+    const canArchive = hasStaffPermission(user?.role, 'jobs:archive')
     const router = useRouter()
     const pathname = usePathname()
     const searchParams = useSearchParams()
@@ -474,17 +484,21 @@ const JobsPageTable = () => {
                                                 {job.deadline ? formatJobDeadline(job.deadline) : 'No deadline'}
                                             </td>
                                             <td className="px-4 py-4">
-                                                <Link
-                                                    href={`/admin-center/applications?jobId=${encodeURIComponent(job._id)}`}
-                                                    className="font-semibold text-[#184aa2] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]"
-                                                >
-                                                    {(job.totalApplicants ?? 0).toLocaleString()}
-                                                    <span className="sr-only"> applications for {job.title}</span>
-                                                </Link>
+                                                {canReviewApplications ? (
+                                                    <Link
+                                                        href={`/admin-center/applications?jobId=${encodeURIComponent(job._id)}`}
+                                                        className="font-semibold text-[#184aa2] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]"
+                                                    >
+                                                        {(job.totalApplicants ?? 0).toLocaleString()}
+                                                        <span className="sr-only"> applications for {job.title}</span>
+                                                    </Link>
+                                                ) : (
+                                                    <span className="font-semibold text-gray-800">{(job.totalApplicants ?? 0).toLocaleString()}</span>
+                                                )}
                                             </td>
                                             <td className="px-4 py-4 text-sm text-gray-600">{formatDate(job.createdAt)}</td>
                                             <td className="px-4 py-4">
-                                                <JobActions job={job} onAction={(type, selectedJob) => setConfirmation({ type, job: selectedJob })} />
+                                                <JobActions job={job} canArchive={canArchive} onAction={(type, selectedJob) => setConfirmation({ type, job: selectedJob })} />
                                             </td>
                                         </tr>
                                     ))}
@@ -524,12 +538,16 @@ const JobsPageTable = () => {
                                     <div>
                                         <dt className="text-gray-500">Applications</dt>
                                         <dd className="mt-0.5">
-                                            <Link
-                                                href={`/admin-center/applications?jobId=${encodeURIComponent(job._id)}`}
-                                                className="font-semibold text-[#184aa2] hover:underline"
-                                            >
-                                                {(job.totalApplicants ?? 0).toLocaleString()}
-                                            </Link>
+                                            {canReviewApplications ? (
+                                                <Link
+                                                    href={`/admin-center/applications?jobId=${encodeURIComponent(job._id)}`}
+                                                    className="font-semibold text-[#184aa2] hover:underline"
+                                                >
+                                                    {(job.totalApplicants ?? 0).toLocaleString()}
+                                                </Link>
+                                            ) : (
+                                                <span className="font-semibold text-gray-800">{(job.totalApplicants ?? 0).toLocaleString()}</span>
+                                            )}
                                         </dd>
                                     </div>
                                     <div>
@@ -540,7 +558,7 @@ const JobsPageTable = () => {
                                     </div>
                                 </dl>
                                 <div className="mt-4 flex justify-end">
-                                    <JobActions job={job} onAction={(type, selectedJob) => setConfirmation({ type, job: selectedJob })} />
+                                    <JobActions job={job} canArchive={canArchive} onAction={(type, selectedJob) => setConfirmation({ type, job: selectedJob })} />
                                 </div>
                             </article>
                         ))}

@@ -14,9 +14,11 @@ type formValues = {
 const AdminAuthForm = ({
     nextPath,
     passwordResetComplete = false,
+    invitationAccepted = false,
 }: {
     nextPath?: string
     passwordResetComplete?: boolean
+    invitationAccepted?: boolean
 }) => {
     const [authData, setAuthData] = useState<formValues>({
         email: '',
@@ -45,7 +47,7 @@ const AdminAuthForm = ({
                 password: authData.password,
             })
 
-            if (data.role !== 'admin' && data.role !== 'super-admin') {
+            if (!['admin', 'recruiter', 'super-admin'].includes(data.role)) {
                 toast.error('Access denied. Not an admin account.', { id: toastId })
                 router.replace('/dashboard')
                 return
@@ -75,14 +77,19 @@ const AdminAuthForm = ({
                     </p>
                 )
                 : null}
+            {invitationAccepted ? (
+                <p role="status" className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
+                    Your staff account is ready. Sign in with the password you created.
+                </p>
+            ) : null}
             <form onSubmit={handleSubmit} aria-labelledby="admin-auth-title" aria-busy={loginMutation.isPending}>
                 <label htmlFor="admin-email" className="flex flex-col">
                     Email Address
-                    <input id="admin-email" required autoComplete="email" onChange={handleChange} name="email" className="px-4 py-2 my-2 ring-1 ring-gray-300 shadow rounded" type="email" />
+                    <input id="admin-email" required autoComplete="email" onChange={handleChange} name="email" className="my-2 rounded border border-gray-300 px-4 py-2 shadow-sm" type="email" />
                 </label>
                 <label htmlFor="admin-password" className="flex flex-col">
                     Password
-                    <input id="admin-password" required autoComplete="current-password" onChange={handleChange} name="password" className="px-4 py-2 my-2 ring-1 ring-gray-300 shadow rounded" type="password" />
+                    <input id="admin-password" required autoComplete="current-password" onChange={handleChange} name="password" className="my-2 rounded border border-gray-300 px-4 py-2 shadow-sm" type="password" />
                 </label>
                 <div className="text-right">
                     <Link

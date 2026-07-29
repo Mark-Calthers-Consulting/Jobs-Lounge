@@ -1,7 +1,5 @@
 import { apiPath } from './base'
 import type {
-    AdminApplicationListFilters,
-    AdminApplicationsResponse,
     AdminCandidateDetail,
     AdminJobListFilters,
     AdminJobsResponse,
@@ -10,9 +8,11 @@ import type {
     CandidateFilterOptions,
     CandidateListFilters,
     CandidateSummary,
+    CreateStaffPayload,
     DashboardStats,
     Job,
     PaginatedResponse,
+    StaffMember,
     User,
 } from '@/types/types'
 import { readApiResponse } from './errors'
@@ -67,14 +67,71 @@ export const fetchAllUsers = async (page = 1, limit = 20): Promise<PaginatedResp
     return readApiResponse<PaginatedResponse<User>>(res, 'Failed to fetch users')
 }
 
-export const fetchTeamMembers = async (page = 1, limit = 20): Promise<PaginatedResponse<User>> => {
-    const res = await fetch(`${apiPath('/admin/getTeamMembers')}?${pageQuery(page, limit)}`,
+export type TeamFilters = {
+    page?: number
+    limit?: number
+    search?: string
+    role?: 'admin' | 'recruiter' | 'super-admin' | ''
+    setupStatus?: 'active' | 'invited' | ''
+}
+
+export const fetchTeamMembers = async (
+    filters: TeamFilters = {},
+): Promise<PaginatedResponse<StaffMember>> => {
+    const params = new URLSearchParams()
+    Object.entries({ page: 1, limit: 20, ...filters }).forEach(([key, value]) => {
+        if (value !== undefined && value !== '') params.set(key, String(value))
+    })
+    const res = await fetch(`${apiPath('/admin/team')}?${params}`,
         {
             method: 'GET',
-            credentials: 'include'
+            credentials: 'include',
+            cache: 'no-store',
         }
     )
-    return readApiResponse<PaginatedResponse<User>>(res, 'Failed to fetch team')
+    return readApiResponse<PaginatedResponse<StaffMember>>(res, 'Failed to fetch team')
+}
+
+export const createStaffMember = async (
+    payload: CreateStaffPayload,
+): Promise<StaffMember> => {
+    const res = await csrfFetch(apiPath('/admin/team'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    })
+    const result = await readApiResponse<ApiSuccess<StaffMember>>(
+        res,
+        'Unable to create staff account',
+    )
+    return result.data
+}
+
+export const updateStaffRole = async ({
+    userId,
+    role,
+}: {
+    userId: string
+    role: 'admin' | 'recruiter'
+}): Promise<StaffMember> => {
+    const res = await csrfFetch(apiPath(`/admin/team/${encodeURIComponent(userId)}/role`), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role }),
+    })
+    const result = await readApiResponse<ApiSuccess<StaffMember>>(
+        res,
+        'Unable to update staff role',
+    )
+    return result.data
+}
+
+export const resendStaffInvitation = async (userId: string): Promise<void> => {
+    const res = await csrfFetch(
+        apiPath(`/admin/team/${encodeURIComponent(userId)}/invitation/resend`),
+        { method: 'POST' },
+    )
+    await readApiResponse<ApiSuccess<null>>(res, 'Unable to resend staff invitation')
 }
 
 export const fetchJobCandidates = async (
@@ -143,23 +200,6 @@ export const fetchCandidateApplications = async (
         res,
         'Unable to load candidate applications',
     )
-}
-
-export const fetchAllApplications = async (
-    filters: AdminApplicationListFilters = {},
-): Promise<AdminApplicationsResponse> => {
-    const params = pageQuery(filters.page ?? 1, filters.limit ?? 20)
-    if (filters.jobId) params.set('jobId', filters.jobId)
-    if (filters.status) params.set('status', filters.status)
-    const res = await fetch(`${apiPath('/admin/applications')}?${params}`,
-        {
-            method: 'GET',
-            credentials: 'include',
-            cache: 'no-store',
-        }
-    )
-    return readApiResponse<AdminApplicationsResponse>(res, 'Failed to fetch applications')
-
 }
 
 export const fetchAdminJob = async (jobId: string): Promise<Job> => {

@@ -193,7 +193,7 @@ const VacanciesContent = () => {
               maxLength={80}
               value={inputValue}
               onChange={(event) => setInputValue(event.target.value)}
-              className="w-full rounded-md bg-white px-4 py-2.5 text-black placeholder:text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#003B6D]"
+              className="w-full rounded-md border border-transparent bg-white px-4 py-2.5 text-black placeholder:text-sm focus:outline-none"
               placeholder="Search jobs by title"
               aria-describedby="job-search-hint"
             />

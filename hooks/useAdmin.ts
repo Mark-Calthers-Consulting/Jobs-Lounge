@@ -1,5 +1,5 @@
-import { deleteAdminJob, fetchAdminCandidate, fetchAdminDashboard, fetchAdminJob, fetchAdminJobs, fetchAllApplications, fetchAllUsers, fetchCandidateApplications, fetchCandidateFilterOptions, fetchJobCandidates, fetchTeamMembers, restoreAdminJob, updateAdminJob, updateAdminJobStatus } from "@/api/admin"
-import { AdminApplicationListFilters, AdminJobListFilters, CandidateListFilters, Job, PaginatedResponse, User } from "@/types/types"
+import { createStaffMember, deleteAdminJob, fetchAdminCandidate, fetchAdminDashboard, fetchAdminJob, fetchAdminJobs, fetchAllUsers, fetchCandidateApplications, fetchCandidateFilterOptions, fetchJobCandidates, fetchTeamMembers, resendStaffInvitation, restoreAdminJob, type TeamFilters, updateAdminJob, updateAdminJobStatus, updateStaffRole } from "@/api/admin"
+import { AdminJobListFilters, CandidateListFilters, Job, PaginatedResponse, StaffMember, User } from "@/types/types"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 
@@ -24,12 +24,35 @@ export const useAdminUsers = (page = 1, limit = 20) => {
     })
 }
 
-export const useGetTeamMembers = (page = 1, limit = 20) => {
-    return useQuery<PaginatedResponse<User>>({
-        queryKey: ['teamMembers', page, limit],
-        queryFn: () => fetchTeamMembers(page, limit)
+export const useGetTeamMembers = (filters: TeamFilters = {}) => {
+    return useQuery<PaginatedResponse<StaffMember>>({
+        queryKey: ['teamMembers', filters],
+        queryFn: () => fetchTeamMembers(filters)
     })
 }
+
+export const useCreateStaffMember = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: createStaffMember,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['teamMembers'] })
+            queryClient.invalidateQueries({ queryKey: ['adminDashboard'] })
+        },
+    })
+}
+
+export const useUpdateStaffRole = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: updateStaffRole,
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['teamMembers'] }),
+    })
+}
+
+export const useResendStaffInvitation = () => useMutation({
+    mutationFn: resendStaffInvitation,
+})
 
 export const useGetJobCandidates = (filters: CandidateListFilters = {}) => {
     return useQuery({
@@ -58,13 +81,6 @@ export const useCandidateApplications = (
     queryFn: () => fetchCandidateApplications(candidateId, page, 10, status),
     enabled: Boolean(candidateId),
 })
-
-export const useAdminApplications = (filters: AdminApplicationListFilters = {}) => {
-    return useQuery({
-        queryKey:['adminApplications', filters],
-        queryFn: () => fetchAllApplications(filters)
-    })
-}
 
 export const useAdminJob = (jobId: string) => useQuery({
     queryKey: ['adminJob', jobId],

@@ -7,6 +7,7 @@ import type {
     PasswordResetConfirmPayload,
     PasswordResetRequestPayload,
     RegisterPayload,
+    StaffInvitationConfirmPayload,
 } from "@/types/types";
 import { clearCsrfToken, csrfFetch } from "./csrf";
 import { apiPath } from "./base";
@@ -112,4 +113,20 @@ export const confirmEmailVerification = async (
         'Unable to verify email',
     )
     return result.data
+}
+
+export const acceptStaffInvitation = async (
+    data: StaffInvitationConfirmPayload,
+): Promise<string> => {
+    const res = await csrfFetch(apiPath('/auth/staff-invitations/accept'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    })
+    const result = await readApiResponse<ApiSuccess<null>>(
+        res,
+        'Unable to activate staff account',
+    )
+    clearCsrfToken()
+    return result.message || 'Your staff account is ready. Sign in to continue.'
 }

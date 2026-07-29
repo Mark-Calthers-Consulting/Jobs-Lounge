@@ -45,7 +45,8 @@ There is currently no frontend unit-test runner. Treat both `lint` and `build` a
 - `/auth`: candidate authentication
 - `/dashboard/*`: authenticated candidate area
 - `/admin-center/login`: administrator authentication
-- `/admin-center/*`: administrator-only area
+- `/accept-staff-invitation`: secure staff password creation
+- `/admin-center/*`: role-protected staff area for Administrators, Recruiters, and Super administrators
 - `/api/backend/*`: same-origin proxy to the Express `/api/*` routes
 
 Route protection is enforced in the dashboard/admin layouts and again by the backend authorization middleware. Frontend checks improve navigation but are not a security boundary.

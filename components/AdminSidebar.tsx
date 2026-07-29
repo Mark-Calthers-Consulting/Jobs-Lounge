@@ -6,6 +6,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import SidebarAccount from "@/components/SidebarAccount"
+import { hasStaffPermission, type StaffPermission } from "@/utils/staffPermissions"
 import { FaWpforms } from "react-icons/fa"
 import {
     LuLayoutDashboard,
@@ -30,41 +31,53 @@ const AdminSidebar = () => {
         router.push("/admin-center/login")
     }
 
-    const menuItems = [
+    const menuItems: Array<{
+        name: string
+        href: string
+        icon: React.ReactNode
+        permission: StaffPermission
+    }> = [
         {
             name: "Dashboard",
             href: "/admin-center",
-            icon: <LuLayoutDashboard size={20} />
+            icon: <LuLayoutDashboard size={20} />,
+            permission: 'admin:access',
         },
         {
             name: "Jobs",
             href: "/admin-center/jobs",
-            icon: <PiSuitcase size={20} />
+            icon: <PiSuitcase size={20} />,
+            permission: 'jobs:manage',
         },
         {
             name: "Applications",
             href: "/admin-center/applications",
-            icon: <FaWpforms size={20} />
+            icon: <FaWpforms size={20} />,
+            permission: 'applications:review',
         },
         {
             name: "Candidates",
             href: "/admin-center/candidates",
-            icon: <PiUsersThree size={20} />
+            icon: <PiUsersThree size={20} />,
+            permission: 'candidates:view',
         },
         {
             name: "Team",
             href: "/admin-center/team",
-            icon: <LuUsers size={20} />
+            icon: <LuUsers size={20} />,
+            permission: 'team:manage',
         },
         {
             name: "My Profile",
             href: "/admin-center/profile",
-            icon: <LuUser size={20} />
+            icon: <LuUser size={20} />,
+            permission: 'admin:access',
         },
         {
             name: "Settings",
             href: "/admin-center/settings",
-            icon: <LuSettings size={20} />
+            icon: <LuSettings size={20} />,
+            permission: 'admin:access',
         },
     ]
 
@@ -77,7 +90,7 @@ const AdminSidebar = () => {
 
             {/* 2. Navigation */}
             <nav aria-label="Administration navigation" className="flex flex-1 gap-2 overflow-x-auto px-4 py-3 md:flex-col md:space-y-2 md:overflow-visible md:py-6">
-                {menuItems.map((item) => {
+                {menuItems.filter((item) => hasStaffPermission(user?.role, item.permission)).map((item) => {
                     const isActive = pathname === item.href
 
                     return (

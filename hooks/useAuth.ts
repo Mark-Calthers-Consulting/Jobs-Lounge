@@ -1,4 +1,5 @@
 import {
+    acceptStaffInvitation,
     confirmEmailVerification,
     confirmPasswordReset,
     loginUser,
@@ -73,3 +74,7 @@ export const useEmailVerificationConfirmation = () => {
         },
     })
 }
+
+export const useStaffInvitationConfirmation = () => useMutation({
+    mutationFn: acceptStaffInvitation,
+})

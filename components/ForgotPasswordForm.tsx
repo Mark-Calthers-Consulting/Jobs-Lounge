@@ -75,7 +75,7 @@ const ForgotPasswordForm = () => {
                         autoComplete="email"
                         aria-invalid={Boolean(emailError)}
                         aria-describedby={emailError ? 'password-reset-email-error' : undefined}
-                        className="mt-2 w-full rounded-md px-3 py-3 ring-1 ring-gray-300 focus:outline-none focus:ring-2 focus:ring-[#003B6D] aria-invalid:ring-2 aria-invalid:ring-red-600"
+                        className="mt-2 w-full rounded-md border border-gray-300 px-3 py-3 focus:outline-none aria-invalid:border-red-600"
                         {...form.register('email')}
                     />
                     {emailError

@@ -21,7 +21,7 @@ import {
 
 type FormMode = 'login' | 'register'
 
-const inputClassName = 'mt-2 rounded px-3 py-2 ring-1 ring-gray-300 aria-invalid:ring-2 aria-invalid:ring-red-600 focus:outline-none focus:ring-2 focus:ring-[#003B6D]'
+const inputClassName = 'mt-2 rounded border border-gray-300 px-3 py-2 aria-invalid:border-red-600 focus:outline-none'
 const errorClassName = 'mt-1 text-sm text-red-700'
 const registrationFieldMessages = {
     firstName: 'Check your first name.',

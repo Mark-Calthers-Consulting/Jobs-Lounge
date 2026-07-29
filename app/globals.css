@@ -31,11 +31,29 @@ body {
   outline-offset: 3px;
 }
 
-input:focus-visible,
+input:not([type]):focus-visible,
+input:is(
+  [type="text"],
+  [type="search"],
+  [type="email"],
+  [type="password"],
+  [type="tel"],
+  [type="url"],
+  [type="number"],
+  [type="date"]
+):focus-visible,
 textarea:focus-visible,
 select:focus-visible {
   outline: none;
   outline-offset: 0;
+  border-color: #184aa2 !important;
+  box-shadow: none !important;
+}
+
+input[aria-invalid="true"]:focus-visible,
+textarea[aria-invalid="true"]:focus-visible,
+select[aria-invalid="true"]:focus-visible {
+  border-color: #dc2626 !important;
 }
 
 .skip-link {

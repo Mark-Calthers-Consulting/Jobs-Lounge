@@ -7,10 +7,12 @@ import {
     useRestoreAdminJob,
     useUpdateAdminJobStatus,
 } from '@/hooks/useAdmin'
+import { useUser } from '@/hooks/useUsers'
 import JobDetailContent from '@/components/JobDetailContent'
 import Modal from '@/components/Modal'
 import type { Job } from '@/types/types'
 import { formatJobDeadline } from '@/utils/jobDeadline'
+import { hasStaffPermission } from '@/utils/staffPermissions'
 import Link from 'next/link'
 import { useState } from 'react'
 import {
@@ -39,6 +41,9 @@ const statusLabels: Record<ApplicationStatus, string> = {
 }
 
 const AdminJobPreview = ({ jobId }: { jobId: string }) => {
+    const { data: user } = useUser()
+    const canReviewApplications = hasStaffPermission(user?.role, 'applications:review')
+    const canArchive = hasStaffPermission(user?.role, 'jobs:archive')
     const { data: job, isLoading, isError, error } = useAdminJob(jobId)
     const updateStatus = useUpdateAdminJobStatus()
     const archiveJob = useDeleteAdminJob()
@@ -145,9 +150,13 @@ const AdminJobPreview = ({ jobId }: { jobId: string }) => {
                             <div className="flex gap-1.5">
                                 <dt className="text-gray-500">Applications:</dt>
                                 <dd>
-                                    <Link href={applicationsUrl()} className="font-semibold text-[#184aa2] hover:underline">
-                                        {applicationSummary.total.toLocaleString()}
-                                    </Link>
+                                    {canReviewApplications ? (
+                                        <Link href={applicationsUrl()} className="font-semibold text-[#184aa2] hover:underline">
+                                            {applicationSummary.total.toLocaleString()}
+                                        </Link>
+                                    ) : (
+                                        <span className="font-semibold text-gray-800">{applicationSummary.total.toLocaleString()}</span>
+                                    )}
                                 </dd>
                             </div>
                             <div className="flex gap-1.5">
@@ -176,14 +185,16 @@ const AdminJobPreview = ({ jobId }: { jobId: string }) => {
 
                     <div className="flex flex-wrap items-center gap-2">
                         {archived ? (
-                            <button
-                                type="button"
-                                onClick={() => setConfirmation('restore')}
-                                className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#184aa2] px-4 py-2 text-sm font-semibold text-white hover:bg-[#123d87] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2] focus-visible:ring-offset-2"
-                            >
-                                <FiRefreshCw aria-hidden="true" />
-                                Restore as closed
-                            </button>
+                            canArchive ? (
+                                <button
+                                    type="button"
+                                    onClick={() => setConfirmation('restore')}
+                                    className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#184aa2] px-4 py-2 text-sm font-semibold text-white hover:bg-[#123d87] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2] focus-visible:ring-offset-2"
+                                >
+                                    <FiRefreshCw aria-hidden="true" />
+                                    Restore as closed
+                                </button>
+                            ) : null
                         ) : (
                             <>
                                 <Link
@@ -212,7 +223,7 @@ const AdminJobPreview = ({ jobId }: { jobId: string }) => {
                                 >
                                     {canViewPublicly ? 'Close vacancy' : 'Publish vacancy'}
                                 </button>
-                                <details className="relative">
+                                {canArchive ? <details className="relative">
                                     <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 rounded-md border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2] [&::-webkit-details-marker]:hidden">
                                         <FiMoreHorizontal aria-hidden="true" />
                                         <span className="sr-only">More actions</span>
@@ -227,7 +238,7 @@ const AdminJobPreview = ({ jobId }: { jobId: string }) => {
                                             Archive job
                                         </button>
                                     </div>
-                                </details>
+                                </details> : null}
                             </>
                         )}
                     </div>
@@ -237,14 +248,19 @@ const AdminJobPreview = ({ jobId }: { jobId: string }) => {
             <section aria-labelledby="application-summary-title" className="mt-5">
                 <h2 id="application-summary-title" className="sr-only">Application summary</h2>
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-                    <Link
+                    {canReviewApplications ? <Link
                         href={applicationsUrl()}
                         className="rounded-xl border border-gray-200 bg-white p-4 transition hover:border-blue-200 hover:bg-blue-50/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]"
                     >
                         <span className="text-sm text-gray-500">All applications</span>
                         <span className="mt-2 block text-2xl font-bold text-gray-950">{applicationSummary.total}</span>
-                    </Link>
-                    {APPLICATION_STATUSES.map((status) => (
+                    </Link> : (
+                        <div className="rounded-xl border border-gray-200 bg-white p-4">
+                            <span className="text-sm text-gray-500">Total applications</span>
+                            <span className="mt-2 block text-2xl font-bold text-gray-950">{applicationSummary.total}</span>
+                        </div>
+                    )}
+                    {canReviewApplications && applicationSummary.byStatus ? APPLICATION_STATUSES.map((status) => (
                         <Link
                             key={status}
                             href={applicationsUrl(status)}
@@ -252,10 +268,10 @@ const AdminJobPreview = ({ jobId }: { jobId: string }) => {
                         >
                             <span className="text-sm text-gray-500">{statusLabels[status]}</span>
                             <span className="mt-2 block text-2xl font-bold text-gray-950">
-                                {applicationSummary.byStatus[status]}
+                                {applicationSummary.byStatus?.[status] ?? 0}
                             </span>
                         </Link>
-                    ))}
+                    )) : null}
                 </div>
             </section>
 

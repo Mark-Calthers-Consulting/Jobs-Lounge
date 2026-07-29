@@ -5,8 +5,8 @@ const AdminUsers: React.FC = () => {
         <div className="">
             <div className="">
                 <div className="">
-                    <h1 className="font-bold text-2xl">Users</h1>
-                    <p className="my-3 text-gray-600">Manage and view team members and users.</p>
+                    <h1 className="font-bold text-2xl">Team</h1>
+                    <p className="my-3 text-gray-600">Create staff accounts and manage recruitment permissions.</p>
                 </div>
             </div>
 
