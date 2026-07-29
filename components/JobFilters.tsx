@@ -168,28 +168,40 @@ const MultiSelectMenu = <T extends string>({
   choices: Choice[]
   selected: T[]
   onChange: (values: T[]) => void
-}) => (
-  <details className="group relative">
-    <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:border-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003B6D] [&::-webkit-details-marker]:hidden">
-      <span>{label}</span>
-      {selected.length > 0 ? (
-        <span className="rounded-full bg-[#003B6D] px-1.5 py-0.5 text-xs font-semibold text-white">
-          {selected.length}
-        </span>
-      ) : null}
-      <FiChevronDown aria-hidden="true" className="ml-auto transition group-open:rotate-180" />
-    </summary>
-    <div className="absolute left-0 top-full z-30 mt-2 max-h-80 w-72 overflow-y-auto rounded-lg border border-gray-200 bg-white p-4 shadow-lg">
-      <FilterChoices
-        legend={label}
-        choices={choices}
-        selected={selected}
-        onChange={onChange}
-        compact
-      />
-    </div>
-  </details>
-)
+}) => {
+  const menuRef = useRef<HTMLDetailsElement>(null)
+
+  return (
+    <details ref={menuRef} className="group relative">
+      <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:border-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003B6D] [&::-webkit-details-marker]:hidden">
+        <span>{label}</span>
+        {selected.length > 0 ? (
+          <span className="rounded-full bg-[#003B6D] px-1.5 py-0.5 text-xs font-semibold text-white">
+            {selected.length}
+          </span>
+        ) : null}
+        <FiChevronDown aria-hidden="true" className="ml-auto transition group-open:rotate-180" />
+      </summary>
+      <div className="absolute left-0 top-full z-30 mt-2 max-h-80 w-72 overflow-y-auto rounded-lg border border-gray-200 bg-white p-4 pr-12 shadow-lg">
+        <button
+          type="button"
+          onClick={() => menuRef.current?.removeAttribute('open')}
+          aria-label={`Close ${label} filters`}
+          className="absolute right-2.5 top-2.5 rounded-md p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003B6D]"
+        >
+          <FiX aria-hidden="true" size={18} />
+        </button>
+        <FilterChoices
+          legend={label}
+          choices={choices}
+          selected={selected}
+          onChange={onChange}
+          compact
+        />
+      </div>
+    </details>
+  )
+}
 
 const AdvancedFields = ({
   filters,
@@ -570,8 +582,16 @@ const JobFilters = ({
       {advancedOpen ? (
         <div
           id="advanced-vacancy-filters"
-          className="hidden rounded-lg border border-gray-200 bg-gray-50 p-5 md:block"
+          className="relative hidden rounded-lg border border-gray-200 bg-gray-50 p-5 pt-12 md:block"
         >
+          <button
+            type="button"
+            onClick={() => setAdvancedOpen(false)}
+            aria-label="Close all filters"
+            className="absolute right-3 top-3 rounded-md p-1.5 text-gray-500 hover:bg-gray-200 hover:text-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003B6D]"
+          >
+            <FiX aria-hidden="true" size={20} />
+          </button>
           <AdvancedFields
             filters={filters}
             locationChoices={locationChoices}
