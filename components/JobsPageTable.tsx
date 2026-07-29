@@ -5,6 +5,7 @@ import type { Job } from '@/types/types'
 import { formatJobDeadline, isJobDeadlinePast } from '@/utils/jobDeadline'
 import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import Modal from './Modal'
@@ -12,6 +13,7 @@ import PaginationControls from './PaginationControls'
 import TableToolbar from './TableToolbar'
 
 const JobsPageTable = () => {
+    const router = useRouter()
     const [page, setPage] = useState(1)
     const [search, setSearch] = useState('')
     const [jobToDelete, setJobToDelete] = useState<Job | null>(null)
@@ -75,7 +77,18 @@ const JobsPageTable = () => {
     }
 
     const columns = [
-        { header: 'Job Title', accessorKey: 'title' },
+        {
+            header: 'Job Title',
+            accessorKey: 'title',
+            cell: ({ row }: { row: { original: Job } }) => (
+                <Link
+                    href={`/admin-center/jobs/${row.original._id}`}
+                    className="font-semibold text-gray-900 hover:text-[#184aa2] hover:underline"
+                >
+                    {row.original.title}
+                </Link>
+            ),
+        },
         {
             header: 'Status',
             accessorKey: 'status',
@@ -131,7 +144,33 @@ const JobsPageTable = () => {
                 <table className="w-full border-collapse text-left">
                     <caption className="sr-only">Job listings</caption>
                     <thead className="border-b border-gray-200 bg-gray-50">{table.getHeaderGroups().map((group) => <tr key={group.id}>{group.headers.map((header) => <th scope="col" key={header.id} className="p-4 text-sm font-medium text-gray-600">{flexRender(header.column.columnDef.header, header.getContext())}</th>)}</tr>)}</thead>
-                    <tbody className="bg-white">{table.getRowModel().rows.length ? table.getRowModel().rows.map((row) => <tr key={row.id} className="border-b border-gray-100">{row.getVisibleCells().map((cell) => <td key={cell.id} className="p-4 text-sm">{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>)}</tr>) : <tr><td colSpan={columns.length} className="p-8 text-center text-gray-500">No jobs found on this page.</td></tr>}</tbody>
+                    <tbody className="bg-white">
+                        {table.getRowModel().rows.length
+                            ? table.getRowModel().rows.map((row) => (
+                                <tr
+                                    key={row.id}
+                                    onClick={(event) => {
+                                        const target = event.target as HTMLElement
+                                        if (target.closest('a, button, input, select, textarea')) return
+                                        router.push(`/admin-center/jobs/${row.original._id}`)
+                                    }}
+                                    className="cursor-pointer border-b border-gray-100 transition-colors hover:bg-blue-50/40"
+                                >
+                                    {row.getVisibleCells().map((cell) => (
+                                        <td key={cell.id} className="p-4 text-sm">
+                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))
+                            : (
+                                <tr>
+                                    <td colSpan={columns.length} className="p-8 text-center text-gray-500">
+                                        No jobs found on this page.
+                                    </td>
+                                </tr>
+                            )}
+                    </tbody>
                 </table>
                 <PaginationControls pagination={vacancies?.pagination} onPageChange={setPage} />
             </div>

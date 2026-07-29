@@ -77,7 +77,9 @@ export const useUpdateAdminJob = () => {
     return useMutation({
         mutationFn: updateAdminJob,
         onSuccess: (job) => {
-            queryClient.setQueryData(['adminJob', job._id], job)
+            queryClient.setQueryData<Job | undefined>(['adminJob', job._id], (current) => (
+                current ? { ...current, ...job } : job
+            ))
             queryClient.invalidateQueries({ queryKey: ['adminVacancies'] })
             queryClient.invalidateQueries({ queryKey: ['adminDashboard'] })
         },
@@ -100,7 +102,9 @@ export const useUpdateAdminJobStatus = () => {
     return useMutation({
         mutationFn: updateAdminJobStatus,
         onSuccess: (job) => {
-            queryClient.setQueryData(['adminJob', job._id], job)
+            queryClient.setQueryData<Job | undefined>(['adminJob', job._id], (current) => (
+                current ? { ...current, ...job } : job
+            ))
             queryClient.invalidateQueries({ queryKey: ['adminVacancies'] })
             queryClient.invalidateQueries({ queryKey: ['adminDashboard'] })
             queryClient.invalidateQueries({ queryKey: ['vacancies'] })
