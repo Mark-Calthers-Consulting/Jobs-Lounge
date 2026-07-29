@@ -1,16 +1,23 @@
 'use client'
-import { useUser } from '@/hooks/useUsers'
+
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import React, { useEffect, useRef, useState } from 'react'
-import { RxHamburgerMenu } from "react-icons/rx";
-import { IoClose } from "react-icons/io5";
+import { useEffect, useRef, useState } from 'react'
+import { FiMenu, FiX } from 'react-icons/fi'
 
-const Navbar: React.FC = () => {
+import { useUser } from '@/hooks/useUsers'
+
+const navigationItems = [
+  { href: '/', label: 'Home' },
+  { href: '/vacancies', label: 'Vacancies' },
+  { href: '/blog', label: 'Career insights' },
+  { href: '/contact', label: 'Contact' },
+]
+
+const Navbar = (): React.JSX.Element => {
   const { data: user } = useUser()
   const pathname = usePathname()
-
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
 
@@ -22,55 +29,127 @@ const Navbar: React.FC = () => {
       setIsMenuOpen(false)
       menuButtonRef.current?.focus()
     }
+
     document.addEventListener('keydown', closeOnEscape)
     return () => document.removeEventListener('keydown', closeOnEscape)
   }, [isMenuOpen])
-  const isAuthed = !!user
-  return (
-    <nav aria-label="Primary navigation" className='relative flex max-w-7xl mx-auto w-full justify-between items-center px-5 md:px-20 py-4'>
-      <Link href='/' aria-label="Jobs Lounge home"><Image width={70} height={70} src='/logo.svg' alt="" /></Link>
-      <div className="hidden md:flex items-center text-[#222] text-lg gap-10">
-        <Link href='/' aria-current={pathname === '/' ? 'page' : undefined} className={pathname === "/" ? "text-[#111] font-bold border-b-2" : ""}>Home</Link>
-        <Link href='/vacancies' aria-current={pathname === '/vacancies' ? 'page' : undefined} className={pathname === "/vacancies" ? "text-[#111] font-bold border-b-2" : ""}>Vacancies</Link>
-        <Link href='/contact' aria-current={pathname === '/contact' ? 'page' : undefined} className={pathname === "/contact" ? "text-[#111] font-bold border-b-2" : ""}>Contact</Link>
-      </div>
-      <div className="hidden md:block">
-        {isAuthed
-          ? <Link href={user.role === 'user' ? '/dashboard' : '/admin-center'} className='inline-block bg-[#1B1F87] font-semibold rounded text-white px-6 py-3'>Dashboard</Link>
-          : <Link href='/auth' className='inline-block bg-[#003B6D] font-semibold rounded text-white px-6 py-3'>Sign in</Link>
-        }
-      </div>
 
-      <button
-        ref={menuButtonRef}
-        type="button"
-        className='block md:hidden cursor-pointer rounded p-2'
-        onClick={() => setIsMenuOpen((open) => !open)}
-        aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-        aria-expanded={isMenuOpen}
-        aria-controls="mobile-navigation-menu"
+  const isActive = (href: string) => (
+    href === '/' ? pathname === href : pathname.startsWith(href)
+  )
+  const accountHref = user?.role === 'user' ? '/dashboard' : '/admin-center'
+  const accountLabel = user ? 'Dashboard' : 'Sign in'
+  const accountButtonTone = user
+    ? 'bg-[#1B1F87] hover:bg-[#15196D]'
+    : 'bg-[#003B6D] hover:bg-[#002F57]'
+
+  return (
+    <header className="relative z-[100] w-full bg-white">
+      <nav
+        aria-label="Primary navigation"
+        className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5 sm:px-6 md:grid md:h-[92px] md:grid-cols-[1fr_auto_1fr] lg:px-8"
       >
-        {isMenuOpen
-          ? <IoClose aria-hidden="true" size={28} color='#1B1F87' />
-          : <RxHamburgerMenu aria-hidden="true" size={28} color='#1B1F87' />
-        }
-      </button>
+        <Link
+          href="/"
+          aria-label="Jobs Lounge home"
+          className="inline-flex w-fit rounded-md"
+          onClick={() => setIsMenuOpen(false)}
+        >
+          <Image
+            width={84}
+            height={58}
+            src="/logo.svg"
+            alt=""
+            priority
+            className="h-auto w-[84px]"
+          />
+        </Link>
+
+        <div className="hidden items-center gap-7 md:flex lg:gap-9">
+          {navigationItems.map(({ href, label }) => {
+            const active = isActive(href)
+            return (
+              <Link
+                key={href}
+                href={href}
+                aria-current={active ? 'page' : undefined}
+                className={`border-b-2 px-0.5 py-2 text-sm font-medium transition-colors ${
+                  active
+                    ? 'border-[#1B1F87] text-[#101A35]'
+                    : 'border-transparent text-slate-600 hover:text-[#101A35]'
+                }`}
+              >
+                {label}
+              </Link>
+            )
+          })}
+        </div>
+
+        <div className="hidden justify-self-end md:block">
+          <Link
+            href={user ? accountHref : '/auth'}
+            className={`inline-flex min-h-10 items-center justify-center rounded-lg px-5 py-2 text-sm font-semibold text-white transition-colors focus-visible:outline-[#1B1F87] ${accountButtonTone}`}
+          >
+            {accountLabel}
+          </Link>
+        </div>
+
+        <button
+          ref={menuButtonRef}
+          type="button"
+          className="inline-flex size-10 items-center justify-center rounded-lg border border-slate-200 text-[#101A35] transition-colors hover:border-slate-300 hover:bg-slate-50 md:hidden"
+          onClick={() => setIsMenuOpen((open) => !open)}
+          aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-expanded={isMenuOpen}
+          aria-controls="mobile-navigation-menu"
+        >
+          {isMenuOpen
+            ? <FiX aria-hidden="true" className="text-xl" />
+            : <FiMenu aria-hidden="true" className="text-xl" />
+          }
+        </button>
+      </nav>
+
       {isMenuOpen && (
-        <div id="mobile-navigation-menu" className='absolute md:hidden top-full px-6 bg-white rounded py-4 right-2 ring-1 ring-gray-300 shadow flex flex-col gap-4 z-200'>
-          <Link onClick={() => setIsMenuOpen(false)} href='/' aria-current={pathname === '/' ? 'page' : undefined} className={pathname === "/" ? "text-[#1B1F87] font-bold" : ""}>Home</Link>
-          <Link onClick={() => setIsMenuOpen(false)} href='/vacancies' aria-current={pathname === '/vacancies' ? 'page' : undefined} className={pathname === "/vacancies" ? "text-[#1B1F87] font-bold" : ""}>Vacancies</Link>
-          <Link onClick={() => setIsMenuOpen(false)} href='/contact' aria-current={pathname === '/contact' ? 'page' : undefined} className={pathname === "/contact" ? "text-[#1B1F87] font-bold" : ""}>Contact</Link>
-          <div>
-            {isAuthed
-              ? <Link href={user.role === 'user' ? '/dashboard' : '/admin-center'} className='inline-block bg-[#1B1F87] font-semibold text-sm rounded text-white px-5 py-2'>Dashboard</Link>
-              : <Link href='/auth' className='inline-block bg-[#1B1F87] font-semibold text-sm rounded text-white px-5 py-2'>Sign in</Link>
-            }
+        <div
+          id="mobile-navigation-menu"
+          className="absolute inset-x-0 top-full border-y border-slate-200 bg-white shadow-[0_14px_28px_rgba(15,23,42,0.08)] md:hidden"
+        >
+          <div className="mx-auto max-w-7xl px-5 py-5 sm:px-6">
+            <div className="flex flex-col gap-1">
+              {navigationItems.map(({ href, label }) => {
+                const active = isActive(href)
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={() => setIsMenuOpen(false)}
+                    aria-current={active ? 'page' : undefined}
+                    className={`rounded-md px-3 py-3 text-sm transition-colors ${
+                      active
+                        ? 'bg-slate-100 font-semibold text-[#101A35]'
+                        : 'font-medium text-slate-600 hover:bg-slate-50 hover:text-[#101A35]'
+                    }`}
+                  >
+                    {label}
+                  </Link>
+                )
+              })}
+            </div>
+
+            <div className="mt-4 border-t border-slate-200 pt-4">
+              <Link
+                href={user ? accountHref : '/auth'}
+                onClick={() => setIsMenuOpen(false)}
+                className={`inline-flex min-h-11 w-full items-center justify-center rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition-colors focus-visible:outline-[#1B1F87] ${accountButtonTone}`}
+              >
+                {accountLabel}
+              </Link>
+            </div>
           </div>
         </div>
-      )
-      }
-    </nav>
-
+      )}
+    </header>
   )
 }
 

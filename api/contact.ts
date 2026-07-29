@@ -6,6 +6,7 @@ import type { ApiSuccess } from '@/types/types'
 export type ContactPayload = {
     name: string
     email: string
+    telephone?: string
     subject: string
     message: string
 }

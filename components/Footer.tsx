@@ -151,7 +151,11 @@ export default function Footer(): React.JSX.Element {
                                 </a>
                                 <p className="flex items-start gap-2 text-sm leading-5 text-slate-400">
                                     <FiMapPin aria-hidden="true" className="mt-0.5 shrink-0 text-slate-500" />
-                                    <span>Lagos &amp; Abuja, Nigeria</span>
+                                    <span>14, Lanre Awolokun Street, Gbagada Phase II, Lagos.</span>
+                                </p>
+                                <p className="flex items-start gap-2 text-sm leading-5 text-slate-400">
+                                    <FiMapPin aria-hidden="true" className="mt-0.5 shrink-0 text-slate-500" />
+                                    <span>Suite 12, 2nd Floor, Ogun House, Central Area, Abuja.</span>
                                 </p>
                             </div>
                         </address>
