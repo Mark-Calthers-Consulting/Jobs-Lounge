@@ -1,8 +1,8 @@
 import type { ApiSuccess, BlogPageProps, BlogPost } from '@/types/types'
 import { notFound } from 'next/navigation';
-import ReactMarkdown from 'react-markdown';
 import { serverApiUrl } from '@/api/serverBase';
 import { readApiResponse } from '@/api/errors';
+import MarkdownArticle from '@/components/MarkdownArticle';
 
 
 const getSingleBlogPost = async (slug: string): Promise<BlogPost> => {
@@ -27,11 +27,7 @@ const BlogPage = async ({ params }: BlogPageProps) => {
         <div className=" prose prose-lg max-w-7xl mx-auto">
             <article>
                 <h1 className='font-semibold py-4'>{post.title}</h1>
-                <div className="max-w-none text-gray-800">
-                    <ReactMarkdown>
-                        {post.content}
-                    </ReactMarkdown>
-                </div>
+                <MarkdownArticle content={post.content} className="text-gray-800" />
             </article>
         </div>
     )

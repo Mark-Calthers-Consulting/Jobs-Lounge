@@ -13,7 +13,8 @@ import {
     LuUser,
     LuSettings,
     LuUsers,
-    LuLogOut
+    LuLogOut,
+    LuBookOpen,
 } from "react-icons/lu"
 import { PiSuitcase, PiUsersThree } from "react-icons/pi"
 
@@ -62,6 +63,12 @@ const AdminSidebar = () => {
             permission: 'candidates:view',
         },
         {
+            name: "Blog",
+            href: "/admin-center/blog",
+            icon: <LuBookOpen size={20} />,
+            permission: 'blogs:manage',
+        },
+        {
             name: "Team",
             href: "/admin-center/team",
             icon: <LuUsers size={20} />,
@@ -91,7 +98,9 @@ const AdminSidebar = () => {
             {/* 2. Navigation */}
             <nav aria-label="Administration navigation" className="flex flex-1 gap-2 overflow-x-auto px-4 py-3 md:flex-col md:space-y-2 md:overflow-visible md:py-6">
                 {menuItems.filter((item) => hasStaffPermission(user?.role, item.permission)).map((item) => {
-                    const isActive = pathname === item.href
+                    const isActive = item.href === '/admin-center'
+                        ? pathname === item.href
+                        : pathname === item.href || pathname.startsWith(`${item.href}/`)
 
                     return (
                         <Link

@@ -33,11 +33,12 @@ Never replace `API_ORIGIN` with a `NEXT_PUBLIC_*` variable; backend topology and
 ```sh
 npm run dev      # local development server
 npm run lint     # ESLint and accessibility rules
+npm run test:unit # Vitest component and utility tests
 npm run build    # production compile, type-check, and route generation
 npm run start    # run the compiled Next.js server
 ```
 
-There is currently no frontend unit-test runner. Treat both `lint` and `build` as required pre-deployment checks.
+Treat unit tests, lint, and build as required pre-deployment checks.
 
 ## Route groups
 
@@ -47,6 +48,7 @@ There is currently no frontend unit-test runner. Treat both `lint` and `build` a
 - `/admin-center/login`: administrator authentication
 - `/accept-staff-invitation`: secure staff password creation
 - `/admin-center/*`: role-protected staff area for Administrators, Recruiters, and Super administrators
+- `/admin-center/blog/*`: Recruiter/Super-admin article management and Markdown editing
 - `/api/backend/*`: same-origin proxy to the Express `/api/*` routes
 
 Route protection is enforced in the dashboard/admin layouts and again by the backend authorization middleware. Frontend checks improve navigation but are not a security boundary.
@@ -58,6 +60,7 @@ Route protection is enforced in the dashboard/admin layouts and again by the bac
 - React Hook Form/Zod provide form handling and shared client validation where applicable.
 - Authentication uses the backend’s secure, HTTP-only cookie. Unsafe browser requests obtain and send a signed CSRF token through `csrfFetch`.
 - `next.config.ts` defines the backend gateway, security headers, CSP, and private-page cache controls.
+- Public Career Insights uses managed Cloudinary cover images with local category artwork as its legacy fallback.
 
 Backend architecture, API contracts, deployment steps, and incident procedures live in the backend repository documentation.
 

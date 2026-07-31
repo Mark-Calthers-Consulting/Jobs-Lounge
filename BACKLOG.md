@@ -21,3 +21,11 @@ Status: deferred
 - Require recent step-up authentication before sensitive actions such as staff role changes and organization configuration.
 - Add Super-admin policies for mandatory staff MFA and staff session lifetimes.
 - Expand immutable security audit events and mandatory security notifications for account and policy changes.
+
+## Career Insights article reading experience
+
+Status: deferred
+
+- Redesign the individual article page around the managed cover image, editorial metadata, and readable Markdown typography.
+- Add related-article discovery after the public listing and category strategy have enough content to support it.
+- Keep the reading experience restrained, accessible, and consistent with the public navigation and footer.

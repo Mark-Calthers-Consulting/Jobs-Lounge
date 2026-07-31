@@ -1,5 +1,6 @@
 import type {
   ApplicationStatus,
+  BlogCategory,
   BlogStatus,
   Category,
   JobStatus,
@@ -593,14 +594,62 @@ export type BlogPost = {
   _id: string
   title: string
   slug: string
+  excerpt: string
+  category: BlogCategory
   content: string
   status: BlogStatus
   postedBy: { name: string }
+  publishedAt?: string | null
   createdAt: string
   updatedAt: string
+  coverImage?: {
+    secureUrl: string
+    alt: string
+    width: number
+    height: number
+  }
   __v?: number
 }
 
-export type CreateBlogPostPayload = Pick<BlogPost, 'title' | 'slug' | 'content'> & {
+export type BlogPostSummary = Omit<BlogPost, 'content'>
+
+export type CreateBlogPostPayload = Pick<
+  BlogPost,
+  'title' | 'slug' | 'excerpt' | 'category' | 'content'
+> & {
   status?: BlogStatus
+  coverImageFile?: File
+  coverImageAlt?: string
+}
+
+export type AdminBlogStatusFilter = BlogStatus | 'all'
+export type AdminBlogSort = 'newest' | 'oldest' | 'updated' | 'title'
+
+export type AdminBlogFilters = {
+  page?: number
+  limit?: number
+  search?: string
+  status?: AdminBlogStatusFilter
+  category?: BlogCategory | 'all'
+  sort?: AdminBlogSort
+}
+
+export type AdminBlogResponse = PaginatedResponse<BlogPost> & {
+  summary: {
+    all: number
+    draft: number
+    published: number
+  }
+}
+
+export type UpdateBlogPostPayload = Partial<CreateBlogPostPayload> & {
+  postId: string
+  version: number
+  removeCoverImage?: boolean
+}
+
+export type DeleteBlogPostPayload = {
+  postId: string
+  confirmationTitle: string
+  version: number
 }

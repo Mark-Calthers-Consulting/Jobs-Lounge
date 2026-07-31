@@ -14,11 +14,12 @@ interface ModalProps {
     actionLabel: string
     actionTone?: 'default' | 'danger'
     disabled?: boolean
+    actionDisabled?: boolean
     size?: 'default' | 'compact'
 }
 
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onSubmit, title, body, footer, actionLabel, actionTone = 'default', disabled, size = 'default' }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onSubmit, title, body, footer, actionLabel, actionTone = 'default', disabled, actionDisabled, size = 'default' }) => {
     const titleId = useId()
     const bodyId = useId()
     const dialogRef = useRef<HTMLDivElement>(null)
@@ -125,7 +126,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onSubmit, title, body, f
                         {isCompact ? (
                             <button
                                 type="button"
-                                disabled={disabled}
+                                disabled={disabled || actionDisabled}
                                 onClick={handleSubmit}
                                 className={`w-full rounded-md px-4 py-2.5 text-sm font-semibold transition disabled:cursor-wait disabled:opacity-60 ${
                                     actionTone === 'danger'
@@ -136,7 +137,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onSubmit, title, body, f
                                 {actionLabel}
                             </button>
                         ) : (
-                            <Button disabled={disabled} label={actionLabel} secondary fullwidth large onClick={handleSubmit} />
+                            <Button disabled={disabled || actionDisabled} label={actionLabel} secondary fullwidth large onClick={handleSubmit} />
                         )}
                         {footer}
                     </div>

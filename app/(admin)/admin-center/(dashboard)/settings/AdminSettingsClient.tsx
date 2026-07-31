@@ -33,10 +33,10 @@ const roleLabel = (role?: string) => {
 
 const permissionsFor = (role?: string) => {
     if (role === 'super-admin') {
-        return ['Manage vacancies', 'Review applications', 'View candidates', 'Archive vacancies', 'Manage the staff team', 'Manage organization settings']
+        return ['Manage vacancies', 'Review applications', 'View candidates', 'Manage blog posts', 'Archive vacancies', 'Manage the staff team', 'Manage organization settings']
     }
     if (role === 'recruiter') {
-        return ['Manage vacancies', 'Review applications', 'View candidates', 'Archive and restore vacancies', 'Create blog posts']
+        return ['Manage vacancies', 'Review applications', 'View candidates', 'Archive and restore vacancies', 'Manage blog posts']
     }
     return ['Create vacancies', 'Edit vacancies', 'Publish and close vacancies']
 }
