@@ -1,36 +1,15 @@
-'use client'
-import JobCard from '@/components/JobCard'
-import { useGetSavedJobs } from '@/hooks/useUsers'
-import { Job } from '@/types/types'
-import React from 'react'
-import { useState } from 'react'
-import PaginationControls from '@/components/PaginationControls'
+import CandidateJobActivity from '@/components/CandidateJobActivity'
 
-const SavedJobs = () => {
-  const [page, setPage] = useState(1)
-  const { data, isLoading } = useGetSavedJobs({ enabled: true, page })
-
-  if (isLoading) return <p role="status">Loading saved jobs…</p>
-
-  return (
-    <div>
-      <h1 className='text-3xl font-bold'>Saved Jobs</h1>
-      <p className='text-gray-600 my-3'>Manage your saved jobs and track your applications.</p>
-
-      <div className="grid gap-2 grid-cols-1 md:grid-cols-2">
-        {data && data.data.length > 0
-          ?
-          data.data.map((job: Job) => (
-            <JobCard key={job._id} job={job} />
-          ))
-
-          : <p className='text-gray-600'>No saved jobs yet.</p>
-        }
-      </div>
-      <PaginationControls pagination={data?.pagination} onPageChange={setPage} />
-
-    </div>
-  )
+type PageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
-export default SavedJobs
+export default async function CandidateJobsPage({ searchParams }: PageProps) {
+  const query = await searchParams
+  const view = query.view === 'applications' ? 'applications' : 'saved'
+  const rawPage = Array.isArray(query.page) ? query.page[0] : query.page
+  const parsedPage = rawPage && /^\d+$/.test(rawPage) ? Number(rawPage) : 1
+  const page = Number.isSafeInteger(parsedPage) && parsedPage > 0 ? parsedPage : 1
+
+  return <CandidateJobActivity view={view} page={page} />
+}

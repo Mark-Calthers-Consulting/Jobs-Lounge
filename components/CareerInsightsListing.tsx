@@ -126,22 +126,20 @@ const CareerInsightsListing = () => {
 
   return (
     <>
-      <section className="relative overflow-hidden border-y border-[#dce6f1] bg-[#f0f5fb] py-16 sm:py-20">
-        <div aria-hidden="true" className="absolute left-1/2 top-1/2 size-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#dce6f1]" />
-        <div aria-hidden="true" className="absolute left-1/2 top-1/2 size-[620px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#e4ebf3]" />
-        <Container className="relative text-center">
+      <section className="border-b border-[#dce6f1] bg-[#f0f5fb] py-8 sm:py-10">
+        <Container className="text-center">
           <p className="text-sm font-semibold text-[#184aa2]">Career insights</p>
-          <h1 className="mx-auto mt-3 max-w-3xl text-4xl font-bold tracking-[-0.03em] text-[#101A35] sm:text-5xl">
+          <h1 className="mx-auto mt-2 max-w-3xl text-3xl font-bold tracking-[-0.025em] text-[#101A35] sm:text-4xl">
             Practical guidance for your next career move
           </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
+          <p className="mx-auto mt-3 max-w-2xl text-base leading-7 text-slate-600">
             Clear advice on job searching, applications, interviews, growth, and the modern workplace.
           </p>
         </Container>
       </section>
 
-      <Container className="py-12 sm:py-16">
-        <div className="mb-8 flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
+      <Container className="py-8 sm:py-10">
+        <div className="mb-7 flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="text-2xl font-bold text-[#101A35]">Latest articles</h2>
             <p className="mt-1 text-sm text-slate-500" aria-live="polite">
@@ -156,14 +154,15 @@ const CareerInsightsListing = () => {
               <button
                 key={value}
                 type="button"
+                aria-label={`${label} view`}
                 aria-pressed={view === value}
+                title={`${label} view`}
                 onClick={() => setView(value)}
-                className={`inline-flex min-h-9 items-center gap-2 rounded-md px-3 text-sm font-semibold transition-colors ${
+                className={`inline-flex size-9 items-center justify-center rounded-md text-sm font-semibold transition-colors ${
                   view === value ? 'bg-[#101A35] text-white' : 'text-slate-600 hover:text-[#101A35]'
                 }`}
               >
                 <Icon aria-hidden="true" />
-                {label}
               </button>
             ))}
           </div>

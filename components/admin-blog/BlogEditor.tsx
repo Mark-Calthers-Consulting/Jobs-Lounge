@@ -14,6 +14,7 @@ import { toast } from 'sonner'
 
 import { ApiError } from '@/api/errors'
 import MarkdownArticle from '@/components/MarkdownArticle'
+import Modal from '@/components/Modal'
 import BlogDeleteModal from '@/components/admin-blog/BlogDeleteModal'
 import BlogCoverImageField from '@/components/admin-blog/BlogCoverImageField'
 import { BLOG_CATEGORIES, type BlogCategory } from '@/constants/enums'
@@ -111,6 +112,7 @@ const BlogEditorForm = ({ postId, existing }: BlogEditorFormProps) => {
   const [slugTouched, setSlugTouched] = useState(Boolean(existing))
   const [mobilePanel, setMobilePanel] = useState<'write' | 'preview'>('write')
   const [deleteTarget, setDeleteTarget] = useState<BlogPost | null>(null)
+  const [clearConfirmationOpen, setClearConfirmationOpen] = useState(false)
   const [coverFile, setCoverFile] = useState<File | null>(null)
   const [coverPreviewUrl, setCoverPreviewUrl] = useState<string>()
   const [coverAlt, setCoverAlt] = useState(existing?.coverImage?.alt || '')
@@ -188,6 +190,24 @@ const BlogEditorForm = ({ postId, existing }: BlogEditorFormProps) => {
     setCoverAlt('')
     setRemoveCoverImage(Boolean(existing?.coverImage))
     setErrors((current) => ({ ...current, coverImage: undefined, coverImageAlt: undefined }))
+  }
+
+  const clearForm = () => {
+    coverSelectionRef.current += 1
+    clearLocalCoverPreview()
+    setCoverFile(null)
+    setCoverAlt('')
+    setRemoveCoverImage(Boolean(existing?.coverImage))
+    setErrors({})
+    setSlugTouched(slugLocked)
+    setMobilePanel('write')
+    setForm({
+      ...EMPTY_FORM,
+      status: existing?.status || 'Draft',
+      slug: slugLocked ? form.slug : '',
+    })
+    setClearConfirmationOpen(false)
+    window.setTimeout(() => document.getElementById('blog-title')?.focus(), 0)
   }
 
   const change = <Field extends keyof FormState>(field: Field, value: FormState[Field]) => {
@@ -497,6 +517,14 @@ const BlogEditorForm = ({ postId, existing }: BlogEditorFormProps) => {
                 </button>
               </>
             )}
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => setClearConfirmationOpen(true)}
+              className="min-h-11 rounded-md px-3 text-sm font-semibold text-slate-600 hover:text-slate-950 disabled:opacity-60"
+            >
+              Clear form
+            </button>
             {existing ? (
               <button
                 type="button"
@@ -544,6 +572,33 @@ const BlogEditorForm = ({ postId, existing }: BlogEditorFormProps) => {
           </div>
         </aside>
       </form>
+
+      <Modal
+        isOpen={clearConfirmationOpen}
+        title="Clear article form?"
+        body={(
+          <p className="text-sm leading-6 text-slate-200">
+            This will remove the title, category selection, excerpt, article content, and cover image
+            from the form. Nothing is changed in the database until you save.
+          </p>
+        )}
+        actionLabel="Clear form"
+        actionTone="danger"
+        size="compact"
+        disabled={pending}
+        onClose={() => setClearConfirmationOpen(false)}
+        onSubmit={clearForm}
+        footer={(
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => setClearConfirmationOpen(false)}
+            className="w-full rounded-md border border-white/20 px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/10 disabled:opacity-60"
+          >
+            Cancel
+          </button>
+        )}
+      />
 
       <BlogDeleteModal
         key={deleteTarget?._id || 'no-delete-target'}

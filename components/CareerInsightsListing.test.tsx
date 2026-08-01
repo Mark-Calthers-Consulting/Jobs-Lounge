@@ -51,8 +51,8 @@ describe('career insights listing', () => {
 
   it('defaults to Grid and provides an accessible List view control', () => {
     render(<CareerInsightsListing />)
-    const grid = screen.getByRole('button', { name: 'Grid' })
-    const list = screen.getByRole('button', { name: 'List' })
+    const grid = screen.getByRole('button', { name: 'Grid view' })
+    const list = screen.getByRole('button', { name: 'List view' })
     expect(grid).toHaveAttribute('aria-pressed', 'true')
     expect(list).toHaveAttribute('aria-pressed', 'false')
 

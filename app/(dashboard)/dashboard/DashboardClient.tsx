@@ -3,17 +3,14 @@ import { useGetSavedJobs, useUser } from '@/hooks/useUsers'
 import { useRecommendedJobs } from '@/hooks/useVacancies'
 import { Job } from '@/types/types'
 import Link from 'next/link'
-import { CiBookmark, CiCalendarDate, CiMoneyBill } from 'react-icons/ci'
+import { CiBookmark, CiMoneyBill } from 'react-icons/ci'
 import { IoCheckmarkCircleOutline, IoLocationOutline } from 'react-icons/io5'
 import { FiArrowRight, FiCheck } from 'react-icons/fi'
 import { useState } from 'react'
 import { useEmailVerificationRequest } from '@/hooks/useAuth'
-import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
-import { formatDateInTimeZone } from '@/utils/dateTime'
 
 
 const DashboardClient: React.FC = () => {
-    const { timeZone } = usePlatformSettings()
     const userQuery = useUser()
     const userRecommendations = useRecommendedJobs()
     const verificationRequest = useEmailVerificationRequest()
@@ -28,10 +25,6 @@ const DashboardClient: React.FC = () => {
         return <p role="status">Loading dashboard…</p>
     }
     if (userQuery.isError) return <p role="alert" className="text-red-700">Unable to load your dashboard.</p>
-
-    const dateJoined = userQuery.data?.createdAt
-        ? formatDateInTimeZone(userQuery.data.createdAt, timeZone)
-        : ''
 
     return (
         <div>
@@ -133,28 +126,21 @@ const DashboardClient: React.FC = () => {
 
             <Link href='/vacancies' className='my-3 inline-block rounded p-2 shadow'>Go to vacancies</Link>
 
-            <section className='gap-2 grid grid-cols-1 md:grid-cols-3'>
-                <div className="rounded bg-white ring-1 ring-black/5 shadow p-5 flex justify-between">
+            <section className='grid grid-cols-1 gap-3 md:grid-cols-2'>
+                <Link href="/dashboard/saved-jobs?view=saved" className="flex justify-between rounded bg-white p-5 shadow ring-1 ring-black/5 transition hover:ring-[#184aa2]">
                     <div className="">
                         <p>Saved jobs</p>
                         <p className='text-2xl font-semibold'>{savedJobsQuery.data?.pagination.total ?? 0}</p>
                     </div>
                     <CiBookmark aria-hidden="true" size={24} color='#155DFC' />
-                </div>
-                <div className="rounded bg-white ring-1 ring-black/5 shadow p-5 flex justify-between">
+                </Link>
+                <Link href="/dashboard/saved-jobs?view=applications" className="flex justify-between rounded bg-white p-5 shadow ring-1 ring-black/5 transition hover:ring-[#184aa2]">
                     <div className="">
                         <p>Jobs applied</p>
                         <p className='text-2xl font-semibold'>{userQuery.data?.applicationCount ?? 0}</p>
                     </div>
                     <IoCheckmarkCircleOutline aria-hidden="true" size={24} color='#078536' />
-                </div>
-                <div className="rounded bg-white ring-1 ring-black/5 shadow p-5 flex justify-between">
-                    <div className="">
-                        <p>Member since</p>
-                        <p className='text-2xl font-semibold'>{dateJoined}</p>
-                    </div>
-                    <CiCalendarDate aria-hidden="true" size={24} color='#7E22CE' />
-                </div>
+                </Link>
             </section>
             <section>
                 <h2 className='text-lg md:text:xl font-semibold my-4'>Recommended Opportunities</h2>

@@ -22,10 +22,18 @@ Status: deferred
 - Add Super-admin policies for mandatory staff MFA and staff session lifetimes.
 - Expand immutable security audit events and mandatory security notifications for account and policy changes.
 
-## Career Insights article reading experience
+## Career Insights future enhancements
 
 Status: deferred
 
-- Redesign the individual article page around the managed cover image, editorial metadata, and readable Markdown typography.
 - Add related-article discovery after the public listing and category strategy have enough content to support it.
-- Keep the reading experience restrained, accessible, and consistent with the public navigation and footer.
+
+## Personalised vacancy recommendations
+
+Status: deferred
+
+- Let candidates specify target roles or categories, preferred locations, work arrangements, and job types.
+- Replace the current newest-unapplied-vacancies feed with deterministic recommendations based on those explicit preferences and suitable profile fields.
+- Exclude vacancies the candidate has already applied to and provide a short, understandable reason for each recommendation.
+- Add indexed, bounded recommendation queries with a useful recent-vacancies fallback when preferences are incomplete.
+- Reuse the same preference model for future job-alert targeting without using sensitive personal information or opaque automated scoring.

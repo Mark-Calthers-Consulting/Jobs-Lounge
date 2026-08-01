@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   articleExcerpt,
+  articleReadingMinutes,
   slugifyArticleTitle,
   validateBlogCoverFile,
 } from './blog'
@@ -20,6 +21,12 @@ describe('blog editorial helpers', () => {
     expect(excerpt).toMatch(/^Resume guidance Use clear language/)
     expect(excerpt.endsWith('…')).toBe(true)
     expect(excerpt.length).toBeLessThanOrEqual(201)
+  })
+
+  it('calculates a minimum one-minute reading time at 225 words per minute', () => {
+    expect(articleReadingMinutes('A short article.')).toBe(1)
+    expect(articleReadingMinutes(Array.from({ length: 226 }, () => 'word').join(' '))).toBe(2)
+    expect(articleReadingMinutes('# Heading\n\n**Useful** [guidance](/vacancies).')).toBe(1)
   })
 
   it('validates cover image type, size, and dimensions before upload', () => {

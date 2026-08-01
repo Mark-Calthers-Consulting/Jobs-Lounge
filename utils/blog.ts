@@ -7,8 +7,7 @@ export const slugifyArticleTitle = (value: string) => value
   .replace(/^-+|-+$/g, '')
   .replace(/-{2,}/g, '-')
 
-export const articleExcerpt = (content: string, maxLength = 200) => {
-  const plain = content
+const plainArticleText = (content: string) => content
     .replace(/```[\s\S]*?```/g, ' ')
     .replace(/`([^`]+)`/g, '$1')
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
@@ -20,10 +19,18 @@ export const articleExcerpt = (content: string, maxLength = 200) => {
     .replace(/\s+/g, ' ')
     .trim()
 
+export const articleExcerpt = (content: string, maxLength = 200) => {
+  const plain = plainArticleText(content)
+
   if (plain.length <= maxLength) return plain
   const candidate = plain.slice(0, maxLength + 1)
   const boundary = candidate.lastIndexOf(' ')
   return `${candidate.slice(0, boundary > 120 ? boundary : maxLength).trim()}…`
+}
+
+export const articleReadingMinutes = (content: string, wordsPerMinute = 225) => {
+  const words = plainArticleText(content).split(/\s+/u).filter(Boolean).length
+  return Math.max(1, Math.ceil(words / wordsPerMinute))
 }
 
 export const BLOG_COVER_MAX_BYTES = 5 * 1024 * 1024

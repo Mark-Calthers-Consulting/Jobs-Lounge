@@ -38,7 +38,7 @@ const DashboardSidebar = () => {
             icon: <LuLayoutDashboard size={20} />
         },
         {
-            name: "Saved Jobs",
+            name: "My Jobs",
             href: "/dashboard/saved-jobs",
             icon: <LuBookmark size={20} />
         },
