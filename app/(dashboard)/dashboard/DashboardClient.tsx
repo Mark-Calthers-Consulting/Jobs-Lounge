@@ -127,14 +127,14 @@ const DashboardClient: React.FC = () => {
             <Link href='/vacancies' className='my-3 inline-block rounded p-2 shadow'>Go to vacancies</Link>
 
             <section className='grid grid-cols-1 gap-3 md:grid-cols-2'>
-                <Link href="/dashboard/saved-jobs?view=saved" className="flex justify-between rounded bg-white p-5 shadow ring-1 ring-black/5 transition hover:ring-[#184aa2]">
+                <Link href="/dashboard/applications?view=saved" className="flex justify-between rounded bg-white p-5 shadow ring-1 ring-black/5 transition hover:ring-[#184aa2]">
                     <div className="">
                         <p>Saved jobs</p>
                         <p className='text-2xl font-semibold'>{savedJobsQuery.data?.pagination.total ?? 0}</p>
                     </div>
                     <CiBookmark aria-hidden="true" size={24} color='#155DFC' />
                 </Link>
-                <Link href="/dashboard/saved-jobs?view=applications" className="flex justify-between rounded bg-white p-5 shadow ring-1 ring-black/5 transition hover:ring-[#184aa2]">
+                <Link href="/dashboard/applications?view=applications" className="flex justify-between rounded bg-white p-5 shadow ring-1 ring-black/5 transition hover:ring-[#184aa2]">
                     <div className="">
                         <p>Jobs applied</p>
                         <p className='text-2xl font-semibold'>{userQuery.data?.applicationCount ?? 0}</p>

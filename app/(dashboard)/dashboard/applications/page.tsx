@@ -1,14 +1,15 @@
-import { redirect } from 'next/navigation'
+import CandidateJobActivity from '@/components/CandidateJobActivity'
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
-export default async function CandidateJobsPage({ searchParams }: PageProps) {
+export default async function CandidateApplicationsPage({ searchParams }: PageProps) {
   const query = await searchParams
+  const view = query.view === 'saved' ? 'saved' : 'applications'
   const rawPage = Array.isArray(query.page) ? query.page[0] : query.page
   const parsedPage = rawPage && /^\d+$/.test(rawPage) ? Number(rawPage) : 1
   const page = Number.isSafeInteger(parsedPage) && parsedPage > 0 ? parsedPage : 1
 
-  redirect(`/dashboard/applications?view=saved&page=${page}`)
+  return <CandidateJobActivity view={view} page={page} />
 }

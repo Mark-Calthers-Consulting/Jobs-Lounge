@@ -143,7 +143,7 @@ const CandidateJobActivity = ({ view, page }: CandidateJobActivityProps) => {
   const applicationTotal = applications.data?.pagination.total ?? 0
 
   const changePage = (nextPage: number) => {
-    router.push(`/dashboard/saved-jobs?view=${view}&page=${nextPage}`)
+    router.push(`/dashboard/applications?view=${view}&page=${nextPage}`)
   }
 
   return (
@@ -151,28 +151,28 @@ const CandidateJobActivity = ({ view, page }: CandidateJobActivityProps) => {
       <header className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-semibold text-[#184aa2]">Your job search</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-[-0.02em] text-slate-950">My jobs</h1>
-          <p className="mt-2 text-slate-600">Return to saved vacancies and review every application you have submitted.</p>
+          <h1 className="mt-1 text-3xl font-bold tracking-[-0.02em] text-slate-950">Applications</h1>
+          <p className="mt-2 text-slate-600">Review your submitted applications and return to vacancies you saved for later.</p>
         </div>
         <Link href="/vacancies" className="inline-flex min-h-10 w-fit items-center gap-2 rounded-md bg-[#184aa2] px-4 text-sm font-semibold text-white hover:bg-[#123d87]">
           Browse vacancies <FiArrowRight aria-hidden="true" />
         </Link>
       </header>
 
-      <nav aria-label="My jobs sections" className="mt-6 flex gap-6 border-b border-slate-200">
+      <nav aria-label="Application sections" className="mt-6 flex gap-6 border-b border-slate-200">
         <Link
-          href="/dashboard/saved-jobs?view=saved"
-          aria-current={view === 'saved' ? 'page' : undefined}
-          className={`flex items-center gap-2 border-b-2 px-1 pb-3 text-sm font-semibold ${view === 'saved' ? 'border-[#184aa2] text-[#184aa2]' : 'border-transparent text-slate-500 hover:text-slate-900'}`}
-        >
-          <FiBookmark aria-hidden="true" /> Saved jobs <span className="text-xs">{savedTotal}</span>
-        </Link>
-        <Link
-          href="/dashboard/saved-jobs?view=applications"
+          href="/dashboard/applications?view=applications"
           aria-current={view === 'applications' ? 'page' : undefined}
           className={`flex items-center gap-2 border-b-2 px-1 pb-3 text-sm font-semibold ${view === 'applications' ? 'border-[#184aa2] text-[#184aa2]' : 'border-transparent text-slate-500 hover:text-slate-900'}`}
         >
           <FiBriefcase aria-hidden="true" /> Applications <span className="text-xs">{applicationTotal}</span>
+        </Link>
+        <Link
+          href="/dashboard/applications?view=saved"
+          aria-current={view === 'saved' ? 'page' : undefined}
+          className={`flex items-center gap-2 border-b-2 px-1 pb-3 text-sm font-semibold ${view === 'saved' ? 'border-[#184aa2] text-[#184aa2]' : 'border-transparent text-slate-500 hover:text-slate-900'}`}
+        >
+          <FiBookmark aria-hidden="true" /> Saved jobs <span className="text-xs">{savedTotal}</span>
         </Link>
       </nav>
 

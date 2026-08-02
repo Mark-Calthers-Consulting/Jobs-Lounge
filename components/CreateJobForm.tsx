@@ -3,13 +3,14 @@
 import { useCreatejob } from '@/hooks/useApplications';
 import { useUpdateAdminJob } from '@/hooks/useAdmin'
 import { useVacancyCreationDefaults } from '@/hooks/useSettings'
+import { useUser } from '@/hooks/useUsers'
 import { JOB_ENUMS } from '@/constants/enums';
 import { jobFormSchema } from '@/schemas/jobSchema';
 import type { Job, VacancyCreationDefaults } from '@/types/types'
 import Modal from '@/components/Modal';
 import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
 import { dateInputValueInTimeZone } from '@/utils/dateTime'
-import { ChangeEvent, FormEvent, KeyboardEvent, useState } from 'react';
+import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner';
 
@@ -110,6 +111,8 @@ const CreateJobFormContent = ({
 }) => {
     const router = useRouter()
     const platformSettings = usePlatformSettings()
+    const { data: currentUser } = useUser()
+    const isSuperAdmin = currentUser?.role === 'super-admin'
     const [formData, setFormData] = useState<JobFormData>({
         jobTitle: initialJob?.title ?? '',
         jobDescription: initialJob?.description ?? '',
@@ -138,6 +141,14 @@ const CreateJobFormContent = ({
     const [isJsonPanelExpanded, setIsJsonPanelExpanded] = useState(true)
     const [jobJson, setJobJson] = useState('')
     const [importFeedback, setImportFeedback] = useState<ImportFeedback | null>(null)
+
+    useEffect(() => {
+        if (isSuperAdmin && !initialJob) {
+            setIsDevModeEnabled(true)
+            setIsDevModeConfirmationOpen(false)
+            setIsJsonPanelExpanded(true)
+        }
+    }, [initialJob, isSuperAdmin])
 
     const [listInputs, setListInputs] = useState<ListInputs>({
         benefits: '',
@@ -185,10 +196,18 @@ const CreateJobFormContent = ({
 
     const handleDevModeToggle = (enabled: boolean) => {
         if (enabled) {
+            if (isSuperAdmin) {
+                setIsDevModeEnabled(true)
+                setIsDevModeConfirmationOpen(false)
+                setIsJsonPanelExpanded(true)
+                return
+            }
+
             setIsDevModeConfirmationOpen(true)
             return
         }
 
+        setIsDevModeConfirmationOpen(false)
         setIsDevModeEnabled(false)
         setImportFeedback(null)
     }
@@ -507,25 +526,27 @@ const CreateJobFormContent = ({
                 </section>
             ) : null}
 
-            <Modal
-                isOpen={isDevModeConfirmationOpen}
-                onClose={() => setIsDevModeConfirmationOpen(false)}
-                onSubmit={confirmDevMode}
-                title="Enable Dev Mode?"
-                actionLabel="Enable dev mode"
-                size="compact"
-                body={(
-                    <div className="space-y-3 text-base leading-7 text-gray-200">
-                        <p>Dev Mode lets you paste structured job JSON and use it to overwrite the current form values.</p>
-                        <p>Nothing will be saved automatically. You will still review the form and select Create job before the listing is created.</p>
-                    </div>
-                )}
-                footer={(
-                    <button type="button" onClick={() => setIsDevModeConfirmationOpen(false)} className="w-full rounded-md border border-gray-500 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/10">
-                        Cancel
-                    </button>
-                )}
-            />
+            {!isSuperAdmin ? (
+                <Modal
+                    isOpen={isDevModeConfirmationOpen}
+                    onClose={() => setIsDevModeConfirmationOpen(false)}
+                    onSubmit={confirmDevMode}
+                    title="Enable Dev Mode?"
+                    actionLabel="Enable dev mode"
+                    size="compact"
+                    body={(
+                        <div className="space-y-3 text-base leading-7 text-gray-200">
+                            <p>Dev Mode lets you paste structured job JSON and use it to overwrite the current form values.</p>
+                            <p>Nothing will be saved automatically. You will still review the form and select Create job before the listing is created.</p>
+                        </div>
+                    )}
+                    footer={(
+                        <button type="button" onClick={() => setIsDevModeConfirmationOpen(false)} className="w-full rounded-md border border-gray-500 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/10">
+                            Cancel
+                        </button>
+                    )}
+                />
+            ) : null}
 
             <form onSubmit={handleSubmit} className="space-y-8" aria-busy={activeMutation.isPending}>
                 <div className="rounded-xl border border-gray-200 p-4 md:p-6">

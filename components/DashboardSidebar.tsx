@@ -8,7 +8,7 @@ import { usePathname, useRouter } from "next/navigation"
 import SidebarAccount from "@/components/SidebarAccount"
 import {
     LuLayoutDashboard,
-    LuBookmark,
+    LuBriefcase,
     LuUser,
     LuSettings,
     LuLogOut
@@ -38,9 +38,9 @@ const DashboardSidebar = () => {
             icon: <LuLayoutDashboard size={20} />
         },
         {
-            name: "My Jobs",
-            href: "/dashboard/saved-jobs",
-            icon: <LuBookmark size={20} />
+            name: "Applications",
+            href: "/dashboard/applications",
+            icon: <LuBriefcase size={20} />
         },
         {
             name: "My Profile",
