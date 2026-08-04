@@ -1,4 +1,4 @@
-import { createStaffMember, deleteAdminJob, fetchAdminCandidate, fetchAdminDashboard, fetchAdminJob, fetchAdminJobs, fetchAllUsers, fetchCandidateApplications, fetchCandidateFilterOptions, fetchJobCandidates, fetchTeamMembers, resendStaffInvitation, restoreAdminJob, type TeamFilters, updateAdminJob, updateAdminJobStatus, updateStaffRole } from "@/api/admin"
+import { cancelStaffInvitation, createStaffMember, deleteAdminJob, fetchAdminCandidate, fetchAdminDashboard, fetchAdminJob, fetchAdminJobs, fetchAllUsers, fetchCandidateApplications, fetchCandidateFilterOptions, fetchJobCandidates, fetchTeamMembers, resendStaffInvitation, restoreAdminJob, type TeamFilters, updateAdminJob, updateAdminJobStatus, updateStaffRole } from "@/api/admin"
 import { AdminJobListFilters, CandidateListFilters, Job, PaginatedResponse, StaffMember, User } from "@/types/types"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
@@ -53,6 +53,17 @@ export const useUpdateStaffRole = () => {
 export const useResendStaffInvitation = () => useMutation({
     mutationFn: resendStaffInvitation,
 })
+
+export const useCancelStaffInvitation = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: cancelStaffInvitation,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['teamMembers'] })
+            queryClient.invalidateQueries({ queryKey: ['adminDashboard'] })
+        },
+    })
+}
 
 export const useGetJobCandidates = (filters: CandidateListFilters = {}) => {
     return useQuery({

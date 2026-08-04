@@ -134,6 +134,17 @@ export const resendStaffInvitation = async (userId: string): Promise<void> => {
     await readApiResponse<ApiSuccess<null>>(res, 'Unable to resend staff invitation')
 }
 
+export const cancelStaffInvitation = async (userId: string): Promise<void> => {
+    const res = await csrfFetch(
+        apiPath(`/admin/team/${encodeURIComponent(userId)}`),
+        { method: 'DELETE' },
+    )
+    await readApiResponse<ApiSuccess<{ userId: string; invitationCancelled: true }>>(
+        res,
+        'Unable to cancel staff invitation',
+    )
+}
+
 export const fetchJobCandidates = async (
     filters: CandidateListFilters = {},
 ): Promise<PaginatedResponse<CandidateSummary>> => {

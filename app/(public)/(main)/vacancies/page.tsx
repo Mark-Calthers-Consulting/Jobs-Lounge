@@ -27,6 +27,8 @@ import type {
   VacancySort,
 } from '@/types/types'
 
+const VACANCIES_PER_PAGE = 18
+
 const FILTER_PARAM_NAMES = [
   'category',
   'workMode',
@@ -160,7 +162,7 @@ const VacanciesContent = () => {
 
   const vacancyFilters: VacancyFilters = {
     page,
-    limit: 20,
+    limit: VACANCIES_PER_PAGE,
     search: urlSearch || undefined,
     category: filters.category,
     workMode: filters.workMode,

@@ -1,6 +1,7 @@
 'use client'
 
 import {
+    useCancelStaffInvitation,
     useCreateStaffMember,
     useGetTeamMembers,
     useResendStaffInvitation,
@@ -13,6 +14,7 @@ import { FiEye, FiEyeOff, FiPlus, FiX } from 'react-icons/fi'
 import { toast } from 'sonner'
 
 import PaginationControls from './PaginationControls'
+import Modal from './Modal'
 import { usePlatformSettings } from './PlatformSettingsProvider'
 import { formatDateInTimeZone } from '@/utils/dateTime'
 
@@ -48,10 +50,12 @@ const TeamPageTable = () => {
         member: StaffMember
         role: 'admin' | 'recruiter'
     } | null>(null)
+    const [pendingCancellation, setPendingCancellation] = useState<StaffMember | null>(null)
     const { data: currentUser } = useUser()
     const createMutation = useCreateStaffMember()
     const roleMutation = useUpdateStaffRole()
     const resendMutation = useResendStaffInvitation()
+    const cancelInvitationMutation = useCancelStaffInvitation()
 
     useEffect(() => {
         const timeout = window.setTimeout(() => {
@@ -133,6 +137,20 @@ const TeamPageTable = () => {
             toast.success(`A new invitation was queued for ${member.name}.`)
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Unable to resend invitation.')
+        }
+    }
+
+    const confirmInvitationCancellation = async () => {
+        if (!pendingCancellation) return
+        try {
+            await cancelInvitationMutation.mutateAsync(pendingCancellation._id)
+            toast.success('Invitation cancelled and pending account removed.')
+            setPendingCancellation(null)
+            if (page > 1 && members?.data.length === 1) {
+                setPage((current) => Math.max(1, current - 1))
+            }
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Unable to cancel staff invitation.')
         }
     }
 
@@ -286,6 +304,27 @@ const TeamPageTable = () => {
                 </div>
             ) : null}
 
+            <Modal
+                isOpen={Boolean(pendingCancellation)}
+                onClose={() => setPendingCancellation(null)}
+                onSubmit={() => void confirmInvitationCancellation()}
+                title="Cancel this invitation?"
+                actionLabel={cancelInvitationMutation.isPending ? 'Cancelling…' : 'Cancel invitation'}
+                actionTone="danger"
+                disabled={cancelInvitationMutation.isPending}
+                size="compact"
+                body={pendingCancellation ? (
+                    <p className="text-sm leading-6 text-gray-200">
+                        The pending account for {pendingCancellation.email} will be removed and its setup link will stop working. An email that has already been delivered cannot be recalled.
+                    </p>
+                ) : undefined}
+                footer={(
+                    <button type="button" disabled={cancelInvitationMutation.isPending} onClick={() => setPendingCancellation(null)} className="w-full rounded-md border border-gray-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10 disabled:opacity-60">
+                        Keep invitation
+                    </button>
+                )}
+            />
+
             {isLoading ? <p role="status" className="p-4">Loading team members…</p> : null}
             {isError ? (
                 <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
@@ -318,10 +357,13 @@ const TeamPageTable = () => {
                                                 <select
                                                     aria-label={`Role for ${member.name}`}
                                                     value={member.role}
-                                                    onChange={(event) => setPendingRole({
-                                                        member,
-                                                        role: event.target.value as 'admin' | 'recruiter',
-                                                    })}
+                                                    onChange={(event) => {
+                                                        setPendingCancellation(null)
+                                                        setPendingRole({
+                                                            member,
+                                                            role: event.target.value as 'admin' | 'recruiter',
+                                                        })
+                                                    }}
                                                     className="rounded-md border border-gray-300 px-3 py-2"
                                                 >
                                                     <option value="admin">Administrator</option>
@@ -337,9 +379,17 @@ const TeamPageTable = () => {
                                         <td className="p-4 text-sm text-gray-600">{formatDateInTimeZone(member.createdAt, timeZone)}</td>
                                         <td className="p-4">
                                             {member.setupStatus === 'invited' ? (
-                                                <button type="button" disabled={resendMutation.isPending} onClick={() => void resend(member)} className="text-sm font-semibold text-blue-800 hover:underline disabled:opacity-50">
-                                                    Resend invitation
-                                                </button>
+                                                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                                                    <button type="button" disabled={resendMutation.isPending || cancelInvitationMutation.isPending} onClick={() => void resend(member)} className="text-sm font-semibold text-blue-800 hover:underline disabled:opacity-50">
+                                                        Resend invitation
+                                                    </button>
+                                                    <button type="button" disabled={resendMutation.isPending || cancelInvitationMutation.isPending} onClick={() => {
+                                                        setPendingRole(null)
+                                                        setPendingCancellation(member)
+                                                    }} className="text-sm font-semibold text-red-700 hover:underline disabled:opacity-50">
+                                                        Cancel invitation
+                                                    </button>
+                                                </div>
                                             ) : <span className="text-sm text-gray-400">—</span>}
                                         </td>
                                     </tr>
