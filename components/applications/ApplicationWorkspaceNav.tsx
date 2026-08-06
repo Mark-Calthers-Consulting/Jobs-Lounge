@@ -17,7 +17,10 @@ export default function ApplicationWorkspaceNav() {
   const pathname = usePathname()
 
   return (
-    <nav aria-label="Application workspace" className="overflow-x-auto border-b border-slate-200">
+    <nav
+      aria-label="Application workspace"
+      className="overflow-x-auto overflow-y-hidden border-b border-slate-200 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    >
       <div className="flex min-w-max gap-7">
         {views.map((view) => {
           const current = view.active(pathname)

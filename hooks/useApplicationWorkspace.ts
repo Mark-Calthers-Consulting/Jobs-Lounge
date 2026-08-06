@@ -29,9 +29,10 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 
-export const useApplicationsOverview = () => useQuery({
+export const useApplicationsOverview = (enabled = true) => useQuery({
   queryKey: ['applicationWorkspace', 'overview'],
   queryFn: fetchApplicationsOverview,
+  enabled,
 })
 
 export const useApplicationJobs = (filters: ApplicationJobDirectoryFilters) => useQuery({
