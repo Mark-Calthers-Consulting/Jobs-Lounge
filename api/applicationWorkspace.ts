@@ -3,6 +3,10 @@ import type {
   ApplicationActivity,
   ApplicationDetail,
   ApplicationFilterOptions,
+  ApplicationExportRequest,
+  ApplicationExportRequestFilters,
+  ApplicationExportRequestResponse,
+  ApplicationExportScope,
   ApplicationJobDirectoryFilters,
   ApplicationJobDirectoryResponse,
   ApplicationJobSummary,
@@ -32,6 +36,132 @@ const addListFilters = (params: URLSearchParams, filters: ApplicationWorkspaceFi
   if (filters.hasCv !== undefined) params.set('hasCv', String(filters.hasCv))
   if (filters.hasCoverLetter !== undefined) params.set('hasCoverLetter', String(filters.hasCoverLetter))
   if (filters.sort) params.set('sort', filters.sort)
+}
+
+const exportFilters = (filters: ApplicationWorkspaceFilters) => {
+  const safeFilters = { ...filters }
+  delete safeFilters.cursor
+  delete safeFilters.limit
+  return safeFilters
+}
+
+const downloadResponse = async (response: Response, fallback: string) => {
+  if (!response.ok) {
+    await readApiResponse<never>(response, fallback)
+    throw new Error(fallback)
+  }
+  const disposition = response.headers.get('Content-Disposition') || ''
+  const filename = disposition.match(/filename="?([^";]+)"?/i)?.[1] || 'export.csv'
+  return { blob: await response.blob(), filename }
+}
+
+export const saveDownloadedFile = ({ blob, filename }: { blob: Blob; filename: string }) => {
+  const objectUrl = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = objectUrl
+  anchor.download = filename
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
+  URL.revokeObjectURL(objectUrl)
+}
+
+export const downloadVacancySummary = async (
+  filters: ApplicationJobDirectoryFilters,
+) => {
+  const response = await csrfFetch(apiPath('/admin/applications/exports/vacancy-summary'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      ...(filters.search ? { search: filters.search } : {}),
+      ...(filters.view ? { view: filters.view } : {}),
+      ...(filters.sort ? { sort: filters.sort } : {}),
+    }),
+  })
+  return downloadResponse(response, 'Unable to download the vacancy summary')
+}
+
+export const createApplicationExportRequest = async ({
+  scope,
+  filters,
+  applicationIds,
+}: {
+  scope: ApplicationExportScope
+  filters: ApplicationWorkspaceFilters
+  applicationIds?: string[]
+}) => {
+  const response = await csrfFetch(apiPath('/admin/applications/exports/requests'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      scope,
+      filters: exportFilters(filters),
+      ...(scope === 'selected' ? { applicationIds } : {}),
+    }),
+  })
+  const result = await readApiResponse<ApiSuccess<ApplicationExportRequest>>(
+    response,
+    'Unable to create the application export',
+  )
+  return result.data
+}
+
+export const fetchApplicationExportRequests = async (
+  filters: ApplicationExportRequestFilters = {},
+) => {
+  const params = new URLSearchParams({
+    page: String(filters.page ?? 1),
+    limit: String(filters.limit ?? 20),
+  })
+  if (filters.status) params.set('status', filters.status)
+  return get<ApplicationExportRequestResponse>(
+    `/admin/applications/exports/requests?${params}`,
+    'Unable to load export requests',
+  )
+}
+
+const updateExportRequest = async (
+  exportId: string,
+  action: 'approve' | 'reject' | 'cancel',
+  body: Record<string, unknown>,
+) => {
+  const response = await csrfFetch(
+    apiPath(`/admin/applications/exports/requests/${encodeURIComponent(exportId)}/${action}`),
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    },
+  )
+  const result = await readApiResponse<ApiSuccess<ApplicationExportRequest>>(
+    response,
+    `Unable to ${action} this export request`,
+  )
+  return result.data
+}
+
+export const approveApplicationExport = ({ exportId, expectedRevision }: { exportId: string; expectedRevision: number }) => (
+  updateExportRequest(exportId, 'approve', { expectedRevision })
+)
+
+export const rejectApplicationExport = ({ exportId, expectedRevision, reason }: { exportId: string; expectedRevision: number; reason: string }) => (
+  updateExportRequest(exportId, 'reject', { expectedRevision, reason })
+)
+
+export const cancelApplicationExport = ({ exportId, expectedRevision }: { exportId: string; expectedRevision: number }) => (
+  updateExportRequest(exportId, 'cancel', { expectedRevision })
+)
+
+export const downloadComprehensiveExport = async (exportId: string) => {
+  const response = await csrfFetch(
+    apiPath(`/admin/applications/exports/requests/${encodeURIComponent(exportId)}/download`),
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+    },
+  )
+  return downloadResponse(response, 'Unable to download the application export')
 }
 
 const get = async <T>(path: string, fallback: string): Promise<T> => {

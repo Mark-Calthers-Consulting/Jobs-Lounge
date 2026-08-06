@@ -9,6 +9,8 @@ import Modal from '@/components/Modal'
 import { useApplicationList, useBulkUpdateApplications } from '@/hooks/useApplicationWorkspace'
 import ApplicationDetailPanel from './ApplicationDetailPanel'
 import ApplicationFilters from './ApplicationFilters'
+import ExportRecordsDialog from './ExportRecordsDialog'
+import ApplicationWorkspaceNav from './ApplicationWorkspaceNav'
 import { applicationFiltersFromUrl } from './urlFilters'
 import { ApplicationCard, EmptyState, ErrorState, LoadingState, STAGES } from './workspaceUi'
 
@@ -75,6 +77,7 @@ export default function ApplicationsInbox() {
 
   return (
     <div className="space-y-4">
+      <ApplicationWorkspaceNav />
       <Modal
         isOpen={Boolean(bulkStatus)}
         onClose={() => setBulkStatus(undefined)}
@@ -91,18 +94,25 @@ export default function ApplicationsInbox() {
           <h1 className="text-2xl font-bold text-slate-950">Application inbox</h1>
           <p className="mt-1 text-slate-600">Triage candidates across every vacancy.</p>
         </div>
-        <label className="text-sm font-medium text-slate-700">
-          Sort
-          <select value={filters.sort} onChange={(event) => setParam('sort', event.target.value)} className="ml-2 rounded-lg border border-slate-300 bg-white px-3 py-2">
-            <option value="newest">Newest</option>
-            <option value="oldest">Oldest</option>
-            <option value="name">Candidate name</option>
-            <option value="experience-desc">Experience: high to low</option>
-            <option value="experience-asc">Experience: low to high</option>
-            <option value="priority">Priority first</option>
-            <option value="updated">Recently updated</option>
-          </select>
-        </label>
+        <div className="flex flex-wrap items-center gap-3">
+          <ExportRecordsDialog
+            filters={filters}
+            selectedIds={[...selected.keys()]}
+            matchingTotal={matchingTotal}
+          />
+          <label className="text-sm font-medium text-slate-700">
+            Sort
+            <select value={filters.sort} onChange={(event) => setParam('sort', event.target.value)} className="ml-2 rounded-lg border border-slate-300 bg-white px-3 py-2">
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+              <option value="name">Candidate name</option>
+              <option value="experience-desc">Experience: high to low</option>
+              <option value="experience-asc">Experience: low to high</option>
+              <option value="priority">Priority first</option>
+              <option value="updated">Recently updated</option>
+            </select>
+          </label>
+        </div>
       </div>
       <ApplicationFilters includeVacancy />
 

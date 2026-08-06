@@ -2,18 +2,24 @@
 
 import {
   addApplicationNote,
+  approveApplicationExport,
   bulkUpdateApplications,
+  cancelApplicationExport,
+  createApplicationExportRequest,
   fetchApplicationActivity,
   fetchApplicationDetail,
   fetchApplicationFilterOptions,
+  fetchApplicationExportRequests,
   fetchApplicationJobSummary,
   fetchApplicationJobs,
   fetchApplicationsOverview,
   fetchWorkspaceApplications,
+  rejectApplicationExport,
   updateApplicationWorkflow,
 } from '@/api/applicationWorkspace'
 import type {
   ApplicationJobDirectoryFilters,
+  ApplicationExportRequestFilters,
   ApplicationWorkspaceFilters,
 } from '@/types/types'
 import {
@@ -31,6 +37,11 @@ export const useApplicationsOverview = () => useQuery({
 export const useApplicationJobs = (filters: ApplicationJobDirectoryFilters) => useQuery({
   queryKey: ['applicationWorkspace', 'jobs', filters],
   queryFn: () => fetchApplicationJobs(filters),
+})
+
+export const useApplicationExportRequests = (filters: ApplicationExportRequestFilters) => useQuery({
+  queryKey: ['applicationWorkspace', 'exports', filters],
+  queryFn: () => fetchApplicationExportRequests(filters),
 })
 
 export const useApplicationList = (filters: ApplicationWorkspaceFilters) => {
@@ -122,4 +133,20 @@ export const useAddApplicationNote = () => (
 
 export const useBulkUpdateApplications = () => (
   useWorkspaceMutation(bulkUpdateApplications)
+)
+
+export const useCreateApplicationExportRequest = () => (
+  useWorkspaceMutation(createApplicationExportRequest)
+)
+
+export const useApproveApplicationExport = () => (
+  useWorkspaceMutation(approveApplicationExport)
+)
+
+export const useRejectApplicationExport = () => (
+  useWorkspaceMutation(rejectApplicationExport)
+)
+
+export const useCancelApplicationExport = () => (
+  useWorkspaceMutation(cancelApplicationExport)
 )

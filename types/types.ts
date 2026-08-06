@@ -422,6 +422,36 @@ export type ApplicationFilterOptions = {
   educationLevels: string[]
 }
 
+export type ApplicationExportScope = 'filtered' | 'selected'
+export type ApplicationExportStatus = 'pending' | 'approved' | 'rejected' | 'cancelled' | 'expired'
+
+export type ApplicationExportRequest = {
+  exportId: string
+  scope: ApplicationExportScope
+  filters: ApplicationWorkspaceFilters
+  recordCount: number
+  status: ApplicationExportStatus
+  revision: number
+  requester?: Pick<User, '_id' | 'name' | 'email' | 'role'>
+  reviewer?: Pick<User, '_id' | 'name' | 'role'>
+  rejectionReason?: string
+  requestedAt: string
+  reviewedAt?: string
+  pendingExpiresAt: string
+  downloadExpiresAt?: string
+  downloadCount: number
+  downloadsRemaining: number
+  lastDownloadedAt?: string
+}
+
+export type ApplicationExportRequestFilters = {
+  page?: number
+  limit?: number
+  status?: ApplicationExportStatus
+}
+
+export type ApplicationExportRequestResponse = PaginatedResponse<ApplicationExportRequest>
+
 export type AdminJobView = 'all' | 'open' | 'draft' | 'closed' | 'deadline-passed' | 'archived'
 export type AdminJobSort = 'newest' | 'oldest' | 'deadline' | 'applicants'
 

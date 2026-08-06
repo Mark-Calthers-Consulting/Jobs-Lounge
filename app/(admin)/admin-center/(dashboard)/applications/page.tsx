@@ -1,4 +1,5 @@
 import ApplicationsOverview from '@/components/applications/ApplicationsOverview'
+import ApplicationWorkspaceNav from '@/components/applications/ApplicationWorkspaceNav'
 import { redirect } from 'next/navigation'
 
 const AdminApplications = async ({
@@ -18,8 +19,13 @@ const AdminApplications = async ({
     return (
         <div>
             <h1 className="text-2xl font-bold text-slate-950">Applications</h1>
-            <p className="mb-6 mt-2 text-slate-600">Review workloads, triage new submissions and move candidates through your private hiring stages.</p>
-            <ApplicationsOverview />
+            <p className="mt-2 text-slate-600">Review workloads, triage new submissions and move candidates through your private hiring stages.</p>
+            <div className="mt-6">
+                <ApplicationWorkspaceNav />
+            </div>
+            <div className="mt-6">
+                <ApplicationsOverview />
+            </div>
         </div>
     )
 }

@@ -7,6 +7,8 @@ import { useApplicationJobs } from '@/hooks/useApplicationWorkspace'
 import PaginationControls from '@/components/PaginationControls'
 import { EmptyState, ErrorState, formatDate, LoadingState, STAGES } from './workspaceUi'
 import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
+import VacancySummaryButton from './VacancySummaryButton'
+import ApplicationWorkspaceNav from './ApplicationWorkspaceNav'
 
 export default function ApplicationJobDirectory() {
   const { timeZone } = usePlatformSettings()
@@ -32,9 +34,13 @@ export default function ApplicationJobDirectory() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-950">Applications by vacancy</h1>
-        <p className="mt-1 text-slate-600">Choose a vacancy to open its focused review workspace.</p>
+      <ApplicationWorkspaceNav />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-950">Vacancy inbox</h1>
+          <p className="mt-1 text-slate-600">Choose a vacancy to open its focused review workspace.</p>
+        </div>
+        <VacancySummaryButton filters={{ search: search || undefined, view, sort }} />
       </div>
       <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 lg:grid-cols-[1fr_auto_auto]">
         <label className="sr-only" htmlFor="application-job-search">Search vacancies</label>

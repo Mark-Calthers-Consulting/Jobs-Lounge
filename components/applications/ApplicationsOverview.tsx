@@ -11,6 +11,7 @@ import {
   StatusBadge,
 } from './workspaceUi'
 import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
+import ApplicationExportsMenu from './ApplicationExportsMenu'
 
 export default function ApplicationsOverview() {
   const { timeZone } = usePlatformSettings()
@@ -26,13 +27,8 @@ export default function ApplicationsOverview() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-slate-600">{total.toLocaleString()} applications across all vacancies</p>
-        <div className="flex gap-2">
-          <Link href="/admin-center/applications/inbox" className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700">
-            Open inbox
-          </Link>
-          <Link href="/admin-center/applications/by-vacancy" className="rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2">
-            Browse by vacancy
-          </Link>
+        <div>
+          <ApplicationExportsMenu total={total} />
         </div>
       </div>
 

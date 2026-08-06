@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
@@ -15,6 +14,8 @@ import {
 import ApplicationBoard from './ApplicationBoard'
 import ApplicationDetailPanel from './ApplicationDetailPanel'
 import ApplicationFilters from './ApplicationFilters'
+import ExportRecordsDialog from './ExportRecordsDialog'
+import ApplicationWorkspaceNav from './ApplicationWorkspaceNav'
 import { applicationFiltersFromUrl } from './urlFilters'
 import {
   ApplicationCard,
@@ -48,6 +49,9 @@ export default function VacancyApplicationWorkspace({ jobId }: { jobId: string }
   const selectedId = searchParams.get('applicationId') || undefined
   const queue = useApplicationList({ ...filters, jobId, limit: 30 })
   const applications = queue.data?.pages.flatMap((page) => page.data) ?? []
+  const matchingTotal = filters.status?.length
+    ? filters.status.reduce((total, status) => total + (summary.data?.byStatus[status] || 0), 0)
+    : summary.data?.total || 0
   const [selected, setSelected] = useState<Map<string, AdminApplication>>(new Map())
   const [bulkStatus, setBulkStatus] = useState<ApplicationStatus>()
   const bulk = useBulkUpdateApplications()
@@ -100,6 +104,7 @@ export default function VacancyApplicationWorkspace({ jobId }: { jobId: string }
 
   return (
     <div className="space-y-5">
+      <ApplicationWorkspaceNav />
       <Modal
         isOpen={Boolean(bulkStatus)}
         onClose={() => setBulkStatus(undefined)}
@@ -111,11 +116,6 @@ export default function VacancyApplicationWorkspace({ jobId }: { jobId: string }
         disabled={bulk.isPending}
         size="compact"
       />
-      <nav aria-label="Applications breadcrumb" className="text-sm text-slate-500">
-        <Link href="/admin-center/applications" className="hover:text-blue-800 hover:underline">Applications</Link>
-        <span aria-hidden="true"> / </span>
-        <Link href="/admin-center/applications/by-vacancy" className="hover:text-blue-800 hover:underline">By vacancy</Link>
-      </nav>
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-2">
@@ -124,9 +124,16 @@ export default function VacancyApplicationWorkspace({ jobId }: { jobId: string }
           </div>
           <p className="mt-1 text-slate-600">{summary.data.job.company || 'Company not specified'} · {summary.data.total} matching applications</p>
         </div>
-        <div className="inline-flex rounded-lg border border-slate-300 bg-white p-1" aria-label="Workspace view">
-          <button type="button" aria-pressed={view === 'queue'} onClick={() => setParam('view', 'queue')} className={`rounded-md px-4 py-2 text-sm font-semibold ${view === 'queue' ? 'bg-slate-950 text-white' : 'text-slate-700 hover:bg-slate-50'}`}>Split queue</button>
-          <button type="button" aria-pressed={view === 'board'} onClick={() => setParam('view', 'board')} className={`rounded-md px-4 py-2 text-sm font-semibold ${view === 'board' ? 'bg-slate-950 text-white' : 'text-slate-700 hover:bg-slate-50'}`}>Kanban</button>
+        <div className="flex flex-wrap items-center gap-3">
+          <ExportRecordsDialog
+            filters={filters}
+            selectedIds={[...selected.keys()]}
+            matchingTotal={matchingTotal}
+          />
+          <div className="inline-flex rounded-lg border border-slate-300 bg-white p-1" aria-label="Workspace view">
+            <button type="button" aria-pressed={view === 'queue'} onClick={() => setParam('view', 'queue')} className={`rounded-md px-4 py-2 text-sm font-semibold ${view === 'queue' ? 'bg-slate-950 text-white' : 'text-slate-700 hover:bg-slate-50'}`}>Split queue</button>
+            <button type="button" aria-pressed={view === 'board'} onClick={() => setParam('view', 'board')} className={`rounded-md px-4 py-2 text-sm font-semibold ${view === 'board' ? 'bg-slate-950 text-white' : 'text-slate-700 hover:bg-slate-50'}`}>Kanban</button>
+          </div>
         </div>
       </header>
 
