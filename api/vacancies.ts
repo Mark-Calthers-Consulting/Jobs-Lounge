@@ -5,6 +5,7 @@ import type {
     Job,
     JobFilterOptions,
     PaginatedResponse,
+    RecommendedJob,
     SavedJobMutation,
     VacancyFilters,
 } from '@/types/types'
@@ -85,10 +86,10 @@ export const checkApplicationStatus = async (jobId: string): Promise<boolean> =>
     return vacancies.data
 }
 
-export const getRecommendedJobs = async (): Promise<Job[]> => {
+export const getRecommendedJobs = async (): Promise<RecommendedJob[]> => {
     const res = await fetch(apiPath('/jobs/recommended'), {
         credentials: 'include',
     })
-    const recommended = await readApiResponse<ApiSuccess<Job[]>>(res, 'Failed to get recommended jobs')
+    const recommended = await readApiResponse<ApiSuccess<RecommendedJob[]>>(res, 'Failed to get recommended jobs')
     return recommended.data
 }

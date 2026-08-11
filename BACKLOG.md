@@ -49,24 +49,41 @@ Status: deferred
 
 ## Personalised vacancy recommendations
 
-Status: deferred
+Status: category-based foundation implemented; richer criteria deferred
 
-- Let candidates specify target roles or categories, preferred locations, work arrangements, and job types.
-- Replace the current newest-unapplied-vacancies feed with deterministic recommendations based on those explicit preferences and suitable profile fields.
-- Exclude vacancies the candidate has already applied to and provide a short, understandable reason for each recommendation.
-- Add indexed, bounded recommendation queries with a useful recent-vacancies fallback when preferences are incomplete.
+- Category interests, explainable matching, unapplied-vacancy exclusion, and recent-vacancy fallback are implemented.
+- Let candidates additionally specify target roles, preferred locations, work arrangements, and job types.
+- Extend deterministic recommendations to those explicit preferences and suitable non-sensitive profile fields.
 - Reuse the same preference model for future job-alert targeting without using sensitive personal information or opaque automated scoring.
 
 ## Candidate acquisition attribution
 
+Status: self-reported onboarding response implemented; aggregate reporting deferred
+
+- The skippable questionnaire, controlled sources, conditional detail, versioned private storage, and Settings editor are implemented.
+- Keep self-reported answers separate from any future automatically captured first-touch UTM/referrer attribution.
+- Add privacy-safe aggregate reporting for Super-admins without exposing individual acquisition answers to routine recruiters or using them in hiring decisions.
+
+## Candidate product onboarding
+
+Status: coach marks deferred
+
+- Add contextual coach marks only after the candidate dashboard, applications, profile, and vacancy interfaces are stable.
+- Keep tours short, dismissible, keyboard accessible, and tied to genuine first-use tasks rather than replaying a generic product walkthrough.
+
+## Google Analytics and Super-admin reporting
+
 Status: deferred
 
-- Ask **How did you hear about us?** as a short, skippable onboarding step after account creation rather than adding friction to registration.
-- Use controlled source options such as search, LinkedIn, other social media, friend or colleague, school or community, event, employer, the Mark Calthers network, and Other; include **Prefer not to say**.
-- Show a bounded optional detail field only when it adds useful context, especially for Other, event, community, or referral responses.
-- Store the self-reported source, optional detail, response timestamp, and question version separately from automatically captured first-touch UTM/referrer attribution.
-- Avoid repeatedly prompting candidates who answer, skip, or decline, while providing a later Settings option to update their response.
-- Add privacy-safe aggregate reporting for Super-admins without exposing individual acquisition answers to routine recruiters or using them in hiring decisions.
+- Add a production Google Analytics 4 property with separate development and production configuration so local and test traffic cannot pollute live reporting.
+- Load analytics only after the applicable consent decision, document the cookie/privacy behaviour, honour opt-out choices, and avoid collecting candidate contact details, document URLs, free-text application content, or other personally identifiable information.
+- Track a bounded event taxonomy for vacancy discovery, filter usage, vacancy views, application starts and successful submissions, account creation, profile completion, saved vacancies, and Career Insights engagement.
+- Exclude or clearly segment staff and automated traffic so admin activity does not distort candidate acquisition and conversion reporting.
+- Preserve privacy-safe campaign attribution using UTM parameters and referrer categories, and align it with the planned self-reported **How did you hear about us?** data without attempting individual-level hiring analysis.
+- Add a Super-admin-only **Analytics** page showing curated aggregate metrics such as users, sessions, acquisition sources, vacancy conversion funnels, top vacancies, application conversions, devices, locations at an appropriate aggregate level, and Career Insights performance.
+- Retrieve reporting data through a backend-owned Google Analytics Data API integration; keep service-account credentials and provider responses off the frontend, apply bounded date ranges and dimensions, cache results, rate-limit requests, and return only the required aggregate contract.
+- Provide comparison periods, explicit time-zone handling, last-updated timestamps, accessible charts/tables, loading and partial-failure states, and CSV export only if governed reporting requirements are later approved.
+- Add CSP allowances, environment documentation, audit events for analytics access/configuration, secret-redaction tests, permission tests, event-contract tests, and production validation before enabling collection.
 
 ## Google candidate authentication
 

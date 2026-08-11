@@ -15,7 +15,11 @@ export const useLogin = () => {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: loginUser,
-        onSuccess: () => queryClient.removeQueries({ queryKey: ['me'] }),
+        onSuccess: () => {
+            queryClient.removeQueries({ queryKey: ['me'] })
+            queryClient.removeQueries({ queryKey: ['candidateOnboarding'] })
+            queryClient.removeQueries({ queryKey: ['recommendations'] })
+        },
     })
 }
 
@@ -34,7 +38,11 @@ export const useRegister = () => {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: registerUser,
-        onSuccess: () => queryClient.removeQueries({ queryKey: ['me'] }),
+        onSuccess: () => {
+            queryClient.removeQueries({ queryKey: ['me'] })
+            queryClient.removeQueries({ queryKey: ['candidateOnboarding'] })
+            queryClient.removeQueries({ queryKey: ['recommendations'] })
+        },
     })
 }
 
@@ -71,6 +79,8 @@ export const useEmailVerificationConfirmation = () => {
                     }
                     : user
             ))
+            void queryClient.invalidateQueries({ queryKey: ['candidateOnboarding'] })
+            void queryClient.invalidateQueries({ queryKey: ['recommendations'] })
         },
     })
 }

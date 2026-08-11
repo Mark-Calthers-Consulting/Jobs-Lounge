@@ -65,9 +65,10 @@ export const useCheckApplicationStatus = (jobId: string, enabled = true) => {
     })
 }
 
-export const useRecommendedJobs = () => {
+export const useRecommendedJobs = (enabled = true) => {
     return useQuery({
         queryKey: ['recommendations'],
         queryFn: getRecommendedJobs,
+        enabled,
     })
 }

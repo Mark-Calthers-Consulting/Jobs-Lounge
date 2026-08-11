@@ -9,8 +9,13 @@ export const useCreatejob = () => {
 }
 
 export const useApplyToJob = () => {
+    const queryClient = useQueryClient()
     return useMutation({
-        mutationFn: applyToJob
+        mutationFn: applyToJob,
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ['recommendations'] })
+            void queryClient.invalidateQueries({ queryKey: ['me'] })
+        },
     })
 }
 
@@ -28,6 +33,7 @@ export const useCancelApplication = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['getPersonalApplications'] })
             queryClient.invalidateQueries({ queryKey: ['me'] })
+            queryClient.invalidateQueries({ queryKey: ['recommendations'] })
         }
     })
 }

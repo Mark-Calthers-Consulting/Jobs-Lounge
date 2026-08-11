@@ -1,115 +1,72 @@
 'use client'
-import { useGetSavedJobs, useUser } from '@/hooks/useUsers'
-import { useRecommendedJobs } from '@/hooks/useVacancies'
-import { Job } from '@/types/types'
+
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import { CiBookmark, CiMoneyBill } from 'react-icons/ci'
 import { IoCheckmarkCircleOutline, IoLocationOutline } from 'react-icons/io5'
-import { FiArrowRight, FiCheck } from 'react-icons/fi'
-import { useState } from 'react'
-import { useEmailVerificationRequest } from '@/hooks/useAuth'
 
+import CandidateActivationChecklist from '@/components/onboarding/CandidateActivationChecklist'
+import CandidateOnboardingDialog from '@/components/onboarding/CandidateOnboardingDialog'
+import { useCandidateOnboarding } from '@/hooks/useCandidateOnboarding'
+import { useGetSavedJobs, useUser } from '@/hooks/useUsers'
+import { useRecommendedJobs } from '@/hooks/useVacancies'
+import type { RecommendedJob } from '@/types/types'
 
 const DashboardClient: React.FC = () => {
     const userQuery = useUser()
-    const userRecommendations = useRecommendedJobs()
-    const verificationRequest = useEmailVerificationRequest()
-    const [verificationMessage, setVerificationMessage] = useState('')
+    const onboardingQuery = useCandidateOnboarding(Boolean(userQuery.data))
+    const userRecommendations = useRecommendedJobs(Boolean(userQuery.data))
+    const [questionnaireOpen, setQuestionnaireOpen] = useState(false)
+    const [dismissedForVisit, setDismissedForVisit] = useState(false)
 
     const savedJobsQuery = useGetSavedJobs({
-        enabled: !!userQuery.data,
+        enabled: Boolean(userQuery.data),
         limit: 1,
     })
 
-    if (userQuery.isLoading) {
-        return <p role="status">Loading dashboard…</p>
+    useEffect(() => {
+        if (
+            onboardingQuery.data
+            && onboardingQuery.data.questionnaire.questionnaireStatus !== 'completed'
+            && !dismissedForVisit
+        ) {
+            setQuestionnaireOpen(true)
+        }
+    }, [dismissedForVisit, onboardingQuery.data])
+
+    if (userQuery.isLoading) return <p role="status">Loading dashboard…</p>
+    if (userQuery.isError) {
+        return <p role="alert" className="text-red-700">Unable to load your dashboard.</p>
     }
-    if (userQuery.isError) return <p role="alert" className="text-red-700">Unable to load your dashboard.</p>
+
+    const user = userQuery.data
+    const recommendations = userRecommendations.data || []
+    const personalizedCount = recommendations.filter(
+        ({ recommendation }) => recommendation.kind === 'category-match',
+    ).length
+    const greetingName = user?.firstName || user?.name || 'there'
 
     return (
         <div>
-            <h1 className='text-3xl font-bold'>Welcome back, {userQuery.data?.name}!</h1>
-            <p className='text-gray-600 my-3'>
-                Here&apos;s what&apos;s happening with your job search today.
-            </p>
+            <h1 className="text-3xl font-bold">Welcome back, {greetingName}!</h1>
+            <p className="my-3 text-gray-600">Here&apos;s what&apos;s happening with your job search today.</p>
 
-            {userQuery.data && !userQuery.data.emailVerified && (
-                <aside className="my-5 rounded-xl border border-sky-200 bg-sky-50 px-5 py-4">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            <h2 className="font-semibold text-sky-950">Verify your email address</h2>
-                            <p className="mt-1 text-sm leading-6 text-sky-900">
-                                Use the link in your welcome email to confirm that this account belongs to you.
-                            </p>
-                            {verificationMessage ? (
-                                <p role="status" className="mt-2 text-sm font-medium text-sky-950">
-                                    {verificationMessage}
-                                </p>
-                            ) : null}
-                        </div>
-                        <button
-                            type="button"
-                            disabled={verificationRequest.isPending}
-                            onClick={() => {
-                                setVerificationMessage('')
-                                verificationRequest.mutate(undefined, {
-                                    onSuccess: (message) => setVerificationMessage(message),
-                                    onError: (error) => setVerificationMessage(
-                                        error instanceof Error
-                                            ? error.message
-                                            : 'Unable to send a new link.',
-                                    ),
-                                })
-                            }}
-                            className="inline-flex shrink-0 justify-center rounded-md border border-sky-300 bg-white px-4 py-2 text-sm font-semibold text-[#003B6D] transition hover:bg-sky-100 disabled:cursor-wait disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003B6D] focus-visible:ring-offset-2"
-                        >
-                            {verificationRequest.isPending ? 'Sending…' : 'Send a new link'}
-                        </button>
-                    </div>
-                </aside>
-            )}
+            {onboardingQuery.data ? (
+                <CandidateActivationChecklist
+                    onboarding={onboardingQuery.data}
+                    onPersonalize={() => {
+                        setDismissedForVisit(false)
+                        setQuestionnaireOpen(true)
+                    }}
+                />
+            ) : null}
+            {onboardingQuery.isError ? (
+                <p role="alert" className="my-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                    We couldn&apos;t load your account setup steps. Refresh the page to try again.
+                </p>
+            ) : null}
 
-            {userQuery.data?.profileCompletion && !userQuery.data.profileCompletion.complete && (
-                <section aria-labelledby="dashboard-profile-progress" className="my-5 rounded-xl border border-blue-100 bg-white p-5 shadow-sm">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                        <div className="max-w-2xl">
-                            <div className="flex items-center gap-2">
-                                <h2 id="dashboard-profile-progress" className="font-semibold text-gray-950">
-                                    Complete your candidate profile
-                                </h2>
-                                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-[#184aa2]">
-                                    {userQuery.data.profileCompletion.percentage}%
-                                </span>
-                            </div>
-                            <p className="mt-1 text-sm text-gray-600">
-                                A complete profile gives recruiters useful context when reviewing your applications. You can finish it at your own pace.
-                            </p>
-                            <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
-                                {userQuery.data.profileCompletion.steps.map((step) => (
-                                    <li key={step.id} className="flex items-center gap-1.5 text-xs text-gray-600">
-                                        <span className={`grid h-4 w-4 place-items-center rounded-full ${step.complete ? 'bg-emerald-100 text-emerald-700' : 'border border-gray-300 text-transparent'}`}>
-                                            <FiCheck aria-hidden="true" size={11} />
-                                        </span>
-                                        {step.label}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                        <Link
-                            href="/dashboard/profile"
-                            className="inline-flex shrink-0 items-center gap-2 rounded-md bg-[#184aa2] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#123d87] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2] focus-visible:ring-offset-2"
-                        >
-                            Continue profile
-                            <FiArrowRight aria-hidden="true" />
-                        </Link>
-                    </div>
-                    <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-gray-100" aria-hidden="true">
-                        <div className="h-full rounded-full bg-[#184aa2]" style={{ width: `${userQuery.data.profileCompletion.percentage}%` }} />
-                    </div>
-                </section>
-            )}
-
-            {!userQuery.data?.cvLink && (
+            {user && !user.cvLink ? (
                 <aside className="my-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
@@ -121,49 +78,86 @@ const DashboardClient: React.FC = () => {
                         </Link>
                     </div>
                 </aside>
-            )}
+            ) : null}
 
+            <Link href="/vacancies" className="my-3 inline-block rounded p-2 shadow">Go to vacancies</Link>
 
-            <Link href='/vacancies' className='my-3 inline-block rounded p-2 shadow'>Go to vacancies</Link>
-
-            <section className='grid grid-cols-1 gap-3 md:grid-cols-2'>
+            <section className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <Link href="/dashboard/applications?view=saved" className="flex justify-between rounded bg-white p-5 shadow ring-1 ring-black/5 transition hover:ring-[#184aa2]">
-                    <div className="">
+                    <div>
                         <p>Saved jobs</p>
-                        <p className='text-2xl font-semibold'>{savedJobsQuery.data?.pagination.total ?? 0}</p>
+                        <p className="text-2xl font-semibold">{savedJobsQuery.data?.pagination.total ?? 0}</p>
                     </div>
-                    <CiBookmark aria-hidden="true" size={24} color='#155DFC' />
+                    <CiBookmark aria-hidden="true" size={24} color="#155DFC" />
                 </Link>
                 <Link href="/dashboard/applications?view=applications" className="flex justify-between rounded bg-white p-5 shadow ring-1 ring-black/5 transition hover:ring-[#184aa2]">
-                    <div className="">
+                    <div>
                         <p>Jobs applied</p>
-                        <p className='text-2xl font-semibold'>{userQuery.data?.applicationCount ?? 0}</p>
+                        <p className="text-2xl font-semibold">{user?.applicationCount ?? 0}</p>
                     </div>
-                    <IoCheckmarkCircleOutline aria-hidden="true" size={24} color='#078536' />
+                    <IoCheckmarkCircleOutline aria-hidden="true" size={24} color="#078536" />
                 </Link>
             </section>
-            <section>
-                <h2 className='text-lg md:text:xl font-semibold my-4'>Recommended Opportunities</h2>
-                {userRecommendations.isLoading && <p role="status">Loading recommendations…</p>}
-                {userRecommendations.isError && <p role="alert" className="text-red-700">Unable to load recommendations.</p>}
-                <div className="grid gap-2 grid-cols-1 sm:grid-cols-2  md:grid-cols-3 ">
-                    {userRecommendations.data?.map((rec: Job, id: number) => (
-                        <div key={id} className='bg-white p-5 rounded ring-1 ring-black/5 shadow flex flex-col gap-2'>
-                            <span className='text-xs bg-[#d0d0d098] px-2 py-1 font-semibold rounded w-max'>{rec.jobType}</span>
-                            <h3 className='font-bold'>{rec.title}</h3>
-                            <p className='text-gray-600 text-sm font-semibold'>{rec.company.name}</p>
-                            <p className='flex items-center text-sm text-gray-600'><IoLocationOutline aria-hidden="true" className='mr-2' />{rec.workMode}</p>
-                            <p className='flex items-center text-sm text-gray-600'>
-                                <CiMoneyBill aria-hidden="true" className='mr-2' />
+
+            <section aria-labelledby="dashboard-recommendations-heading" className="mt-6">
+                <div className="mb-4">
+                    <h2 id="dashboard-recommendations-heading" className="text-lg font-semibold md:text-xl">
+                        {personalizedCount > 0 ? 'Jobs picked for your interests' : 'Recent opportunities for you'}
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-600">
+                        {personalizedCount > 0
+                            ? 'Matching vacancies appear first, followed by other recent roles you have not applied to.'
+                            : 'Choose job interests in your account setup to make these recommendations more personal.'}
+                    </p>
+                </div>
+                {userRecommendations.isLoading ? <p role="status">Loading recommendations…</p> : null}
+                {userRecommendations.isError ? <p role="alert" className="text-red-700">Unable to load recommendations.</p> : null}
+                {!userRecommendations.isLoading && !userRecommendations.isError && recommendations.length === 0 ? (
+                    <p className="rounded-lg border border-slate-200 bg-white px-5 py-6 text-sm text-slate-600">
+                        There are no new vacancies to recommend right now. Check the vacancies page for updates.
+                    </p>
+                ) : null}
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+                    {recommendations.map((rec: RecommendedJob) => (
+                        <article key={rec._id} className="flex flex-col gap-2 rounded-lg bg-white p-5 shadow ring-1 ring-black/5">
+                            <p className={`text-xs font-semibold ${rec.recommendation.kind === 'category-match' ? 'text-[#184aa2]' : 'text-slate-500'}`}>
+                                {rec.recommendation.reason}
+                            </p>
+                            <span className="w-max rounded bg-gray-100 px-2 py-1 text-xs font-semibold">{rec.jobType}</span>
+                            <h3 className="font-bold">{rec.title}</h3>
+                            <p className="text-sm font-semibold text-gray-600">{rec.company.name}</p>
+                            <p className="flex items-center text-sm text-gray-600">
+                                <IoLocationOutline aria-hidden="true" className="mr-2" />
+                                {rec.location} · {rec.workMode}
+                            </p>
+                            <p className="flex items-center text-sm text-gray-600">
+                                <CiMoneyBill aria-hidden="true" className="mr-2" />
                                 {rec.salary?.min !== undefined || rec.salary?.max !== undefined
-                                    ? `${rec.salary?.min ?? '—'} - ${rec.salary?.max ?? '—'}`
+                                    ? `${rec.salary?.min ?? '—'} - ${rec.salary?.max ?? '—'} ${rec.salary?.currency || ''}`
                                     : 'Salary not disclosed'}
                             </p>
-                            <Link className='w-fit bg-[#184aa2] cursor-pointer hover:bg-[#496698] text-white text-sm px-3 py-2 rounded-sm' href={`/vacancies/${rec._id}`} aria-label={`View details for ${rec.title}`}>View details</Link>
-                        </div>
+                            <Link
+                                className="mt-auto w-fit rounded-sm bg-[#184aa2] px-3 py-2 text-sm text-white hover:bg-[#123d87] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2] focus-visible:ring-offset-2"
+                                href={`/vacancies/${rec._id}`}
+                                aria-label={`View details for ${rec.title}`}
+                            >
+                                View details
+                            </Link>
+                        </article>
                     ))}
                 </div>
             </section>
+
+            {onboardingQuery.data ? (
+                <CandidateOnboardingDialog
+                    open={questionnaireOpen}
+                    onboarding={onboardingQuery.data}
+                    onCloseForVisit={() => {
+                        setQuestionnaireOpen(false)
+                        setDismissedForVisit(true)
+                    }}
+                />
+            ) : null}
         </div>
     )
 }

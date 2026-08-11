@@ -12,6 +12,7 @@ import {
 } from 'react-icons/fi'
 
 import NotificationSettings from '@/components/NotificationSettings'
+import CandidatePreferencesSettings from '@/components/onboarding/CandidatePreferencesSettings'
 import { useEmailVerificationRequest } from '@/hooks/useAuth'
 import { useUser } from '@/hooks/useUsers'
 
@@ -140,6 +141,18 @@ const SettingsClient: React.FC = () => {
                             {verificationMessage.text}
                         </p>
                     ) : null}
+                </section>
+
+                <section aria-labelledby="candidate-personalisation-heading" className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                    <div className="border-b border-gray-100 px-5 py-5 sm:px-6">
+                        <h2 id="candidate-personalisation-heading" className="text-lg font-semibold text-gray-950">
+                            Personalisation
+                        </h2>
+                        <p className="mt-1 text-sm text-gray-600">
+                            Control which vacancies are prioritised in your recommendations and update how you found Jobs Lounge.
+                        </p>
+                    </div>
+                    <CandidatePreferencesSettings />
                 </section>
 
                 <section aria-labelledby="candidate-email-heading" className="overflow-hidden rounded-xl border border-gray-200 bg-white">

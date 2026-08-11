@@ -56,6 +56,69 @@ export type Job = {
   __v?: number
 }
 
+export type RecommendedJob = Job & {
+  recommendation: {
+    kind: 'category-match' | 'recent-fallback'
+    reason: string
+  }
+}
+
+export type CandidateOnboardingStatus = 'not-started' | 'in-progress' | 'snoozed' | 'completed'
+
+export type AcquisitionSource =
+  | 'search'
+  | 'linkedin'
+  | 'other-social-media'
+  | 'referral'
+  | 'school-community'
+  | 'event'
+  | 'employer'
+  | 'mark-calthers-network'
+  | 'other'
+  | 'prefer-not-to-say'
+
+export type CandidateOnboarding = {
+  questionnaire: {
+    questionnaireStatus: CandidateOnboardingStatus
+    currentStep: 1 | 2
+    questionnaireVersion: number
+    interests: {
+      categories: Category[]
+      openToAny: boolean
+    }
+    acquisition: {
+      source?: AcquisitionSource
+      detail?: string
+      respondedAt?: string
+    }
+    startedAt: string | null
+    snoozedAt: string | null
+    completedAt: string | null
+  }
+  checklist: {
+    collapsed: boolean
+    complete: boolean
+    completedCount: number
+    totalCount: number
+    items: Array<{
+      id: 'personalize' | 'verify-email' | 'complete-profile'
+      label: string
+      complete: boolean
+      percentage?: number
+    }>
+  }
+}
+
+export type OnboardingInterestsPayload = {
+  categories: Category[]
+  openToAny: boolean
+}
+
+export type OnboardingAcquisitionPayload = {
+  source: AcquisitionSource
+  detail?: string
+}
+
 export type User = {
   _id: string
   name?: string

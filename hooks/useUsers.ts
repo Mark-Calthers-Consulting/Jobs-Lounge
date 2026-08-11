@@ -30,9 +30,13 @@ export const useEditUserDetails = ()=> {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: editUserDetails,
-        onSuccess: (user) => queryClient.setQueryData<User | null>(['me'], (current) => (
-            user ? { ...current, ...user } : current
-        )),
+        onSuccess: (user) => {
+            queryClient.setQueryData<User | null>(['me'], (current) => (
+                user ? { ...current, ...user } : current
+            ))
+            void queryClient.invalidateQueries({ queryKey: ['candidateOnboarding'] })
+            void queryClient.invalidateQueries({ queryKey: ['recommendations'] })
+        },
     })
  }
 
