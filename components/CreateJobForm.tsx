@@ -10,6 +10,11 @@ import type { Job, VacancyCreationDefaults } from '@/types/types'
 import Modal from '@/components/Modal';
 import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
 import { dateInputValueInTimeZone } from '@/utils/dateTime'
+import { buildJobLocation, locationToFormValue } from '@/utils/jobLocation'
+import {
+    CUSTOM_JOB_LOCATION_OPTION,
+    NIGERIAN_STATE_OPTIONS,
+} from '@/constants/nigeria'
 import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner';
@@ -22,7 +27,8 @@ type JobFormData = {
     companyName: string;
     companyWebsite: string;
     category: string;
-    jobLocation: string;
+    jobLocationOption: string;
+    customJobLocation: string;
     workMode: string;
     jobType: string;
     level: string;
@@ -113,13 +119,15 @@ const CreateJobFormContent = ({
     const platformSettings = usePlatformSettings()
     const { data: currentUser } = useUser()
     const isSuperAdmin = currentUser?.role === 'super-admin'
+    const initialLocation = locationToFormValue(initialJob?.location)
     const [formData, setFormData] = useState<JobFormData>({
         jobTitle: initialJob?.title ?? '',
         jobDescription: initialJob?.description ?? '',
         companyName: initialJob?.company.name ?? '',
         companyWebsite: initialJob?.company.website ?? '',
         category: initialJob?.category ?? '',
-        jobLocation: initialJob?.location ?? '',
+        jobLocationOption: initialLocation.option,
+        customJobLocation: initialLocation.custom,
         workMode: initialJob?.workMode ?? '',
         jobType: initialJob?.jobType ?? '',
         level: initialJob?.level ?? '',
@@ -273,13 +281,15 @@ const CreateJobFormContent = ({
                 return
             }
 
+            const importedLocation = locationToFormValue(job.location)
             setFormData({
                 jobTitle: job.title,
                 jobDescription: job.description,
                 companyName: job.company.name,
                 companyWebsite: job.company.website ?? '',
                 category: job.category,
-                jobLocation: job.location,
+                jobLocationOption: importedLocation.option,
+                customJobLocation: importedLocation.custom,
                 workMode: job.workMode,
                 jobType: job.jobType,
                 level: job.level,
@@ -360,7 +370,7 @@ const CreateJobFormContent = ({
                     logo: companyLogo || undefined,
                 },
                 category: formData.category,
-                location: formData.jobLocation,
+                location: buildJobLocation(formData.jobLocationOption, formData.customJobLocation),
                 workMode: formData.workMode,
                 jobType: formData.jobType,
                 level: formData.level,
@@ -641,20 +651,64 @@ const CreateJobFormContent = ({
                             </select>
                         </div>
 
-                        <div className="flex flex-col">
-                            <RequiredLabel htmlFor="jobLocation">
-                                Job Location
-                            </RequiredLabel>
-                            <input
+                        <div className="flex flex-col md:col-span-2">
+                            <RequiredLabel htmlFor="jobLocationOption">Location</RequiredLabel>
+                            <select
+                                id="jobLocationOption"
+                                name="jobLocationOption"
+                                value={formData.jobLocationOption}
+                                onChange={(event) => {
+                                    const value = event.target.value
+                                    setFormData((previous) => ({
+                                        ...previous,
+                                        jobLocationOption: value,
+                                        customJobLocation: value === CUSTOM_JOB_LOCATION_OPTION
+                                            ? previous.jobLocationOption === CUSTOM_JOB_LOCATION_OPTION
+                                                ? previous.customJobLocation
+                                                : ''
+                                            : '',
+                                    }))
+                                }}
                                 className={inputClassName}
-                                type="text"
-                                id="jobLocation"
-                                name="jobLocation"
-                                value={formData.jobLocation}
-                                onChange={handleFieldChange}
-                                placeholder="e.g. Lagos, Nigeria"
+                                aria-describedby="job-location-help job-location-preview"
                                 required
-                            />
+                            >
+                                <option value="">Choose a location</option>
+                                <option value={CUSTOM_JOB_LOCATION_OPTION}>Enter a custom location</option>
+                                <optgroup label="Nigeria">
+                                    {NIGERIAN_STATE_OPTIONS.map((option) => (
+                                        <option key={option.value} value={option.value}>{option.label}</option>
+                                    ))}
+                                </optgroup>
+                            </select>
+
+                            {formData.jobLocationOption === CUSTOM_JOB_LOCATION_OPTION ? (
+                                <div className="mt-3">
+                                    <label htmlFor="customJobLocation" className={labelClassName}>Enter location</label>
+                                    <input
+                                        className={inputClassName}
+                                        type="text"
+                                        id="customJobLocation"
+                                        name="customJobLocation"
+                                        value={formData.customJobLocation}
+                                        onChange={handleFieldChange}
+                                        placeholder="e.g. Gbagada, Lagos; Nationwide; or West Africa"
+                                        maxLength={120}
+                                        required
+                                        autoFocus
+                                        aria-describedby="job-location-help job-location-preview"
+                                    />
+                                </div>
+                            ) : null}
+
+                            <p id="job-location-help" className="mt-2 text-xs leading-5 text-gray-500">
+                                Choose a listed location, or use a custom entry for a specific area, nationwide, or multi-location role.
+                            </p>
+                            {buildJobLocation(formData.jobLocationOption, formData.customJobLocation) ? (
+                                <p id="job-location-preview" aria-live="polite" className="mt-1 text-xs text-gray-700">
+                                    Candidates will see: <span className="font-semibold">{buildJobLocation(formData.jobLocationOption, formData.customJobLocation)}</span>
+                                </p>
+                            ) : null}
                         </div>
 
                         <div className="flex flex-col">
