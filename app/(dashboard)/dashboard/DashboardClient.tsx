@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { CiBookmark, CiMoneyBill } from 'react-icons/ci'
 import { IoCheckmarkCircleOutline, IoLocationOutline } from 'react-icons/io5'
+import { FiArrowRight } from 'react-icons/fi'
 
 import CandidateActivationChecklist from '@/components/onboarding/CandidateActivationChecklist'
 import CandidateOnboardingDialog from '@/components/onboarding/CandidateOnboardingDialog'
@@ -11,6 +12,34 @@ import { useCandidateOnboarding } from '@/hooks/useCandidateOnboarding'
 import { useGetSavedJobs, useUser } from '@/hooks/useUsers'
 import { useRecommendedJobs } from '@/hooks/useVacancies'
 import type { RecommendedJob } from '@/types/types'
+
+const formatSalary = (job: RecommendedJob) => {
+    const minimum = job.salary?.min
+    const maximum = job.salary?.max
+    if (minimum === undefined && maximum === undefined) return 'Salary not disclosed'
+
+    const currency = job.salary?.currency || 'NGN'
+    const formatAmount = (amount: number) => {
+        try {
+            return new Intl.NumberFormat('en-NG', {
+                style: 'currency',
+                currency,
+                currencyDisplay: 'narrowSymbol',
+                maximumFractionDigits: 0,
+            }).format(amount)
+        } catch {
+            return `${amount.toLocaleString('en-NG')} ${currency}`
+        }
+    }
+
+    if (minimum !== undefined && maximum !== undefined) {
+        return minimum === maximum
+            ? formatAmount(minimum)
+            : `${formatAmount(minimum)} – ${formatAmount(maximum)}`
+    }
+    if (minimum !== undefined) return `From ${formatAmount(minimum)}`
+    return `Up to ${formatAmount(maximum as number)}`
+}
 
 const DashboardClient: React.FC = () => {
     const userQuery = useUser()
@@ -117,31 +146,43 @@ const DashboardClient: React.FC = () => {
                         There are no new vacancies to recommend right now. Check the vacancies page for updates.
                     </p>
                 ) : null}
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     {recommendations.map((rec: RecommendedJob) => (
-                        <article key={rec._id} className="flex flex-col gap-2 rounded-lg bg-white p-5 shadow ring-1 ring-black/5">
-                            <p className={`text-xs font-semibold ${rec.recommendation.kind === 'category-match' ? 'text-[#184aa2]' : 'text-slate-500'}`}>
-                                {rec.recommendation.reason}
-                            </p>
-                            <span className="w-max rounded bg-gray-100 px-2 py-1 text-xs font-semibold">{rec.jobType}</span>
-                            <h3 className="font-bold">{rec.title}</h3>
-                            <p className="text-sm font-semibold text-gray-600">{rec.company.name}</p>
-                            <p className="flex items-center text-sm text-gray-600">
-                                <IoLocationOutline aria-hidden="true" className="mr-2" />
-                                {rec.location} · {rec.workMode}
-                            </p>
-                            <p className="flex items-center text-sm text-gray-600">
-                                <CiMoneyBill aria-hidden="true" className="mr-2" />
-                                {rec.salary?.min !== undefined || rec.salary?.max !== undefined
-                                    ? `${rec.salary?.min ?? '—'} - ${rec.salary?.max ?? '—'} ${rec.salary?.currency || ''}`
-                                    : 'Salary not disclosed'}
-                            </p>
+                        <article
+                            key={rec._id}
+                            className="flex min-h-72 flex-col rounded-xl border border-slate-200 bg-white p-5 transition-colors hover:border-slate-300"
+                        >
+                            <div className="flex items-start justify-between gap-3">
+                                <p className={`text-xs font-semibold leading-5 ${rec.recommendation.kind === 'category-match' ? 'text-[#184aa2]' : 'text-slate-500'}`}>
+                                    {rec.recommendation.reason}
+                                </p>
+                                <span className="shrink-0 rounded-md bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                                    {rec.jobType}
+                                </span>
+                            </div>
+
+                            <div className="mt-5">
+                                <h3 className="text-lg font-bold leading-6 text-slate-950">{rec.title}</h3>
+                                <p className="mt-1.5 text-sm font-medium text-slate-600">{rec.company.name}</p>
+                            </div>
+
+                            <div className="mt-5 space-y-2.5 border-t border-slate-100 pt-4">
+                                <p className="flex items-start text-sm leading-5 text-slate-600">
+                                    <IoLocationOutline aria-hidden="true" className="mr-2 mt-0.5 shrink-0" />
+                                    <span>{rec.location} · {rec.workMode}</span>
+                                </p>
+                                <p className="flex items-center text-sm font-medium text-slate-700">
+                                    <CiMoneyBill aria-hidden="true" className="mr-2 shrink-0" />
+                                    {formatSalary(rec)}
+                                </p>
+                            </div>
+
                             <Link
-                                className="mt-auto w-fit rounded-sm bg-[#184aa2] px-3 py-2 text-sm text-white hover:bg-[#123d87] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2] focus-visible:ring-offset-2"
+                                className="mt-auto inline-flex min-h-10 w-fit items-center gap-2 rounded-md bg-[#184aa2] px-4 text-sm font-semibold text-white hover:bg-[#123d87] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2] focus-visible:ring-offset-2"
                                 href={`/vacancies/${rec._id}`}
                                 aria-label={`View details for ${rec.title}`}
                             >
-                                View details
+                                View details <FiArrowRight aria-hidden="true" />
                             </Link>
                         </article>
                     ))}
