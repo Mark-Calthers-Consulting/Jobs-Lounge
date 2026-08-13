@@ -1,0 +1,5 @@
+[[redirects]]
+  from = "https://mccjobslounge.markcalthers.com/*"
+  to = "https://jobslounge.markcalthers.com/:splat"
+  status = 301
+  force = true

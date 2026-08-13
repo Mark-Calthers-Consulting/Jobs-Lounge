@@ -31,45 +31,52 @@ const JobPage = async ({ params }: JobPageProps) => {
     const encodedUrl = encodeURIComponent(currentUrl)
 
     return (
-        <section>
-            <div aria-hidden="true" className="h-24 w-full bg-[#333]" />
+        <section aria-label={`${job.title} vacancy`}>
             <JobDetailContent
                 job={job}
+                backHref="/vacancies"
                 sidebarContent={(
                     <>
                         <JobActions jobId={jobId} jobTitle={job.title} />
 
-                        <section className="my-5 space-y-2">
-                            <a
-                                href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex cursor-pointer items-center gap-2 rounded border border-gray-300 p-2 text-sm transition hover:bg-gray-50"
-                            >
-                                <FaFacebook aria-hidden="true" className="text-lg text-blue-600" />
-                                <span>Share on Facebook <span className="sr-only">(opens in a new tab)</span></span>
-                            </a>
-                            <a
-                                href={`https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent(`Check out this ${job.title} role at ${job.company.name}`)}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex cursor-pointer items-center gap-2 rounded border border-gray-300 p-2 text-sm transition hover:bg-gray-50"
-                            >
-                                <FaXTwitter aria-hidden="true" className="text-lg text-black" />
-                                <span>Share on X <span className="sr-only">(opens in a new tab)</span></span>
-                            </a>
-                            <a
-                                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex cursor-pointer items-center gap-2 rounded border border-gray-300 p-2 text-sm transition hover:bg-gray-50"
-                            >
-                                <BsLinkedin aria-hidden="true" className="text-lg text-blue-700" />
-                                <span>Share on LinkedIn <span className="sr-only">(opens in a new tab)</span></span>
-                            </a>
+                        <section aria-labelledby="share-vacancy-title" className="border-t border-slate-200 pt-5">
+                            <h2 id="share-vacancy-title" className="text-sm font-semibold text-slate-700">
+                                Share this vacancy
+                            </h2>
+                            <div className="mt-3 flex items-center gap-2">
+                                <a
+                                    href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    aria-label="Share on LinkedIn (opens in a new tab)"
+                                    title="Share on LinkedIn"
+                                    className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-slate-300 bg-white text-[#0a66c2] transition hover:border-slate-400 hover:bg-slate-50"
+                                >
+                                    <BsLinkedin aria-hidden="true" />
+                                </a>
+                                <a
+                                    href={`https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent(`Check out this ${job.title} role at ${job.company.name}`)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    aria-label="Share on X (opens in a new tab)"
+                                    title="Share on X"
+                                    className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-900 transition hover:border-slate-400 hover:bg-slate-50"
+                                >
+                                    <FaXTwitter aria-hidden="true" />
+                                </a>
+                                <a
+                                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    aria-label="Share on Facebook (opens in a new tab)"
+                                    title="Share on Facebook"
+                                    className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-slate-300 bg-white text-[#1877f2] transition hover:border-slate-400 hover:bg-slate-50"
+                                >
+                                    <FaFacebook aria-hidden="true" />
+                                </a>
+                                <CopyLink />
+                            </div>
                         </section>
-
-                        <CopyLink />
                     </>
                 )}
             />
