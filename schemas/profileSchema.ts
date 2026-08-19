@@ -1,4 +1,5 @@
 import { USER_GENDERS, USER_MARITAL_STATUSES, USER_NYSC_STATUSES } from '@/constants/enums'
+import { DOCUMENT_URL_ERROR, isValidDocumentUrl } from '@/utils/documentUrl'
 import { z } from 'zod'
 
 const optionalText = (maximum: number) => z.string().trim().max(maximum).optional()
@@ -6,21 +7,10 @@ const telephone = z.string().trim()
   .regex(/^\+?[0-9]{7,15}$/, 'Enter 7 to 15 digits, optionally beginning with +')
 const optionalTelephone = z.string().trim()
   .refine((value) => !value || /^\+?[0-9]{7,15}$/.test(value), 'Enter 7 to 15 digits, optionally beginning with +')
-const httpUrl = z.string().trim().refine((value) => {
-  try {
-    return ['http:', 'https:'].includes(new URL(value).protocol)
-  } catch {
-    return false
-  }
-}, 'Enter a valid HTTP or HTTPS URL')
+const httpUrl = z.string().trim().refine(isValidDocumentUrl, DOCUMENT_URL_ERROR)
 const optionalHttpUrl = z.string().trim().refine((value) => {
-  if (!value) return true
-  try {
-    return ['http:', 'https:'].includes(new URL(value).protocol)
-  } catch {
-    return false
-  }
-}, 'Enter a valid HTTP or HTTPS URL')
+  return !value || isValidDocumentUrl(value)
+}, DOCUMENT_URL_ERROR)
 
 export const identityProfileSchema = z.object({
   firstName: z.string().trim().min(1, 'First name is required').max(80),

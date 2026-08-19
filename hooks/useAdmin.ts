@@ -1,4 +1,4 @@
-import { cancelStaffInvitation, createStaffMember, deleteAdminJob, fetchAdminCandidate, fetchAdminDashboard, fetchAdminJob, fetchAdminJobs, fetchAllUsers, fetchCandidateApplications, fetchCandidateFilterOptions, fetchJobCandidates, fetchTeamMembers, resendStaffInvitation, restoreAdminJob, type TeamFilters, updateAdminJob, updateAdminJobStatus, updateStaffRole } from "@/api/admin"
+import { cancelStaffInvitation, createStaffMember, deleteAdminJob, deleteCandidateAccount, fetchAdminCandidate, fetchAdminDashboard, fetchAdminJob, fetchAdminJobs, fetchAllUsers, fetchCandidateApplications, fetchCandidateFilterOptions, fetchJobCandidates, fetchTeamMembers, resendStaffInvitation, restoreAdminJob, type TeamFilters, updateAdminJob, updateAdminJobStatus, updateStaffRole } from "@/api/admin"
 import { AdminJobListFilters, CandidateListFilters, Job, PaginatedResponse, StaffMember, User } from "@/types/types"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
@@ -92,6 +92,23 @@ export const useCandidateApplications = (
     queryFn: () => fetchCandidateApplications(candidateId, page, 10, status),
     enabled: Boolean(candidateId),
 })
+
+export const useDeleteCandidateAccount = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: deleteCandidateAccount,
+        onSuccess: (result) => {
+            queryClient.removeQueries({ queryKey: ['adminCandidate', result.candidateId] })
+            queryClient.removeQueries({ queryKey: ['candidateApplications', result.candidateId] })
+            queryClient.invalidateQueries({ queryKey: ['jobCandidates'] })
+            queryClient.invalidateQueries({ queryKey: ['candidateFilterOptions'] })
+            queryClient.invalidateQueries({ queryKey: ['adminVacancies'] })
+            queryClient.invalidateQueries({ queryKey: ['adminApplications'] })
+            queryClient.invalidateQueries({ queryKey: ['applicationWorkspace'] })
+            queryClient.invalidateQueries({ queryKey: ['adminDashboard'] })
+        },
+    })
+}
 
 export const useAdminJob = (jobId: string) => useQuery({
     queryKey: ['adminJob', jobId],

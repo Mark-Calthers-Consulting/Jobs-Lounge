@@ -1,13 +1,17 @@
 'use client'
 
 import { APPLICATION_STATUSES } from '@/constants/enums'
-import { useAdminCandidate, useCandidateApplications } from '@/hooks/useAdmin'
+import { useAdminCandidate, useCandidateApplications, useDeleteCandidateAccount } from '@/hooks/useAdmin'
+import { useUser } from '@/hooks/useUsers'
 import PaginationControls from '@/components/PaginationControls'
+import Modal from '@/components/Modal'
 import Link from 'next/link'
 import { useState } from 'react'
-import { FiAlertTriangle, FiArrowLeft, FiExternalLink, FiMail, FiPhone } from 'react-icons/fi'
+import { useRouter } from 'next/navigation'
+import { FiAlertTriangle, FiArrowLeft, FiExternalLink, FiMail, FiPhone, FiTrash2 } from 'react-icons/fi'
 import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
 import { formatDateInTimeZone } from '@/utils/dateTime'
+import { toast } from 'sonner'
 
 const formatDate = (value: string | undefined, timeZone: string, options?: Intl.DateTimeFormatOptions) => value
     ? formatDateInTimeZone(value, timeZone, options)
@@ -58,10 +62,16 @@ const DocumentLink = ({ href, children }: { href?: string; children: string }) =
 }
 
 const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
+    const router = useRouter()
     const { timeZone } = usePlatformSettings()
+    const currentUser = useUser()
     const [applicationPage, setApplicationPage] = useState(1)
     const [applicationStatus, setApplicationStatus] = useState('')
+    const [deleteOpen, setDeleteOpen] = useState(false)
+    const [confirmationEmail, setConfirmationEmail] = useState('')
+    const [deleteError, setDeleteError] = useState('')
     const candidateQuery = useAdminCandidate(candidateId)
+    const deleteCandidate = useDeleteCandidateAccount()
     const applicationsQuery = useCandidateApplications(
         candidateId,
         applicationPage,
@@ -80,6 +90,36 @@ const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
 
     const { candidate, applicationSummary, duplicateSignal } = candidateQuery.data
     const completion = candidate.profileCompletion
+    const confirmationMatches = confirmationEmail.trim().toLowerCase()
+        === candidate.email.trim().toLowerCase()
+
+    const closeDeleteDialog = () => {
+        if (deleteCandidate.isPending) return
+        setDeleteOpen(false)
+        setConfirmationEmail('')
+        setDeleteError('')
+    }
+
+    const confirmDeletion = async () => {
+        if (!confirmationMatches) return
+        setDeleteError('')
+        try {
+            const result = await deleteCandidate.mutateAsync({
+                candidateId,
+                confirmationEmail,
+            })
+            toast.success(
+                `Candidate deleted with ${result.deletedApplications} ${result.deletedApplications === 1 ? 'application' : 'applications'}.`,
+            )
+            router.replace('/admin-center/candidates')
+        } catch (error) {
+            const message = error instanceof Error
+                ? error.message
+                : 'Unable to delete candidate account.'
+            setDeleteError(message)
+            toast.error(message)
+        }
+    }
 
     return (
         <div className="mx-auto max-w-6xl space-y-5">
@@ -223,6 +263,82 @@ const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
                     </details>
                 </aside>
             </div>
+
+            {currentUser.data?.role === 'super-admin' ? (
+                <section
+                    aria-labelledby="delete-candidate-title"
+                    className="border-t border-red-200 pt-6"
+                >
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="max-w-2xl">
+                            <h2 id="delete-candidate-title" className="font-semibold text-gray-950">
+                                Delete candidate account
+                            </h2>
+                            <p className="mt-1 text-sm leading-6 text-gray-600">
+                                Use this only for test or duplicate accounts. It permanently removes the
+                                account and {applicationSummary.total} associated {applicationSummary.total === 1 ? 'application' : 'applications'}.
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setDeleteOpen(true)}
+                            className="inline-flex w-fit items-center gap-2 rounded-md border border-red-300 px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600"
+                        >
+                            <FiTrash2 aria-hidden="true" />Delete candidate
+                        </button>
+                    </div>
+                </section>
+            ) : null}
+
+            <Modal
+                isOpen={deleteOpen}
+                onClose={closeDeleteDialog}
+                onSubmit={() => void confirmDeletion()}
+                title="Delete candidate permanently?"
+                actionLabel={deleteCandidate.isPending ? 'Deleting…' : 'Delete candidate permanently'}
+                actionTone="danger"
+                actionDisabled={!confirmationMatches}
+                disabled={deleteCandidate.isPending}
+                size="compact"
+                body={(
+                    <div className="space-y-4">
+                        <p className="text-sm leading-6 text-white/80">
+                            This permanently deletes <strong className="text-white">{candidate.name || candidate.email}</strong>,
+                            their {applicationSummary.total} {applicationSummary.total === 1 ? 'application' : 'applications'},
+                            submitted document links, saved jobs and onboarding data. This cannot be undone.
+                        </p>
+                        <div>
+                            <label htmlFor="candidate-delete-email" className="block text-sm font-medium text-white">
+                                Type {candidate.email} to confirm
+                            </label>
+                            <input
+                                id="candidate-delete-email"
+                                type="email"
+                                autoComplete="off"
+                                value={confirmationEmail}
+                                onChange={(event) => setConfirmationEmail(event.target.value)}
+                                disabled={deleteCandidate.isPending}
+                                className="mt-2 w-full rounded-md border border-white/25 bg-white px-3 py-2 text-sm text-gray-950 focus:border-white focus:outline-none"
+                            />
+                        </div>
+                        {deleteError ? (
+                            <p role="alert" className="rounded-md bg-red-950/60 p-3 text-sm text-red-100">
+                                {deleteError}
+                            </p>
+                        ) : null}
+                    </div>
+                )}
+                footer={(
+                    <button
+                        type="button"
+                        onClick={closeDeleteDialog}
+                        disabled={deleteCandidate.isPending}
+                        className="w-full rounded-md border border-white/25 px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/10 disabled:opacity-60"
+                    >
+                        Keep candidate
+                    </button>
+                )}
+            />
         </div>
     )
 }

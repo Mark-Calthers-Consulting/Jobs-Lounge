@@ -8,6 +8,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { FormEvent, useState } from 'react'
 import { toast } from 'sonner'
+import { DOCUMENT_URL_ERROR, isValidDocumentUrl } from '@/utils/documentUrl'
+import CvLinkGuidance from '@/components/CvLinkGuidance'
 
 const fieldClass = 'w-full rounded border border-gray-300 px-3 py-2'
 
@@ -18,15 +20,23 @@ const ApplicationForm = ({ jobId, jobTitle }: { jobId: string; jobTitle: string 
     const { data: hasApplied, isLoading: checkingStatus } = useCheckApplicationStatus(jobId, Boolean(user))
     const apply = useApplyToJob()
     const [cvLink, setCvLink] = useState<string | null>(null)
+    const [cvLinkError, setCvLinkError] = useState('')
     const [coverLetterLink, setCoverLetterLink] = useState<string | null>(null)
     const [note, setNote] = useState('')
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault()
+        const submittedCvLink = (cvLink ?? user?.cvLink ?? '').trim()
+        if (!isValidDocumentUrl(submittedCvLink)) {
+            setCvLinkError(DOCUMENT_URL_ERROR)
+            document.getElementById('application-cv')?.focus()
+            return
+        }
+        setCvLinkError('')
         try {
             await apply.mutateAsync({
                 jobId,
-                cvLink: cvLink ?? user?.cvLink ?? '',
+                cvLink: submittedCvLink,
                 ...((coverLetterLink ?? user?.coverLetterLink) ? { coverLetterLink: coverLetterLink ?? user?.coverLetterLink } : {}),
                 ...(note.trim() ? { note: note.trim() } : {}),
             })
@@ -47,11 +57,30 @@ const ApplicationForm = ({ jobId, jobTitle }: { jobId: string; jobTitle: string 
     }
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-5" aria-busy={apply.isPending}>
+        <form onSubmit={handleSubmit} noValidate className="space-y-5" aria-busy={apply.isPending}>
             <div>
                 <label htmlFor="application-cv" className="mb-1 block font-medium">CV link</label>
-                <input id="application-cv" type="url" required value={cvLink ?? user.cvLink ?? ''} onChange={(event) => setCvLink(event.target.value)} placeholder="https://drive.google.com/…" className={fieldClass} />
-                <p className="mt-1 text-sm text-gray-600">Make sure the hiring team can open this link.</p>
+                <input
+                    id="application-cv"
+                    type="url"
+                    inputMode="url"
+                    required
+                    value={cvLink ?? user.cvLink ?? ''}
+                    onChange={(event) => {
+                        setCvLink(event.target.value)
+                        if (cvLinkError) setCvLinkError('')
+                    }}
+                    placeholder="https://drive.google.com/file/d/your-cv-file-id/view"
+                    aria-invalid={Boolean(cvLinkError)}
+                    aria-describedby={`application-cv-help${cvLinkError ? ' application-cv-error' : ''}`}
+                    className={fieldClass}
+                />
+                <CvLinkGuidance id="application-cv-help" />
+                {cvLinkError ? (
+                    <p id="application-cv-error" role="alert" className="mt-1 text-sm text-red-700">
+                        {cvLinkError}
+                    </p>
+                ) : null}
             </div>
             <div>
                 <label htmlFor="application-cover-letter" className="mb-1 block font-medium">Cover letter link <span className="font-normal text-gray-600">(optional)</span></label>

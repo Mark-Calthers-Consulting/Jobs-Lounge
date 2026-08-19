@@ -612,6 +612,13 @@ export type CandidateApplication = {
   updatedAt: string
 }
 
+export type CandidateDeletionResult = {
+  candidateId: string
+  deletedApplications: number
+  deletedApplicationActivities: number
+  deletedExportRequests: number
+}
+
 export type DashboardStats = {
   totalJobs: number
   activeJobs: number

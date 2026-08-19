@@ -16,6 +16,7 @@ import { useEffect, type ReactNode } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { FiCheck, FiExternalLink } from 'react-icons/fi'
 import { toast } from 'sonner'
+import CvLinkGuidance from '@/components/CvLinkGuidance'
 
 const EDUCATION_SUGGESTIONS = [
     'Secondary school',
@@ -325,7 +326,19 @@ const ProfileClient = () => {
                     ))}
                 >
                     <Field id="profile-cv" label="CV link" error={documentsForm.formState.errors.cvLink?.message}>
-                        <input id="profile-cv" type="url" inputMode="url" placeholder="https://drive.google.com/file/d/your-cv-file-id/view" className={inputClass} {...documentsForm.register('cvLink')} />
+                        <>
+                            <input
+                                id="profile-cv"
+                                type="url"
+                                inputMode="url"
+                                placeholder="https://drive.google.com/file/d/your-cv-file-id/view"
+                                aria-describedby={`profile-cv-help${documentsForm.formState.errors.cvLink ? ' profile-cv-error' : ''}`}
+                                aria-invalid={Boolean(documentsForm.formState.errors.cvLink)}
+                                className={inputClass}
+                                {...documentsForm.register('cvLink')}
+                            />
+                            <CvLinkGuidance id="profile-cv-help" />
+                        </>
                     </Field>
                     <Field id="profile-cover-letter" label="Cover-letter link" optional error={documentsForm.formState.errors.coverLetterLink?.message}>
                         <input id="profile-cover-letter" type="url" inputMode="url" placeholder="https://drive.google.com/file/d/your-cover-letter-file-id/view" className={inputClass} {...documentsForm.register('coverLetterLink')} />

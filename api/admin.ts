@@ -5,6 +5,7 @@ import type {
     AdminJobsResponse,
     ApiSuccess,
     CandidateApplication,
+    CandidateDeletionResult,
     CandidateFilterOptions,
     CandidateListFilters,
     CandidateSummary,
@@ -211,6 +212,28 @@ export const fetchCandidateApplications = async (
         res,
         'Unable to load candidate applications',
     )
+}
+
+export const deleteCandidateAccount = async ({
+    candidateId,
+    confirmationEmail,
+}: {
+    candidateId: string
+    confirmationEmail: string
+}): Promise<CandidateDeletionResult> => {
+    const res = await csrfFetch(
+        apiPath(`/admin/candidates/${encodeURIComponent(candidateId)}`),
+        {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ confirmationEmail }),
+        },
+    )
+    const result = await readApiResponse<ApiSuccess<CandidateDeletionResult>>(
+        res,
+        'Unable to delete candidate account',
+    )
+    return result.data
 }
 
 export const fetchAdminJob = async (jobId: string): Promise<Job> => {
