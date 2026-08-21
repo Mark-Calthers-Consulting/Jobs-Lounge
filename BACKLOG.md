@@ -86,6 +86,7 @@ Status: deferred
 Status: deferred
 
 - Add a production Google Analytics 4 property with separate development and production configuration so local and test traffic cannot pollute live reporting.
+- Complete the Google-side reporting setup: confirm the production GA4 property and web data stream, create a dedicated Google Cloud project, enable the Google Analytics Data API, create a least-privilege service account, grant it read-only access to the GA4 property, and configure the property ID and service-account credentials only in the backend production environment.
 - Load analytics only after the applicable consent decision, document the cookie/privacy behaviour, honour opt-out choices, and avoid collecting candidate contact details, document URLs, free-text application content, or other personally identifiable information.
 - Track a bounded event taxonomy for vacancy discovery, filter usage, vacancy views, application starts and successful submissions, account creation, profile completion, saved vacancies, and Career Insights engagement.
 - Exclude or clearly segment staff and automated traffic so admin activity does not distort candidate acquisition and conversion reporting.

@@ -24,6 +24,18 @@ const roleLabel = (role: StaffMember['role']) => {
     return 'Administrator'
 }
 
+const lastLoginLabel = (
+    member: StaffMember,
+    timeZone: string,
+) => {
+    if (member.setupStatus === 'invited') return 'Not signed in yet'
+    if (!member.lastLoginAt) return 'Never signed in'
+    return formatDateInTimeZone(member.lastLoginAt, timeZone, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+    })
+}
+
 const emptyForm: CreateStaffPayload & { confirmPassword: string } = {
     firstName: '',
     lastName: '',
@@ -334,11 +346,11 @@ const TeamPageTable = () => {
             ) : null}
             {!isLoading && !isError ? (
                 <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
-                    <table className="w-full min-w-[840px] border-collapse text-left">
+                    <table className="w-full min-w-[1000px] border-collapse text-left">
                         <caption className="sr-only">Administration team members</caption>
                         <thead className="border-b border-gray-200 bg-gray-50">
                             <tr>
-                                {['Member', 'Role', 'Account state', 'Date joined', 'Actions'].map((header) => (
+                                {['Member', 'Role', 'Account state', 'Last login', 'Date joined', 'Actions'].map((header) => (
                                     <th scope="col" key={header} className="p-4 text-sm font-medium text-gray-600">{header}</th>
                                 ))}
                             </tr>
@@ -376,6 +388,9 @@ const TeamPageTable = () => {
                                                 {member.setupStatus === 'active' ? 'Active' : 'Invitation pending'}
                                             </span>
                                         </td>
+                                        <td className="p-4 text-sm text-gray-600">
+                                            {lastLoginLabel(member, timeZone)}
+                                        </td>
                                         <td className="p-4 text-sm text-gray-600">{formatDateInTimeZone(member.createdAt, timeZone)}</td>
                                         <td className="p-4">
                                             {member.setupStatus === 'invited' ? (
@@ -396,7 +411,7 @@ const TeamPageTable = () => {
                                 )
                             })}
                             {(members?.data.length ?? 0) === 0 ? (
-                                <tr><td colSpan={5} className="p-8 text-center text-gray-500">No team members match these filters.</td></tr>
+                                <tr><td colSpan={6} className="p-8 text-center text-gray-500">No team members match these filters.</td></tr>
                             ) : null}
                         </tbody>
                     </table>

@@ -444,11 +444,11 @@ const JobsPageTable = () => {
                 <>
                     <div className="hidden overflow-visible rounded-xl border border-gray-200 bg-white lg:block">
                         <div className="overflow-x-auto">
-                            <table className="w-full min-w-[940px] text-left">
+                            <table className="w-full min-w-[1080px] text-left">
                                 <caption className="sr-only">Admin job directory</caption>
                                 <thead className="border-b border-gray-200 bg-gray-50">
                                     <tr>
-                                        {['Job', 'Status', 'Deadline', 'Applicants', 'Posted', 'Actions'].map((heading) => (
+                                        {['Job', 'Status', 'Deadline', 'Applicants', 'Uploaded by', 'Posted', 'Actions'].map((heading) => (
                                             <th key={heading} scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
                                                 {heading}
                                             </th>
@@ -493,6 +493,16 @@ const JobsPageTable = () => {
                                                 ) : (
                                                     <span className="font-semibold text-gray-800">{(job.totalApplicants ?? 0).toLocaleString()}</span>
                                                 )}
+                                            </td>
+                                            <td className="px-4 py-4 text-sm text-gray-700">
+                                                <span className="block font-medium text-gray-900">
+                                                    {job.postedBy?.name || 'Not recorded'}
+                                                </span>
+                                                {job.lastEditedBy ? (
+                                                    <span className="mt-1 block text-xs text-gray-500">
+                                                        Last edited by {job.lastEditedBy.name}
+                                                    </span>
+                                                ) : null}
                                             </td>
                                             <td className="px-4 py-4 text-sm text-gray-600">{formatDate(job.createdAt)}</td>
                                             <td className="px-4 py-4">
@@ -548,6 +558,20 @@ const JobsPageTable = () => {
                                             )}
                                         </dd>
                                     </div>
+                                    <div>
+                                        <dt className="text-gray-500">Uploaded by</dt>
+                                        <dd className="mt-0.5 font-medium text-gray-900">
+                                            {job.postedBy?.name || 'Not recorded'}
+                                        </dd>
+                                    </div>
+                                    {job.lastEditedBy ? (
+                                        <div>
+                                            <dt className="text-gray-500">Last edited by</dt>
+                                            <dd className="mt-0.5 font-medium text-gray-900">
+                                                {job.lastEditedBy.name}
+                                            </dd>
+                                        </div>
+                                    ) : null}
                                     <div>
                                         <dt className="text-gray-500">{job.archivedAt ? 'Archived' : 'Posted'}</dt>
                                         <dd className="mt-0.5 font-medium text-gray-900">

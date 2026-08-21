@@ -168,6 +168,24 @@ const AdminJobPreview = ({ jobId }: { jobId: string }) => {
                                     {formatDateInTimeZone(job.updatedAt, timeZone)}
                                 </dd>
                             </div>
+                            <div className="flex gap-1.5">
+                                <dt className="text-gray-500">Uploaded by:</dt>
+                                <dd className="font-medium text-gray-800">
+                                    {job.postedBy?.name || 'Not recorded'}
+                                </dd>
+                            </div>
+                            {job.lastEditedBy ? (
+                                <div className="flex gap-1.5">
+                                    <dt className="text-gray-500">Last edited by:</dt>
+                                    <dd className="font-medium text-gray-800">
+                                        {job.lastEditedBy.name} on{' '}
+                                        {formatDateInTimeZone(job.lastEditedBy.at, timeZone, {
+                                            dateStyle: 'medium',
+                                            timeStyle: 'short',
+                                        })}
+                                    </dd>
+                                </div>
+                            ) : null}
                             {archived && job.archivedAt ? (
                                 <div className="flex gap-1.5">
                                     <dt className="text-gray-500">Archived:</dt>

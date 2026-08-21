@@ -36,6 +36,11 @@ export type Job = {
     id: string
     name: string
   }
+  lastEditedBy?: {
+    id: string
+    name: string
+    at: string
+  }
   responsibilities: string[]
   benefits: string[]
   requirements: string[]
@@ -643,6 +648,7 @@ export type StaffMember = {
   telephone: string
   role: Extract<UserRole, 'admin' | 'recruiter' | 'super-admin'>
   setupStatus: 'active' | 'invited'
+  lastLoginAt: string | null
   createdAt: string
   updatedAt: string
 }
