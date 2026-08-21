@@ -4,6 +4,7 @@ import type {
     EmailVerificationConfirmPayload,
     EmailVerificationResult,
     LoginPayload,
+    PasswordChangePayload,
     PasswordResetConfirmPayload,
     PasswordResetRequestPayload,
     RegisterPayload,
@@ -87,6 +88,20 @@ export const confirmPasswordReset = async (
     )
     clearCsrfToken()
     return result.message || 'Password changed. Sign in with your new password.'
+}
+
+export const changePassword = async (data: PasswordChangePayload): Promise<string> => {
+    const res = await csrfFetch(apiPath('/auth/password/change'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    })
+    const result = await readApiResponse<ApiSuccess<null>>(
+        res,
+        'Unable to change password',
+    )
+    clearCsrfToken()
+    return result.message || 'Password changed. Your other sessions have been signed out.'
 }
 
 export const requestEmailVerification = async (): Promise<string> => {

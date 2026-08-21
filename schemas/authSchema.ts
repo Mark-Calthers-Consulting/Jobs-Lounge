@@ -73,9 +73,22 @@ export const passwordResetSchema = z.object({
     path: ['confirmPassword'],
 })
 
+export const passwordChangeSchema = z.object({
+    currentPassword: z.string().min(1, 'Enter your current password.'),
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, 'Confirm your new password.'),
+}).refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match.',
+    path: ['confirmPassword'],
+}).refine((data) => data.currentPassword !== data.password, {
+    message: 'Choose a password different from your current password.',
+    path: ['password'],
+})
+
 export type LoginFormValues = z.infer<typeof loginSchema>
 export type RegistrationFormInput = z.input<typeof registrationSchema>
 export type RegistrationFormValues = z.output<typeof registrationSchema>
 export type ForgotPasswordFormInput = z.input<typeof forgotPasswordSchema>
 export type ForgotPasswordFormValues = z.output<typeof forgotPasswordSchema>
 export type PasswordResetFormValues = z.infer<typeof passwordResetSchema>
+export type PasswordChangeFormValues = z.infer<typeof passwordChangeSchema>

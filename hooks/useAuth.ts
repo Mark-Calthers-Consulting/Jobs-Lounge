@@ -1,5 +1,6 @@
 import {
     acceptStaffInvitation,
+    changePassword,
     confirmEmailVerification,
     confirmPasswordReset,
     loginUser,
@@ -57,6 +58,16 @@ export const usePasswordResetConfirmation = () => {
         onSuccess: () => {
             queryClient.removeQueries()
             queryClient.setQueryData(['me'], null)
+        },
+    })
+}
+
+export const usePasswordChange = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: changePassword,
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ['me'] })
         },
     })
 }

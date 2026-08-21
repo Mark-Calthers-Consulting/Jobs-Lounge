@@ -178,15 +178,15 @@ const SettingsClient: React.FC = () => {
                                     Password
                                 </h2>
                                 <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-600">
-                                    We&apos;ll email you a secure link to choose a new password. Completing the reset signs out your other sessions.
+                                    Update your password securely by confirming your current password first.
                                 </p>
                             </div>
                         </div>
                         <Link
-                            href="/forgot-password?area=candidate"
+                            href="/dashboard/settings/change-password"
                             className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-md bg-[#003B6D] px-4 text-sm font-semibold text-white transition hover:bg-[#002f57] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2] focus-visible:ring-offset-2"
                         >
-                            Reset password
+                            Change password
                         </Link>
                     </div>
                 </section>

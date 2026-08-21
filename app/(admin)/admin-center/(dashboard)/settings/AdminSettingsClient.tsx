@@ -17,7 +17,7 @@ import {
 } from 'react-icons/fi'
 import { toast } from 'sonner'
 
-import { useEmailVerificationRequest, usePasswordResetRequest } from '@/hooks/useAuth'
+import { useEmailVerificationRequest } from '@/hooks/useAuth'
 import {
     useOrganizationSettings,
     useUpdateOrganizationSettings,
@@ -44,7 +44,6 @@ const permissionsFor = (role?: string) => {
 const PersonalSettings = () => {
     const userQuery = useUser()
     const verification = useEmailVerificationRequest()
-    const reset = usePasswordResetRequest()
     const [message, setMessage] = useState<{ tone: 'success' | 'error'; text: string } | null>(null)
 
     if (userQuery.isLoading) return <p role="status">Loading account settings…</p>
@@ -61,15 +60,6 @@ const PersonalSettings = () => {
             setMessage({ tone: 'error', text: error instanceof Error ? error.message : 'Unable to send verification email.' })
         }
     }
-    const sendPasswordReset = async () => {
-        setMessage(null)
-        try {
-            setMessage({ tone: 'success', text: await reset.mutateAsync({ email: user.email }) })
-        } catch (error) {
-            setMessage({ tone: 'error', text: error instanceof Error ? error.message : 'Unable to send password reset instructions.' })
-        }
-    }
-
     return (
         <div className="space-y-6">
             {message ? (
@@ -132,12 +122,12 @@ const PersonalSettings = () => {
                         <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-lg bg-blue-50 text-[#184aa2]"><FiLock /></span>
                         <div>
                             <h2 id="staff-password-heading" className="text-lg font-semibold text-gray-950">Password</h2>
-                            <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-600">Send a secure reset link to your staff email. Completing the reset signs out every existing session.</p>
+                            <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-600">Update your password securely by confirming your current password first.</p>
                         </div>
                     </div>
-                    <button type="button" onClick={() => void sendPasswordReset()} disabled={reset.isPending} className="min-h-10 shrink-0 rounded-md bg-[#003B6D] px-4 text-sm font-semibold text-white disabled:opacity-60">
-                        {reset.isPending ? 'Sending…' : 'Send reset email'}
-                    </button>
+                    <Link href="/admin-center/settings/change-password" className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-md bg-[#003B6D] px-4 text-sm font-semibold text-white">
+                        Change password
+                    </Link>
                 </div>
             </section>
         </div>

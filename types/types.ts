@@ -193,6 +193,11 @@ export type PasswordResetConfirmPayload = {
   password: string
 }
 
+export type PasswordChangePayload = {
+  currentPassword: string
+  newPassword: string
+}
+
 export type StaffInvitationConfirmPayload = {
   token: string
   password: string

@@ -28,7 +28,6 @@ vi.mock('@/hooks/useUsers', () => ({
 
 vi.mock('@/hooks/useAuth', () => ({
     useEmailVerificationRequest: () => ({ isPending: false, mutateAsync: vi.fn() }),
-    usePasswordResetRequest: () => ({ isPending: false, mutateAsync: vi.fn() }),
 }))
 
 vi.mock('@/hooks/useSettings', () => ({
@@ -65,6 +64,8 @@ describe('role-aware admin settings', () => {
         expect(screen.getByRole('heading', { name: 'Staff account' })).toBeInTheDocument()
         expect(screen.queryByRole('tab', { name: 'Organization' })).not.toBeInTheDocument()
         expect(screen.getByText('Create vacancies')).toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'Change password' }))
+            .toHaveAttribute('href', '/admin-center/settings/change-password')
     })
 
     it('shows the Organization section only to a Super-admin', () => {
