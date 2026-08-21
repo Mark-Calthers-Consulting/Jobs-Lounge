@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import type { BlogPost } from '@/types/types'
 
 export const articleCanonicalUrl = (slug: string) => {
-  const origin = (process.env.NEXT_PUBLIC_ORIGIN || 'https://mccjobslounge.markcalthers.com')
+  const origin = (process.env.NEXT_PUBLIC_ORIGIN || 'https://jobslounge.markcalthers.com')
     .replace(/\/+$/, '')
   return `${origin}/blog/${encodeURIComponent(slug)}`
 }

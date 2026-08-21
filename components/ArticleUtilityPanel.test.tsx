@@ -13,7 +13,7 @@ const props = {
   publishedAt: '2026-07-10T08:00:00.000Z',
   readingMinutes: 4,
   title: 'Build a more focused career',
-  url: 'https://mccjobslounge.markcalthers.com/blog/focused-career',
+  url: 'https://jobslounge.markcalthers.com/blog/focused-career',
   layout: 'desktop' as const,
 }
 

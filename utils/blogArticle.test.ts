@@ -29,7 +29,7 @@ const post: BlogPost = {
 
 describe('article discovery metadata', () => {
   it('builds canonical social metadata from the public article contract', () => {
-    const canonical = 'https://mccjobslounge.markcalthers.com/blog/a-stronger-interview'
+    const canonical = 'https://jobslounge.markcalthers.com/blog/a-stronger-interview'
     const metadata = buildArticleMetadata(post, canonical)
 
     expect(metadata.alternates?.canonical).toBe(canonical)
