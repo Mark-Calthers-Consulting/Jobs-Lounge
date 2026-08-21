@@ -605,8 +605,13 @@ const CreateJobFormContent = ({
                                 value={formData.jobDescription}
                                 onChange={handleFieldChange}
                                 placeholder="Describe the role, expectations, and scope"
+                                minLength={50}
+                                aria-describedby="job-description-help"
                                 required
                             />
+                            <p id="job-description-help" className="mt-1 text-xs leading-5 text-gray-500">
+                                Provide at least 50 characters so candidates can understand the role.
+                            </p>
                         </div>
 
                         <div className="flex flex-col">
@@ -886,9 +891,9 @@ const CreateJobFormContent = ({
 
                             return (
                                 <div key={key}>
-                                    <label htmlFor={`${key}-input`} className={`${labelClassName} block`}>
+                                    <RequiredLabel htmlFor={`${key}-input`}>
                                         {field.label}
-                                    </label>
+                                    </RequiredLabel>
                                     <p id={`${key}-help`} className="mb-2 text-xs leading-5 text-gray-500">
                                         {field.helper}
                                     </p>
