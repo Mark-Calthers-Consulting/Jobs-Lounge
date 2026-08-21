@@ -8,6 +8,7 @@ import { JOB_ENUMS } from '@/constants/enums';
 import { jobFormSchema } from '@/schemas/jobSchema';
 import type { Job, VacancyCreationDefaults } from '@/types/types'
 import Modal from '@/components/Modal';
+import JobUploadGuideModal from '@/components/JobUploadGuideModal'
 import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
 import { dateInputValueInTimeZone } from '@/utils/dateTime'
 import { buildJobLocation, locationToFormValue } from '@/utils/jobLocation'
@@ -154,6 +155,7 @@ const CreateJobFormContent = ({
     const [isJsonPanelExpanded, setIsJsonPanelExpanded] = useState(true)
     const [jobJson, setJobJson] = useState('')
     const [importFeedback, setImportFeedback] = useState<ImportFeedback | null>(null)
+    const [isUploadGuideOpen, setIsUploadGuideOpen] = useState(!initialJob)
 
     useEffect(() => {
         if (isSuperAdmin && !initialJob) {
@@ -463,23 +465,36 @@ const CreateJobFormContent = ({
                 </div>
 
                 {!initialJob ? (
-                    <label className="flex w-fit cursor-pointer items-center gap-3 text-sm font-medium text-gray-700">
-                        <span>Dev mode</span>
-                        <span className="relative inline-flex h-6 w-11 shrink-0 items-center">
-                            <input
-                                type="checkbox"
-                                role="switch"
-                                checked={isDevModeEnabled || isDevModeConfirmationOpen}
-                                aria-controls="job-json-import-panel"
-                                onChange={(event) => handleDevModeToggle(event.target.checked)}
-                                className="peer sr-only"
-                            />
-                            <span aria-hidden="true" className="absolute inset-0 rounded-full bg-gray-300 transition peer-checked:bg-[#003B6D] peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[#003B6D]" />
-                            <span aria-hidden="true" className="absolute left-1 size-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-5" />
-                        </span>
-                    </label>
+                    <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+                        <button
+                            type="button"
+                            onClick={() => setIsUploadGuideOpen(true)}
+                            className="text-sm font-semibold text-[#003B6D] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003B6D] focus-visible:ring-offset-2"
+                        >
+                            Job upload guide
+                        </button>
+                        <label className="flex w-fit cursor-pointer items-center gap-3 text-sm font-medium text-gray-700">
+                            <span>Dev mode</span>
+                            <span className="relative inline-flex h-6 w-11 shrink-0 items-center">
+                                <input
+                                    type="checkbox"
+                                    role="switch"
+                                    checked={isDevModeEnabled || isDevModeConfirmationOpen}
+                                    aria-controls="job-json-import-panel"
+                                    onChange={(event) => handleDevModeToggle(event.target.checked)}
+                                    className="peer sr-only"
+                                />
+                                <span aria-hidden="true" className="absolute inset-0 rounded-full bg-gray-300 transition peer-checked:bg-[#003B6D] peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[#003B6D]" />
+                                <span aria-hidden="true" className="absolute left-1 size-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-5" />
+                            </span>
+                        </label>
+                    </div>
                 ) : null}
             </div>
+
+            {isUploadGuideOpen && !initialJob ? (
+                <JobUploadGuideModal onClose={() => setIsUploadGuideOpen(false)} />
+            ) : null}
 
             {isDevModeEnabled && !initialJob ? (
                 <section id="job-json-import-panel" aria-labelledby="job-json-import-title" className="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
