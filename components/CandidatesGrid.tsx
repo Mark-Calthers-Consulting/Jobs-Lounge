@@ -17,6 +17,7 @@ import {
 import PaginationControls from './PaginationControls'
 import { usePlatformSettings } from './PlatformSettingsProvider'
 import { formatDateInTimeZone } from '@/utils/dateTime'
+import { useUser } from '@/hooks/useUsers'
 
 const inputClass = 'w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-[#184aa2] focus:ring-2 focus:ring-[#184aa2]/20'
 type CandidateSort = NonNullable<CandidateListFilters['sort']>
@@ -265,6 +266,7 @@ const VacancyCombobox = ({
 
 const CandidatesGrid = () => {
     const { timeZone } = usePlatformSettings()
+    const currentUser = useUser()
     const router = useRouter()
     const pathname = usePathname()
     const searchParams = useSearchParams()
@@ -284,7 +286,10 @@ const CandidatesGrid = () => {
         router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
     }, [pathname, router, searchParams])
 
+    const requestedView = searchParams.get('view') === 'registered' ? 'registered' : 'candidates'
+    const isRegisteredView = requestedView === 'registered'
     const filters: CandidateListFilters = {
+        view: requestedView,
         page: numberParam(searchParams.get('page')) ?? 1,
         limit: 20,
         search: searchParams.get('search') || undefined,
@@ -331,6 +336,7 @@ const CandidatesGrid = () => {
     const optionsQuery = useCandidateFilterOptions(
         debouncedJobSearch || undefined,
         filters.jobId,
+        filters.view,
     )
     const rows = candidatesQuery.data?.data ?? []
     const setJobOptionSearchStable = useCallback((value: string) => setJobOptionSearch(value), [])
@@ -373,6 +379,7 @@ const CandidatesGrid = () => {
 
     const clearFilters = () => {
         const params = new URLSearchParams()
+        if (isRegisteredView) params.set('view', 'registered')
         if (filters.search) params.set('search', filters.search)
         router.replace(params.size ? `${pathname}?${params}` : pathname, { scroll: false })
         setJobOptionSearch('')
@@ -382,6 +389,20 @@ const CandidatesGrid = () => {
         updateParams({ sort: sort === 'newest' ? undefined : sort })
     }
 
+    const switchView = (view: 'candidates' | 'registered') => {
+        const params = new URLSearchParams(searchParams.toString())
+        if (view === 'registered') params.set('view', 'registered')
+        else params.delete('view')
+        params.delete('page')
+        params.delete('applicationStatus')
+        params.delete('jobId')
+        if (['applications', 'applications-asc'].includes(params.get('sort') || '')) {
+            params.delete('sort')
+        }
+        setJobOptionSearch('')
+        router.replace(params.size ? `${pathname}?${params}` : pathname, { scroll: false })
+    }
+
     const openCandidate = (candidateId: string, target: EventTarget | null) => {
         if ((target as HTMLElement | null)?.closest('a, button, input, select, textarea')) return
         router.push(`/admin-center/candidates/${candidateId}`)
@@ -389,20 +410,52 @@ const CandidatesGrid = () => {
 
     return (
         <div className="space-y-4">
+            {currentUser.data?.role === 'super-admin' && (
+                <nav aria-label="User directory views" className="border-b border-gray-200">
+                    <div className="flex gap-6">
+                        <button
+                            type="button"
+                            aria-current={!isRegisteredView ? 'page' : undefined}
+                            onClick={() => switchView('candidates')}
+                            className={`border-b-2 px-1 pb-3 text-sm font-semibold ${!isRegisteredView ? 'border-[#184aa2] text-[#184aa2]' : 'border-transparent text-gray-600 hover:text-gray-950'}`}
+                        >
+                            Candidates
+                        </button>
+                        <button
+                            type="button"
+                            aria-current={isRegisteredView ? 'page' : undefined}
+                            onClick={() => switchView('registered')}
+                            className={`border-b-2 px-1 pb-3 text-sm font-semibold ${isRegisteredView ? 'border-[#184aa2] text-[#184aa2]' : 'border-transparent text-gray-600 hover:text-gray-950'}`}
+                        >
+                            Registered users
+                        </button>
+                    </div>
+                </nav>
+            )}
+            <div>
+                <h2 className="text-lg font-semibold text-gray-950">
+                    {isRegisteredView ? 'Registered users' : 'Candidate directory'}
+                </h2>
+                <p className="mt-1 text-sm text-gray-600">
+                    {isRegisteredView
+                        ? 'Accounts that have registered but have not submitted an application.'
+                        : 'People who have submitted at least one job application.'}
+                </p>
+            </div>
             <div className="rounded-xl border border-gray-200 bg-white p-4">
                 <div className="flex flex-col gap-3 lg:flex-row">
                     <div className="relative flex-1">
                         <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 flex w-10 items-center justify-center text-gray-400">
                             <FiSearch size={18} />
                         </span>
-                        <label htmlFor="candidate-search" className="sr-only">Search candidates</label>
+                        <label htmlFor="candidate-search" className="sr-only">Search {isRegisteredView ? 'registered users' : 'candidates'}</label>
                         <input
                             id="candidate-search"
                             type="search"
                             value={searchValue}
                             onChange={(event) => setSearchValue(event.target.value)}
                             className={`${inputClass} pl-9`}
-                            placeholder="Search name, email or phone…"
+                            placeholder={`Search ${isRegisteredView ? 'registered users' : 'candidates'} by name, email or phone…`}
                         />
                     </div>
                     <div className="flex gap-2">
@@ -427,8 +480,8 @@ const CandidatesGrid = () => {
                             <option value="oldest">Oldest</option>
                             <option value="name">Name A–Z</option>
                             <option value="name-desc">Name Z–A</option>
-                            <option value="applications">Most applications</option>
-                            <option value="applications-asc">Fewest applications</option>
+                            {!isRegisteredView && <option value="applications">Most applications</option>}
+                            {!isRegisteredView && <option value="applications-asc">Fewest applications</option>}
                         </select>
                     </div>
                 </div>
@@ -447,22 +500,26 @@ const CandidatesGrid = () => {
                                     <option value="false">Incomplete</option>
                                 </select>
                             </label>
-                            <label className="text-sm font-medium text-gray-700">
-                                Application status
-                                <select value={filters.applicationStatus ?? ''} onChange={(event) => updateParams({ applicationStatus: event.target.value || undefined })} className={`${inputClass} mt-1 capitalize`}>
-                                    <option value="">Any status</option>
-                                    {APPLICATION_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
-                                </select>
-                            </label>
-                            <VacancyCombobox
-                                jobs={optionsQuery.data?.jobs ?? []}
-                                selectedId={filters.jobId}
-                                searchValue={jobOptionSearch}
-                                loading={optionsQuery.isLoading || optionsQuery.isFetching}
-                                error={optionsQuery.isError}
-                                onSearchChange={setJobOptionSearchStable}
-                                onSelect={(job) => updateParams({ jobId: job?._id })}
-                            />
+                            {!isRegisteredView && (
+                                <label className="text-sm font-medium text-gray-700">
+                                    Application status
+                                    <select value={filters.applicationStatus ?? ''} onChange={(event) => updateParams({ applicationStatus: event.target.value || undefined })} className={`${inputClass} mt-1 capitalize`}>
+                                        <option value="">Any status</option>
+                                        {APPLICATION_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
+                                    </select>
+                                </label>
+                            )}
+                            {!isRegisteredView && (
+                                <VacancyCombobox
+                                    jobs={optionsQuery.data?.jobs ?? []}
+                                    selectedId={filters.jobId}
+                                    searchValue={jobOptionSearch}
+                                    loading={optionsQuery.isLoading || optionsQuery.isFetching}
+                                    error={optionsQuery.isError}
+                                    onSearchChange={setJobOptionSearchStable}
+                                    onSelect={(job) => updateParams({ jobId: job?._id })}
+                                />
+                            )}
                             <label className="text-sm font-medium text-gray-700">
                                 Education
                                 <select value={filters.education ?? ''} onChange={(event) => updateParams({ education: event.target.value || undefined })} className={`${inputClass} mt-1`}>
@@ -510,26 +567,26 @@ const CandidatesGrid = () => {
                 )}
             </div>
 
-            {candidatesQuery.isLoading && <p role="status" className="rounded-xl border border-gray-200 bg-white p-8 text-center text-gray-600">Loading candidates…</p>}
+            {candidatesQuery.isLoading && <p role="status" className="rounded-xl border border-gray-200 bg-white p-8 text-center text-gray-600">Loading {isRegisteredView ? 'registered users' : 'candidates'}…</p>}
             {candidatesQuery.isError && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">{candidatesQuery.error.message}</p>}
 
             {!candidatesQuery.isLoading && !candidatesQuery.isError && (
                 <>
                     <p className="text-sm text-gray-600" aria-live="polite">
-                        {candidatesQuery.data?.pagination.total ?? 0} candidates
+                        {candidatesQuery.data?.pagination.total ?? 0} {isRegisteredView ? 'registered users' : 'candidates'}
                     </p>
 
                     <div className="hidden overflow-hidden rounded-xl border border-gray-200 bg-white md:block">
                         <div className="overflow-x-auto">
                             <table className="w-full min-w-[940px] text-left">
-                                <caption className="sr-only">Candidate directory. Candidate rows can be clicked to open the full profile.</caption>
+                                <caption className="sr-only">{isRegisteredView ? 'Registered user' : 'Candidate'} directory. Rows can be clicked to open the full profile.</caption>
                                 <thead className="border-b border-gray-200 bg-gray-50">
                                     <tr>
                                         <SortHeading label="Candidate" current={filters.sort || 'newest'} primary="name" secondary="name-desc" primaryDirection="ascending" onChange={sortCandidates} />
                                         <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Contact</th>
                                         <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Education and experience</th>
                                         <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Profile</th>
-                                        <SortHeading label="Applications" current={filters.sort || 'newest'} primary="applications" secondary="applications-asc" primaryDirection="descending" onChange={sortCandidates} />
+                                        {!isRegisteredView && <SortHeading label="Applications" current={filters.sort || 'newest'} primary="applications" secondary="applications-asc" primaryDirection="descending" onChange={sortCandidates} />}
                                         <SortHeading label="Joined" current={filters.sort || 'newest'} primary="newest" secondary="oldest" primaryDirection="descending" onChange={sortCandidates} />
                                         <th scope="col" className="px-4 py-3"><span className="sr-only">Actions</span></th>
                                     </tr>
@@ -555,14 +612,16 @@ const CandidatesGrid = () => {
                                                 <p className="mt-1 text-gray-500">{experienceLabel(candidate.postNyscExperience)}</p>
                                             </td>
                                             <td className="px-4 py-4"><Completion candidate={candidate} /></td>
-                                            <td className="px-4 py-4 text-sm">
-                                                <span className="font-semibold">{candidate.applicationCount}</span>
-                                                <p className="mt-1 text-xs text-gray-500">Latest {formatDate(candidate.latestApplicationAt, timeZone)}</p>
-                                            </td>
+                                            {!isRegisteredView && (
+                                                <td className="px-4 py-4 text-sm">
+                                                    <span className="font-semibold">{candidate.applicationCount}</span>
+                                                    <p className="mt-1 text-xs text-gray-500">Latest {formatDate(candidate.latestApplicationAt, timeZone)}</p>
+                                                </td>
+                                            )}
                                             <td className="px-4 py-4 text-sm text-gray-600">{formatDate(candidate.createdAt, timeZone)}</td>
                                             <td className="px-4 py-4 text-right">
                                                 <Link href={`/admin-center/candidates/${candidate._id}`} className="whitespace-nowrap text-sm font-semibold text-[#184aa2] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]">
-                                                    View candidate
+                                                    View {isRegisteredView ? 'user' : 'candidate'}
                                                 </Link>
                                             </td>
                                         </tr>
@@ -570,7 +629,7 @@ const CandidatesGrid = () => {
                                 </tbody>
                             </table>
                         </div>
-                        {!rows.length && <p className="p-10 text-center text-gray-500">No candidates match these filters.</p>}
+                        {!rows.length && <p className="p-10 text-center text-gray-500">No {isRegisteredView ? 'registered users' : 'candidates'} match these filters.</p>}
                     </div>
 
                     <div className="grid gap-3 md:hidden">
@@ -586,15 +645,15 @@ const CandidatesGrid = () => {
                                 </div>
                                 <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
                                     <div><dt className="text-gray-500">Experience</dt><dd className="mt-0.5 font-medium">{experienceLabel(candidate.postNyscExperience)}</dd></div>
-                                    <div><dt className="text-gray-500">Applications</dt><dd className="mt-0.5 font-medium">{candidate.applicationCount}</dd></div>
+                                    {!isRegisteredView && <div><dt className="text-gray-500">Applications</dt><dd className="mt-0.5 font-medium">{candidate.applicationCount}</dd></div>}
                                     <div><dt className="text-gray-500">Joined</dt><dd className="mt-0.5 font-medium">{formatDate(candidate.createdAt, timeZone)}</dd></div>
                                 </dl>
                                 <Link href={`/admin-center/candidates/${candidate._id}`} className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-md bg-[#184aa2] px-4 text-sm font-semibold text-white">
-                                    View candidate
+                                    View {isRegisteredView ? 'user' : 'candidate'}
                                 </Link>
                             </article>
                         ))}
-                        {!rows.length && <p className="rounded-xl border border-gray-200 bg-white p-8 text-center text-gray-500">No candidates match these filters.</p>}
+                        {!rows.length && <p className="rounded-xl border border-gray-200 bg-white p-8 text-center text-gray-500">No {isRegisteredView ? 'registered users' : 'candidates'} match these filters.</p>}
                     </div>
 
                     <div className="rounded-xl border border-gray-200 bg-white">

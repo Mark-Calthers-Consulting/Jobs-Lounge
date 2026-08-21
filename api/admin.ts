@@ -166,8 +166,10 @@ export const fetchJobCandidates = async (
 export const fetchCandidateFilterOptions = async (
     jobSearch?: string,
     selectedJobId?: string,
+    view: CandidateListFilters['view'] = 'candidates',
 ): Promise<CandidateFilterOptions> => {
     const params = new URLSearchParams()
+    if (view === 'registered') params.set('view', view)
     if (jobSearch) params.set('jobSearch', jobSearch)
     if (selectedJobId) params.set('selectedJobId', selectedJobId)
     const suffix = params.size ? `?${params}` : ''

@@ -71,6 +71,16 @@ Status: coach marks deferred
 - Add contextual coach marks only after the candidate dashboard, applications, profile, and vacancy interfaces are stable.
 - Keep tours short, dismissible, keyboard accessible, and tied to genuine first-use tasks rather than replaying a generic product walkthrough.
 
+## Consent-based talent pool
+
+Status: deferred
+
+- Allow registered jobseekers who have not applied for a vacancy to explicitly opt into recruiter discovery.
+- Keep ordinary registered users outside the recruiter Candidates directory until they either submit an application or provide clear talent-pool consent.
+- Capture the consent version and timestamp, provide an easy withdrawal control, and remove withdrawn profiles from recruiter discovery without deleting the candidate account.
+- Define recruiter search, retention, access auditing, privacy notices, and any contact rules before enabling the talent pool.
+- Keep talent-pool membership distinct from an application and never imply that a member applied for a particular vacancy.
+
 ## Google Analytics and Super-admin reporting
 
 Status: deferred

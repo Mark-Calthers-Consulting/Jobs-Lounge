@@ -72,9 +72,13 @@ export const useGetJobCandidates = (filters: CandidateListFilters = {}) => {
     })
 }
 
-export const useCandidateFilterOptions = (jobSearch?: string, selectedJobId?: string) => useQuery({
-    queryKey: ['candidateFilterOptions', jobSearch || '', selectedJobId || ''],
-    queryFn: () => fetchCandidateFilterOptions(jobSearch, selectedJobId),
+export const useCandidateFilterOptions = (
+    jobSearch?: string,
+    selectedJobId?: string,
+    view: CandidateListFilters['view'] = 'candidates',
+) => useQuery({
+    queryKey: ['candidateFilterOptions', view, jobSearch || '', selectedJobId || ''],
+    queryFn: () => fetchCandidateFilterOptions(jobSearch, selectedJobId, view),
 })
 
 export const useAdminCandidate = (candidateId: string) => useQuery({

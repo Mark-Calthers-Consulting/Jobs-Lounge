@@ -88,7 +88,11 @@ const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
         )
     }
 
-    const { candidate, applicationSummary, duplicateSignal } = candidateQuery.data
+    const { candidate, applicationSummary, duplicateSignal, classification } = candidateQuery.data
+    const isRegisteredUser = classification === 'registered-user'
+    const directoryHref = isRegisteredUser
+        ? '/admin-center/candidates?view=registered'
+        : '/admin-center/candidates'
     const completion = candidate.profileCompletion
     const confirmationMatches = confirmationEmail.trim().toLowerCase()
         === candidate.email.trim().toLowerCase()
@@ -109,9 +113,9 @@ const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
                 confirmationEmail,
             })
             toast.success(
-                `Candidate deleted with ${result.deletedApplications} ${result.deletedApplications === 1 ? 'application' : 'applications'}.`,
+                `${isRegisteredUser ? 'Registered user' : 'Candidate'} deleted with ${result.deletedApplications} ${result.deletedApplications === 1 ? 'application' : 'applications'}.`,
             )
-            router.replace('/admin-center/candidates')
+            router.replace(directoryHref)
         } catch (error) {
             const message = error instanceof Error
                 ? error.message
@@ -123,8 +127,8 @@ const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
 
     return (
         <div className="mx-auto max-w-6xl space-y-5">
-            <Link href="/admin-center/candidates" className="inline-flex items-center gap-2 text-sm font-semibold text-[#184aa2] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]">
-                <FiArrowLeft aria-hidden="true" />Back to candidates
+            <Link href={directoryHref} className="inline-flex items-center gap-2 text-sm font-semibold text-[#184aa2] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]">
+                <FiArrowLeft aria-hidden="true" />Back to {isRegisteredUser ? 'registered users' : 'candidates'}
             </Link>
 
             <header className="rounded-xl border border-gray-200 bg-white p-5 sm:p-6">
@@ -132,6 +136,11 @@ const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
                     <div>
                         <div className="flex flex-wrap items-center gap-3">
                             <h1 className="text-2xl font-bold text-gray-950 sm:text-3xl">{candidate.name || 'Unnamed candidate'}</h1>
+                            {isRegisteredUser && (
+                                <span className="rounded-md bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-800">
+                                    Registered user · No applications
+                                </span>
+                            )}
                             <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${completion.complete ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>
                                 {completion.complete ? 'Profile complete' : `${completion.percentage}% complete`}
                             </span>
@@ -162,7 +171,7 @@ const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
                 </section>
             )}
 
-            <section aria-labelledby="application-summary-title" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            {!isRegisteredUser && <section aria-labelledby="application-summary-title" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 <div className="rounded-xl border border-gray-200 bg-white p-4">
                     <h2 id="application-summary-title" className="text-sm text-gray-500">All applications</h2>
                     <p className="mt-2 text-2xl font-bold text-gray-950">{applicationSummary.total}</p>
@@ -173,7 +182,7 @@ const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
                         <p className="mt-2 text-2xl font-bold text-gray-950">{applicationSummary.byStatus[status]}</p>
                     </div>
                 ))}
-            </section>
+            </section>}
 
             <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
                 <div className="space-y-5">
@@ -187,7 +196,7 @@ const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
                         </dl>
                     </section>
 
-                    <section className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                    {!isRegisteredUser && <section className="overflow-hidden rounded-xl border border-gray-200 bg-white">
                         <div className="flex flex-col gap-3 border-b border-gray-200 p-5 sm:flex-row sm:items-center sm:justify-between">
                             <div><h2 className="text-lg font-semibold text-gray-950">Application history</h2><p className="mt-1 text-sm text-gray-600">Read-only history for this candidate.</p></div>
                             <label className="text-sm font-medium text-gray-700">
@@ -231,7 +240,7 @@ const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
                                 <PaginationControls pagination={applicationsQuery.data?.pagination} onPageChange={setApplicationPage} />
                             </>
                         )}
-                    </section>
+                    </section>}
                 </div>
 
                 <aside className="space-y-5">

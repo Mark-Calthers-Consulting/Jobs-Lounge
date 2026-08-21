@@ -568,6 +568,7 @@ export type CandidateSummary = {
 }
 
 export type CandidateListFilters = {
+  view?: 'candidates' | 'registered'
   page?: number
   limit?: number
   search?: string
@@ -600,6 +601,7 @@ export type AdminCandidateDetail = {
     byStatus: Record<ApplicationStatus, number>
     latestApplicationAt?: string
   }
+  classification: 'candidate' | 'registered-user'
   duplicateSignal: {
     possibleDuplicate: boolean
     matchFields: Array<'email' | 'telephone'>
