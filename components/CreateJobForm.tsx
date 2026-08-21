@@ -15,7 +15,8 @@ import {
     CUSTOM_JOB_LOCATION_OPTION,
     NIGERIAN_STATE_OPTIONS,
 } from '@/constants/nigeria'
-import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useState } from 'react';
+import { getJobDetailSuggestions } from '@/constants/jobDetailSuggestions'
+import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner';
 
@@ -73,23 +74,27 @@ const publishingStatusOptions = [
 
 const listFieldMeta: Record<
     ListFieldKey,
-    { label: string; placeholder: string }
+    { label: string; placeholder: string; helper: string }
 > = {
     benefits: {
         label: 'Benefits',
         placeholder: 'e.g. Health insurance',
+        helper: 'Add only the benefits this employer actually provides.',
     },
     responsibilities: {
         label: 'Responsibilities',
         placeholder: 'e.g. Manage client accounts',
+        helper: 'Use one clear responsibility per item.',
     },
     requirements: {
         label: 'Requirements',
         placeholder: 'e.g. 2+ years of experience',
+        helper: 'Include genuine must-haves and avoid unnecessary barriers.',
     },
     skills: {
         label: 'Required Skills',
         placeholder: 'e.g. React',
+        helper: 'Add specific tools, knowledge, and practical abilities.',
     },
 };
 
@@ -164,6 +169,7 @@ const CreateJobFormContent = ({
         requirements: '',
         skills: '',
     });
+    const listInputRefs = useRef<Partial<Record<ListFieldKey, HTMLInputElement | null>>>({})
 
     const createJobMutation = useCreatejob()
     const updateJobMutation = useUpdateAdminJob()
@@ -193,6 +199,15 @@ const CreateJobFormContent = ({
             [key]: value,
         }));
     };
+
+    const selectListSuggestion = (key: ListFieldKey, suggestion: string) => {
+        handleListInputChange(key, suggestion)
+        requestAnimationFrame(() => {
+            const input = listInputRefs.current[key]
+            input?.focus()
+            input?.setSelectionRange(suggestion.length, suggestion.length)
+        })
+    }
 
     const handleDeadlineModeChange = (e: ChangeEvent<HTMLInputElement>) => {
         const noDeadline = e.target.checked
@@ -862,15 +877,27 @@ const CreateJobFormContent = ({
                     <div className="space-y-6">
                         {(Object.keys(listFieldMeta) as ListFieldKey[]).map((key) => {
                             const field = listFieldMeta[key];
+                            const suggestions = getJobDetailSuggestions(key, {
+                                category: formData.category,
+                                jobType: formData.jobType,
+                                level: formData.level,
+                                workMode: formData.workMode,
+                            })
 
                             return (
                                 <div key={key}>
                                     <label htmlFor={`${key}-input`} className={`${labelClassName} block`}>
                                         {field.label}
                                     </label>
+                                    <p id={`${key}-help`} className="mb-2 text-xs leading-5 text-gray-500">
+                                        {field.helper}
+                                    </p>
 
                                     <div className="flex flex-col gap-2 sm:flex-row">
                                         <input
+                                            ref={(element) => {
+                                                listInputRefs.current[key] = element
+                                            }}
                                             id={`${key}-input`}
                                             type="text"
                                             value={listInputs[key]}
@@ -880,6 +907,7 @@ const CreateJobFormContent = ({
                                             onKeyDown={(e) => handleListKeyDown(e, key)}
                                             placeholder={field.placeholder}
                                             className={inputClassName}
+                                            aria-describedby={`${key}-help`}
                                         />
 
                                         <button
@@ -891,6 +919,39 @@ const CreateJobFormContent = ({
                                             Add
                                         </button>
                                     </div>
+
+                                    <details className="mt-3 border-y border-gray-200 py-2">
+                                        <summary className="cursor-pointer select-none text-sm font-medium text-[#003B6D] marker:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003B6D] focus-visible:ring-offset-2">
+                                            Browse suggested {field.label.toLowerCase()}
+                                        </summary>
+                                        <div className="mt-3 border-t border-gray-100 pt-2">
+                                            <p className="mb-2 text-xs leading-5 text-gray-500">
+                                                Choose a starting point, edit it in the field above, then add it. Use only what applies to this role.
+                                            </p>
+                                            <div className="divide-y divide-gray-100">
+                                                {suggestions.map((suggestion) => {
+                                                    const isAdded = listValues[key].some(
+                                                        (item) => item.toLocaleLowerCase() === suggestion.toLocaleLowerCase(),
+                                                    )
+
+                                                    return (
+                                                        <button
+                                                            key={suggestion}
+                                                            type="button"
+                                                            onClick={() => selectListSuggestion(key, suggestion)}
+                                                            disabled={isAdded}
+                                                            className="flex w-full items-start justify-between gap-4 px-1 py-2.5 text-left text-sm text-gray-700 transition hover:bg-gray-50 hover:text-gray-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#003B6D] disabled:cursor-default disabled:text-gray-400"
+                                                        >
+                                                            <span>{suggestion}</span>
+                                                            <span className={`shrink-0 text-xs font-semibold ${isAdded ? 'text-gray-400' : 'text-[#003B6D]'}`}>
+                                                                {isAdded ? 'Added' : 'Use'}
+                                                            </span>
+                                                        </button>
+                                                    )
+                                                })}
+                                            </div>
+                                        </div>
+                                    </details>
 
                                     {listValues[key].length > 0 && (
                                         <ul aria-live="polite" className="mt-3 space-y-2">
