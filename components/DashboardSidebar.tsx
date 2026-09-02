@@ -11,7 +11,8 @@ import {
     LuBriefcase,
     LuUser,
     LuSettings,
-    LuLogOut
+    LuLogOut,
+    LuLifeBuoy,
 } from "react-icons/lu"
 
 const DashboardSidebar = () => {
@@ -52,6 +53,11 @@ const DashboardSidebar = () => {
             href: "/dashboard/settings",
             icon: <LuSettings size={20} />
         },
+        {
+            name: "Support Center",
+            href: "/dashboard/support",
+            icon: <LuLifeBuoy size={20} />
+        },
     ]
 
     return (
@@ -73,12 +79,12 @@ const DashboardSidebar = () => {
                             key={item.href}
                             href={item.href}
                             aria-current={isActive ? 'page' : undefined}
-                            className={`flex shrink-0 items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${isActive
-                                ? "bg-blue-50 text-blue-700 shadow-sm"
+                            className={`flex shrink-0 items-center gap-3 rounded-md px-4 py-3 text-sm font-medium transition-colors duration-200 ${isActive
+                                ? "bg-gray-100 text-gray-900"
                                 : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                                 }`}
                         >
-                            <span aria-hidden="true" className={isActive ? "text-blue-600" : "text-gray-400"}>
+                            <span aria-hidden="true" className={isActive ? "text-gray-700" : "text-gray-400"}>
                                 {item.icon}
                             </span>
                             {item.name}

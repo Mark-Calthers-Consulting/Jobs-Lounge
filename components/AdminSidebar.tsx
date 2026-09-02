@@ -15,6 +15,7 @@ import {
     LuUsers,
     LuLogOut,
     LuBookOpen,
+    LuLifeBuoy,
 } from "react-icons/lu"
 import { PiSuitcase, PiUsersThree } from "react-icons/pi"
 
@@ -86,6 +87,12 @@ const AdminSidebar = () => {
             icon: <LuSettings size={20} />,
             permission: 'admin:access',
         },
+        {
+            name: "Support Center",
+            href: "/admin-center/support",
+            icon: <LuLifeBuoy size={20} />,
+            permission: 'admin:access',
+        },
     ]
 
     return (
@@ -107,12 +114,12 @@ const AdminSidebar = () => {
                             key={item.href}
                             href={item.href}
                             aria-current={isActive ? 'page' : undefined}
-                            className={`flex shrink-0 items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${isActive
-                                ? "bg-blue-50 text-blue-700 shadow-sm"
+                            className={`flex shrink-0 items-center gap-3 rounded-md px-4 py-3 text-sm font-medium transition-colors duration-200 ${isActive
+                                ? "bg-gray-100 text-gray-900"
                                 : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                                 }`}
                         >
-                            <span aria-hidden="true" className={isActive ? "text-blue-600" : "text-gray-400"}>
+                            <span aria-hidden="true" className={isActive ? "text-gray-700" : "text-gray-400"}>
                                 {item.icon}
                             </span>
                             {item.name}
