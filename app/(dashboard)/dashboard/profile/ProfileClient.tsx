@@ -327,6 +327,7 @@ const ProfileClient = () => {
                 >
                     <Field id="profile-cv" label="CV link" error={documentsForm.formState.errors.cvLink?.message}>
                         <>
+                            <CvLinkGuidance id="profile-cv-help" />
                             <input
                                 id="profile-cv"
                                 type="url"
@@ -337,7 +338,6 @@ const ProfileClient = () => {
                                 className={inputClass}
                                 {...documentsForm.register('cvLink')}
                             />
-                            <CvLinkGuidance id="profile-cv-help" />
                         </>
                     </Field>
                     <Field id="profile-cover-letter" label="Cover-letter link" optional error={documentsForm.formState.errors.coverLetterLink?.message}>

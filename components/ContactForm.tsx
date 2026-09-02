@@ -134,7 +134,7 @@ const ContactForm = (): React.JSX.Element => {
                             aria-invalid={telephoneError ? 'true' : undefined}
                             aria-describedby="contact-telephone-help"
                             className={inputClassName}
-                            placeholder="+234 806 888 8885"
+                            placeholder="+234 902 888 8885"
                         />
                         <p
                             id="contact-telephone-help"

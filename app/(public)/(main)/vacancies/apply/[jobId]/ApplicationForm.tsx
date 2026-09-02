@@ -60,6 +60,7 @@ const ApplicationForm = ({ jobId, jobTitle }: { jobId: string; jobTitle: string 
         <form onSubmit={handleSubmit} noValidate className="space-y-5" aria-busy={apply.isPending}>
             <div>
                 <label htmlFor="application-cv" className="mb-1 block font-medium">CV link</label>
+                <CvLinkGuidance id="application-cv-help" />
                 <input
                     id="application-cv"
                     type="url"
@@ -75,7 +76,6 @@ const ApplicationForm = ({ jobId, jobTitle }: { jobId: string; jobTitle: string 
                     aria-describedby={`application-cv-help${cvLinkError ? ' application-cv-error' : ''}`}
                     className={fieldClass}
                 />
-                <CvLinkGuidance id="application-cv-help" />
                 {cvLinkError ? (
                     <p id="application-cv-error" role="alert" className="mt-1 text-sm text-red-700">
                         {cvLinkError}

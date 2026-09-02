@@ -52,7 +52,7 @@ describe('ContactForm', () => {
         render(<ContactForm />)
         completeRequiredFields()
         fireEvent.change(screen.getByLabelText(/Telephone/), {
-            target: { value: '+234 806 888 8885' },
+            target: { value: '+234 902 888 8885' },
         })
 
         fireEvent.submit(screen.getByRole('button', { name: 'Send message' }).closest('form')!)
@@ -61,7 +61,7 @@ describe('ContactForm', () => {
             expect(mocks.mutateAsync).toHaveBeenCalledWith({
                 name: 'Ada Lovelace',
                 email: 'ada@example.com',
-                telephone: '+234 806 888 8885',
+                telephone: '+234 902 888 8885',
                 subject: 'Account support',
                 message: 'Please help me access my profile.',
             })

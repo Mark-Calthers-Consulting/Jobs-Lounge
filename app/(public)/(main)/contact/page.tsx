@@ -84,10 +84,10 @@ const Contact = (): React.JSX.Element => {
                                 <h3 className="text-sm font-semibold text-slate-950">Telephone</h3>
                             </div>
                             <a
-                                href="tel:+2348068888885"
+                                href="tel:+2349028888885"
                                 className="mt-3 block text-sm leading-6 text-slate-600 transition-colors hover:text-[#1B1F87]"
                             >
-                                +234 806 888 8885
+                                +234 902 888 8885
                             </a>
                         </div>
 

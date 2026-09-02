@@ -143,11 +143,11 @@ export default function Footer(): React.JSX.Element {
                                     <span className="break-all sm:whitespace-nowrap sm:break-normal">{supportEmail}</span>
                                 </a>
                                 <a
-                                    href="tel:+2348068888885"
+                                    href="tel:+2349028888885"
                                     className="flex w-fit items-center gap-2 text-sm text-slate-300 transition-colors hover:text-white"
                                 >
                                     <FiPhone aria-hidden="true" className="shrink-0 text-slate-500" />
-                                    <span>+234 806 888 8885</span>
+                                    <span>+234 902 888 8885</span>
                                 </a>
                                 <p className="flex items-start gap-2 text-sm leading-5 text-slate-400">
                                     <FiMapPin aria-hidden="true" className="mt-0.5 shrink-0 text-slate-500" />
