@@ -55,7 +55,7 @@ Status: partially implemented
 - Record successful and failed staff sign-ins with a defined retention policy and a privacy-safe activity view.
 - Add TOTP multi-factor authentication, one-time recovery codes, MFA removal, and a secure recovery process.
 - Require recent step-up authentication before sensitive actions such as staff role changes and organization configuration.
-- Role-specific absolute staff session lifetimes are implemented for newly issued sessions, with controlled 8-hour, 24-hour, 3-day, and 7-day options.
+- Role-specific absolute staff session lifetimes are implemented for newly issued sessions, with controlled 8-hour, 24-hour, 3-day, 7-day, and 30-day options. All roles retain the existing 30-day default unless a Super-admin explicitly changes it.
 - Add a Super-admin policy for mandatory staff MFA after TOTP support exists.
 - Expand immutable security audit events and mandatory security notifications for account and policy changes.
 

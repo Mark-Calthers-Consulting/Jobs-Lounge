@@ -158,12 +158,13 @@ const SESSION_DURATION_OPTIONS: Array<{
     { label: '24 hours', value: 24 },
     { label: '3 days', value: 72 },
     { label: '7 days', value: 168 },
+    { label: '30 days', value: 720 },
 ]
 
 const DEFAULT_STAFF_SESSION_POLICY: StaffSessionDurationPolicy = {
-    admin: 168,
-    recruiter: 24,
-    superAdmin: 8,
+    admin: 720,
+    recruiter: 720,
+    superAdmin: 720,
 }
 
 const OrganizationSettingsPanel = () => {

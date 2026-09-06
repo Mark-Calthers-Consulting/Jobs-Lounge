@@ -39,9 +39,9 @@ vi.mock('@/hooks/useSettings', () => ({
             timeZone: 'Africa/Lagos',
             candidateRegistrationEnabled: true,
             staffSessionDurationHours: {
-                admin: 168,
-                recruiter: 24,
-                superAdmin: 8,
+                admin: 720,
+                recruiter: 720,
+                superAdmin: 720,
             },
             revision: 1,
         },
@@ -121,9 +121,9 @@ describe('role-aware admin settings', () => {
         updateOrganization.mockResolvedValue({})
         render(<AdminSettingsClient />)
 
-        expect(screen.getByLabelText('Administrators')).toHaveValue('168')
-        expect(screen.getByLabelText('Recruiters')).toHaveValue('24')
-        expect(screen.getByLabelText('Super-admins')).toHaveValue('8')
+        expect(screen.getByLabelText('Administrators')).toHaveValue('720')
+        expect(screen.getByLabelText('Recruiters')).toHaveValue('720')
+        expect(screen.getByLabelText('Super-admins')).toHaveValue('720')
         const saveButton = screen.getByRole('button', { name: 'Save session policy' })
         expect(saveButton).toBeDisabled()
 
@@ -134,8 +134,8 @@ describe('role-aware admin settings', () => {
         await waitFor(() => expect(updateOrganization).toHaveBeenCalledWith({
             staffSessionDurationHours: {
                 admin: 72,
-                recruiter: 24,
-                superAdmin: 8,
+                recruiter: 720,
+                superAdmin: 720,
             },
             revision: 1,
         }))

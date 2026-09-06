@@ -671,7 +671,7 @@ export type PublicPlatformSettings = {
     candidateRegistrationEnabled: boolean
 }
 
-export type StaffSessionDurationHours = 8 | 24 | 72 | 168
+export type StaffSessionDurationHours = 8 | 24 | 72 | 168 | 720
 
 export type StaffSessionDurationPolicy = {
   admin: StaffSessionDurationHours
