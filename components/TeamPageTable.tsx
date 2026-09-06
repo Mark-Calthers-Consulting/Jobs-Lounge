@@ -6,11 +6,12 @@ import {
     useGetTeamMembers,
     useResendStaffInvitation,
     useUpdateStaffRole,
+    useUpdateStaffSuspension,
 } from '@/hooks/useAdmin'
 import { useUser } from '@/hooks/useUsers'
 import type { CreateStaffPayload, StaffMember } from '@/types/types'
 import { useEffect, useState } from 'react'
-import { FiEye, FiEyeOff, FiPlus, FiX } from 'react-icons/fi'
+import { FiEye, FiEyeOff, FiLock, FiPlus, FiUnlock, FiX } from 'react-icons/fi'
 import { toast } from 'sonner'
 
 import PaginationControls from './PaginationControls'
@@ -63,11 +64,16 @@ const TeamPageTable = () => {
         role: 'admin' | 'recruiter'
     } | null>(null)
     const [pendingCancellation, setPendingCancellation] = useState<StaffMember | null>(null)
+    const [pendingSuspension, setPendingSuspension] = useState<{
+        member: StaffMember
+        suspended: boolean
+    } | null>(null)
     const { data: currentUser } = useUser()
     const createMutation = useCreateStaffMember()
     const roleMutation = useUpdateStaffRole()
     const resendMutation = useResendStaffInvitation()
     const cancelInvitationMutation = useCancelStaffInvitation()
+    const suspensionMutation = useUpdateStaffSuspension()
 
     useEffect(() => {
         const timeout = window.setTimeout(() => {
@@ -166,6 +172,22 @@ const TeamPageTable = () => {
         }
     }
 
+    const confirmSuspensionChange = async () => {
+        if (!pendingSuspension) return
+        try {
+            await suspensionMutation.mutateAsync({
+                userId: pendingSuspension.member._id,
+                suspended: pendingSuspension.suspended,
+            })
+            toast.success(pendingSuspension.suspended
+                ? `${pendingSuspension.member.name} has been suspended and signed out.`
+                : `${pendingSuspension.member.name} can sign in again.`)
+            setPendingSuspension(null)
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Unable to update staff access.')
+        }
+    }
+
     return (
         <div className="space-y-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -206,6 +228,7 @@ const TeamPageTable = () => {
                     >
                         <option value="">All account states</option>
                         <option value="active">Active</option>
+                        <option value="suspended">Suspended</option>
                         <option value="invited">Invitation pending</option>
                     </select>
                 </div>
@@ -337,6 +360,33 @@ const TeamPageTable = () => {
                 )}
             />
 
+            <Modal
+                isOpen={Boolean(pendingSuspension)}
+                onClose={() => setPendingSuspension(null)}
+                onSubmit={() => void confirmSuspensionChange()}
+                title={pendingSuspension?.suspended ? 'Suspend this account?' : 'Restore account access?'}
+                actionLabel={suspensionMutation.isPending
+                    ? 'Updating…'
+                    : pendingSuspension?.suspended
+                        ? 'Suspend account'
+                        : 'Restore access'}
+                actionTone={pendingSuspension?.suspended ? 'danger' : 'default'}
+                disabled={suspensionMutation.isPending}
+                size="compact"
+                body={pendingSuspension ? (
+                    <p className="text-sm leading-6 text-gray-200">
+                        {pendingSuspension.suspended
+                            ? `${pendingSuspension.member.name} will be signed out on every device and unable to sign in until you restore access. Their account and work will remain intact.`
+                            : `${pendingSuspension.member.name} will be able to sign in again. Sessions created before the suspension will remain invalid.`}
+                    </p>
+                ) : undefined}
+                footer={(
+                    <button type="button" disabled={suspensionMutation.isPending} onClick={() => setPendingSuspension(null)} className="w-full rounded-md border border-gray-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10 disabled:opacity-60">
+                        Cancel
+                    </button>
+                )}
+            />
+
             {isLoading ? <p role="status" className="p-4">Loading team members…</p> : null}
             {isError ? (
                 <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
@@ -371,6 +421,7 @@ const TeamPageTable = () => {
                                                     value={member.role}
                                                     onChange={(event) => {
                                                         setPendingCancellation(null)
+                                                        setPendingSuspension(null)
                                                         setPendingRole({
                                                             member,
                                                             role: event.target.value as 'admin' | 'recruiter',
@@ -384,8 +435,18 @@ const TeamPageTable = () => {
                                             ) : roleLabel(member.role)}
                                         </td>
                                         <td className="p-4">
-                                            <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${member.setupStatus === 'active' ? 'bg-green-50 text-green-800' : 'bg-amber-50 text-amber-900'}`}>
-                                                {member.setupStatus === 'active' ? 'Active' : 'Invitation pending'}
+                                            <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                                member.setupStatus === 'active'
+                                                    ? 'bg-green-50 text-green-800'
+                                                    : member.setupStatus === 'suspended'
+                                                        ? 'bg-red-50 text-red-800'
+                                                        : 'bg-amber-50 text-amber-900'
+                                            }`}>
+                                                {member.setupStatus === 'active'
+                                                    ? 'Active'
+                                                    : member.setupStatus === 'suspended'
+                                                        ? 'Suspended'
+                                                        : 'Invitation pending'}
                                             </span>
                                         </td>
                                         <td className="p-4 text-sm text-gray-600">
@@ -405,6 +466,25 @@ const TeamPageTable = () => {
                                                         Cancel invitation
                                                     </button>
                                                 </div>
+                                            ) : member.role !== 'super-admin' && member._id !== currentUser?._id ? (
+                                                <button
+                                                    type="button"
+                                                    disabled={suspensionMutation.isPending}
+                                                    onClick={() => {
+                                                        setPendingRole(null)
+                                                        setPendingCancellation(null)
+                                                        setPendingSuspension({
+                                                            member,
+                                                            suspended: member.setupStatus !== 'suspended',
+                                                        })
+                                                    }}
+                                                    className={`inline-flex items-center gap-2 text-sm font-semibold hover:underline disabled:opacity-50 ${member.setupStatus === 'suspended' ? 'text-emerald-700' : 'text-red-700'}`}
+                                                >
+                                                    {member.setupStatus === 'suspended'
+                                                        ? <FiUnlock aria-hidden="true" />
+                                                        : <FiLock aria-hidden="true" />}
+                                                    {member.setupStatus === 'suspended' ? 'Restore access' : 'Suspend access'}
+                                                </button>
                                             ) : <span className="text-sm text-gray-400">—</span>}
                                         </td>
                                     </tr>

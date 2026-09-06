@@ -1,228 +1,263 @@
-'use client'
-import Image from "next/image";
-import Link from "next/link";
-import { MdOutlineAssignment } from "react-icons/md";
-import { FaCloudArrowUp } from "react-icons/fa6";
-import { PiExam } from "react-icons/pi";
-import { IoMdCheckmarkCircleOutline } from "react-icons/io";
-import { LuUserRound } from "react-icons/lu";
-import { Container } from "@/components/Container";
+import type { Metadata } from 'next'
+import Image from 'next/image'
+import Link from 'next/link'
+import {
+  FiArrowRight,
+  FiBookmark,
+  FiCheck,
+  FiClipboard,
+  FiCompass,
+  FiSearch,
+  FiTarget,
+  FiTrendingUp,
+  FiUser,
+} from 'react-icons/fi'
 
+import HomepageDiscovery from '@/components/HomepageDiscovery'
 
+const origin = 'https://jobslounge.markcalthers.com'
+
+export const metadata: Metadata = {
+  title: 'Jobs Lounge | Find your next opportunity',
+  description: 'Discover curated vacancies, apply with confidence, and keep track of your next career move with Jobs Lounge.',
+  alternates: { canonical: origin },
+  openGraph: {
+    type: 'website',
+    url: origin,
+    siteName: 'Jobs Lounge',
+    title: 'Jobs Lounge | Find your next opportunity',
+    description: 'Discover curated vacancies, apply with confidence, and keep track of your next career move with Jobs Lounge.',
+    images: [{ url: `${origin}/hero.jpeg`, alt: '' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Jobs Lounge | Find your next opportunity',
+    description: 'Discover curated vacancies, apply with confidence, and keep track of your next career move with Jobs Lounge.',
+    images: [`${origin}/hero.jpeg`],
+  },
+}
+
+const steps = [
+  {
+    title: 'Create your profile',
+    description: 'Tell us about your experience and add a CV link recruiters can access.',
+    icon: FiUser,
+  },
+  {
+    title: 'Explore vacancies',
+    description: 'Find open roles by category, location, work arrangement, and experience level.',
+    icon: FiSearch,
+  },
+  {
+    title: 'Apply with confidence',
+    description: 'Review the role carefully and submit your application directly through Jobs Lounge.',
+    icon: FiClipboard,
+  },
+  {
+    title: 'Track your applications',
+    description: 'Return to your dashboard to see every application and its current status.',
+    icon: FiCheck,
+  },
+]
+
+const reasons = [
+  {
+    title: 'Curated vacancies',
+    description: 'Focus on clearly presented opportunities published through a managed recruitment process.',
+    icon: FiCompass,
+  },
+  {
+    title: 'Straightforward applications',
+    description: 'Keep your profile and documents ready, then apply without repeating unnecessary steps.',
+    icon: FiTarget,
+  },
+  {
+    title: 'One place to keep track',
+    description: 'Review submitted applications and vacancies you saved for later from your dashboard.',
+    icon: FiBookmark,
+  },
+  {
+    title: 'More relevant discovery',
+    description: 'Choose your career interests and receive explainable vacancy recommendations.',
+    icon: FiTrendingUp,
+  },
+]
+
+const faqs = [
+  {
+    question: 'How do I create a Jobs Lounge account?',
+    answer: 'Select Create your profile, enter your basic details, and follow the prompts to prepare your candidate profile. Creating an account is free.',
+  },
+  {
+    question: 'What do I need before I apply?',
+    answer: 'You need a valid CV link beginning with http:// or https://. Make sure recruiters can open the link without signing in or requesting access.',
+  },
+  {
+    question: 'Can I apply for more than one vacancy?',
+    answer: 'Yes. You can apply for multiple roles when they genuinely match your skills and experience. Each application remains visible in your dashboard.',
+  },
+  {
+    question: 'What happens after I submit an application?',
+    answer: 'Your submission appears in Applications on your dashboard. The recruitment team reviews it and may update its status or contact you directly about the next step.',
+  },
+  {
+    question: 'Can I change my CV after applying?',
+    answer: 'You can update the CV link on your profile for future applications. An application you have already submitted keeps the document link supplied at the time you applied.',
+  },
+  {
+    question: 'How does Jobs Lounge recommend vacancies?',
+    answer: 'Select up to three job categories in your account preferences. Matching open vacancies appear first, followed by other recently published roles you have not applied for.',
+  },
+]
 
 export default function Home() {
   return (
-    // <div className="flex-1 max-w-screen-2xl mx-auto">
-    <Container>
-
-      <section className="rounded-4xl flex-1 flex justify-center items-start h-160 md:h-200 w-full bg-[linear-gradient(rgba(0,0,0,0.7),rgba(0,0,0,0.1)),url('/hero.jpeg')] bg-cover bg-top">
-        <div className="text-white borer-8 text-center mt-35 space-y-5 p-2">
-          <h1 className="text-3xl md:text-5xl lg:text-7xl md:w-10/12 mx-auto">Find the opportunity that moves you forward.</h1>
-          <p className="w-10/12 sm:-8/12 md:w-1/2 mx-auto md:text-xl">Discover roles that match your skills, goals, and ambition in a job search experience built to feel clear, modern, and effortless.</p>
-          <div className="">
-            <Link href="/vacancies" className="inline-block bg-[#111] md:text-lg p-3 rounded-full cursor-pointer hover:opacity-85">Browse opportunities</Link>
+    <div className="overflow-hidden bg-white">
+      <section className="relative isolate flex min-h-[520px] items-center bg-[#101A35] sm:min-h-[560px] lg:min-h-[600px]">
+        <Image
+          src="/hero.jpeg"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="-z-20 object-cover object-[58%_40%] sm:object-center"
+        />
+        <div className="absolute inset-0 -z-10 bg-[#071126]/70" />
+        <div className="mx-auto w-full max-w-7xl px-5 py-16 sm:px-6 lg:px-8">
+          <div className="max-w-2xl text-white">
+            <p className="mb-5 text-sm font-semibold text-blue-200">Your next move starts here</p>
+            <h1 className="text-balance text-4xl font-bold leading-[1.06] tracking-[-0.04em] sm:text-5xl lg:text-6xl">
+              Find the opportunity that moves you forward.
+            </h1>
+            <p className="mt-6 max-w-xl text-base leading-7 text-slate-200 sm:text-lg sm:leading-8">
+              Discover roles that match your skills, goals, and ambition in a job search experience built to feel clear, modern, and effortless.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link href="/vacancies" className="inline-flex min-h-12 items-center justify-center gap-2 bg-white px-6 text-sm font-semibold text-[#101A35] transition-colors hover:bg-slate-100">
+                Browse opportunities <FiArrowRight aria-hidden="true" />
+              </Link>
+              <Link href="/auth?mode=register" className="inline-flex min-h-12 items-center justify-center border border-white/55 px-6 text-sm font-semibold text-white transition-colors hover:border-white hover:bg-white/10">
+                Create your profile
+              </Link>
+            </div>
+            <p className="mt-7 text-sm text-slate-300">Curated roles. Clear applications. Progress you can track.</p>
           </div>
         </div>
       </section>
 
-      {/* <section className="relative">
-        <div className="flex flex-col items-center md:flex-row px-12">
-          <section className="w-full md:w-1/2 space-y-6">
-            <h1 className="text-[#003B6D] text-4xl md:text-6xl font-bold">Find your dream job<br />  in seconds.</h1>
-            <p className="text-lg max-w-md">Our platform connects you with highly qualified job seekers across industries, helping you build your team with ease.</p>
-            <Link
-              href={"/vacancies"}
-              className="inline-block bg-[#003B6D] text-white px-6 py-3 cursor-pointer font-medium hover:bg-blue-800 transition"
-            >
-              Explore Vacancies
+      <HomepageDiscovery />
+
+      <section aria-labelledby="how-it-works-heading" className="bg-white py-16 sm:py-24">
+        <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+          <div className="max-w-2xl">
+            <p className="text-sm font-semibold text-[#184aa2]">A clearer way to apply</p>
+            <h2 id="how-it-works-heading" className="mt-2 text-3xl font-bold tracking-[-0.025em] text-[#101A35] sm:text-4xl">How Jobs Lounge works</h2>
+            <p className="mt-4 text-base leading-7 text-slate-600">Go from discovering a role to following your application without losing track of the details.</p>
+          </div>
+
+          <ol className="relative mt-12 grid gap-0 border-y border-slate-200 lg:grid-cols-4 lg:border-y-0 lg:border-t">
+            {steps.map(({ title, description, icon: Icon }, index) => (
+              <li key={title} className="relative border-b border-slate-200 py-8 last:border-b-0 lg:border-b-0 lg:border-r lg:px-7 lg:py-10 lg:first:pl-0 lg:last:border-r-0 lg:last:pr-0">
+                <div className="flex items-center justify-between">
+                  <span className="flex size-10 items-center justify-center bg-[#101A35] text-sm font-semibold text-white">{index + 1}</span>
+                  <Icon aria-hidden="true" className="text-xl text-[#184aa2]" />
+                </div>
+                <h3 className="mt-7 text-lg font-semibold text-[#101A35]">{title}</h3>
+                <p className="mt-3 text-sm leading-6 text-slate-600">{description}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      <section aria-label="Our mission and vision" className="border-y border-slate-200 bg-slate-50">
+        <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+          <div className="grid items-center gap-10 border-b border-slate-200 py-16 lg:grid-cols-2 lg:gap-20 lg:py-24">
+            <div className="order-2 lg:order-1">
+              <p className="text-sm font-semibold text-[#184aa2]">Driving positive transformation</p>
+              <h2 className="mt-3 text-3xl font-bold tracking-[-0.025em] text-[#101A35] sm:text-4xl">Our mission</h2>
+              <p className="mt-6 max-w-xl text-base leading-8 text-slate-600">At Jobs Lounge, our mission is to revolutionize the job search experience by providing a user-friendly platform that seamlessly connects job seekers with employers.</p>
+            </div>
+            <div className="order-1 flex min-h-80 items-center justify-center bg-white p-8 lg:order-2 lg:min-h-[420px]">
+              <Image src="/illustrations/shared-goals.svg" width={665} height={499} alt="" className="h-auto max-h-80 w-full object-contain" />
+            </div>
+          </div>
+
+          <div className="grid items-center gap-10 py-16 lg:grid-cols-2 lg:gap-20 lg:py-24">
+            <div className="flex min-h-80 items-center justify-center bg-white p-8 lg:min-h-[420px]">
+              <Image src="/illustrations/career-development.svg" width={992} height={519} alt="" className="h-auto max-h-80 w-full object-contain" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-[#184aa2]">Picturing tomorrow, today</p>
+              <h2 className="mt-3 text-3xl font-bold tracking-[-0.025em] text-[#101A35] sm:text-4xl">Our vision</h2>
+              <p className="mt-6 max-w-xl text-base leading-8 text-slate-600">To be the leading online job portal, connecting individuals with meaningful employment opportunities and empowering organizations to build their dream teams, while fostering a dynamic and inclusive global workforce.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="why-heading" className="bg-[#101A35] py-16 text-white sm:py-24">
+        <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+          <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
+            <div>
+              <p className="text-sm font-semibold text-blue-200">Built around your next move</p>
+              <h2 id="why-heading" className="mt-3 max-w-md text-3xl font-bold tracking-[-0.025em] sm:text-4xl">Less friction between you and the right opportunity</h2>
+              <p className="mt-5 max-w-md text-base leading-7 text-slate-300">Jobs Lounge keeps the important parts of your search organised, understandable, and within reach.</p>
+            </div>
+            <div className="grid border-t border-white/15 sm:grid-cols-2">
+              {reasons.map(({ title, description, icon: Icon }) => (
+                <article key={title} className="border-b border-white/15 py-7 sm:px-7 sm:[&:nth-child(odd)]:border-r">
+                  <Icon aria-hidden="true" className="text-xl text-blue-200" />
+                  <h3 className="mt-5 font-semibold text-white">{title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-300">{description}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="faq-heading" className="bg-[#eef4fb] py-16 sm:py-24">
+        <div className="mx-auto grid max-w-7xl gap-10 px-5 sm:px-6 lg:grid-cols-[0.7fr_1.3fr] lg:gap-20 lg:px-8">
+          <div>
+            <p className="text-sm font-semibold text-[#184aa2]">Good to know</p>
+            <h2 id="faq-heading" className="mt-3 text-3xl font-bold tracking-[-0.025em] text-[#101A35] sm:text-4xl">Frequently asked questions</h2>
+            <p className="mt-5 max-w-sm text-base leading-7 text-slate-600">The essentials about setting up your account, applying, and following your progress.</p>
+          </div>
+
+          <div className="border-t border-slate-300">
+            {faqs.map(({ question, answer }, index) => (
+              <details key={question} className="group border-b border-slate-300" open={index === 0}>
+                <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-6 py-5 font-semibold text-[#101A35] marker:content-none [&::-webkit-details-marker]:hidden">
+                  <span>{question}</span>
+                  <span aria-hidden="true" className="text-xl font-normal text-[#184aa2]">
+                    <span className="group-open:hidden">+</span>
+                    <span className="hidden group-open:inline">−</span>
+                  </span>
+                </summary>
+                <p className="max-w-2xl pb-6 pr-10 text-sm leading-7 text-slate-600">{answer}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-slate-200 bg-white py-14 sm:py-18">
+        <div className="mx-auto flex max-w-7xl flex-col gap-7 px-5 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+          <div>
+            <h2 className="text-2xl font-bold tracking-[-0.02em] text-[#101A35] sm:text-3xl">Your next opportunity could be here.</h2>
+            <p className="mt-2 text-base text-slate-600">Explore open roles or prepare your profile for the right one.</p>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Link href="/vacancies" className="inline-flex min-h-11 items-center justify-center gap-2 bg-[#101A35] px-5 text-sm font-semibold text-white hover:bg-[#172447]">
+              Browse vacancies <FiArrowRight aria-hidden="true" />
             </Link>
-          </section>
-          <section className="w-full relative borde md:w-1/2  h-[400px] md:h-[500px] overflow-x-hidden">
-            <Image src='/hero.webp' fill sizes="50vw" priority className="z-100 object-contain object-right" alt="standing woman" />
-
-            <Image src='/bgcircles.png' height={20} width={20} sizes="50vw" className="absolute z-50 -translate-y-1/2 w-100 right-0 opacity-20 top-1/2" alt="circles" />
-          </section>
-        </div>
-      </section> */}
-
-      <section className="w-full text-center my-8">
-        <p className="bg-[#161C2D] py-3 text-white ">Enthusiastic about experiencing the comprehensive offerings of Jobs Lounge? <a target="_blank" rel="noopener noreferrer" className="underline" href='https://www.youtube.com/@mcchrtv'>Watch our video on YouTube <span className="sr-only">(opens in a new tab)</span></a>.</p>
-      </section>
-
-
-      <section className="px-12 py-12">
-        <h2 className="text-[#161C2D] text-center font-bold text-4xl mb-12">How it works</h2>
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
-          <div className="bg-[#3FA2F7] rounded py-12 text-white flex flex-col gap-8 items-center">
-            <MdOutlineAssignment aria-hidden="true" size={40} />
-            <p className="font-semibold">Step 1</p>
-            <h3 className="w-8/12 text-center font-bold text-2xl">Sign up on the platform</h3>
-            <p className="w-8/12 text-center text-lg">Begin by signing up; it&apos;s quick and easy.</p>
-          </div>
-          <div className="bg-[#3FA2F7] rounded py-12 text-white flex flex-col gap-8 items-center">
-            <FaCloudArrowUp aria-hidden="true" size={40} />
-            <p className="font-semibold">Step 2</p>
-            <h3 className="w-8/12 text-center font-bold text-2xl">Browse job openings</h3>
-            <p className="w-8/12 text-center text-lg">Discover and browse through our carefully curated job listings easily.</p>
-          </div>
-          <div className="bg-[#3FA2F7] rounded py-12 text-white flex flex-col gap-8 items-center">
-            <PiExam aria-hidden="true" size={40} />
-            <p className="font-semibold">Step 3</p>
-            <h3 className="w-8/12 text-center font-bold text-2xl">Tests and interviews</h3>
-            <p className="w-8/12 text-center text-lg">Prepare for success by taking tests and acing interviews effortlessly.</p>
-          </div>
-          <div className="bg-[#3FA2F7] rounded py-12 text-white flex flex-col gap-8 items-center">
-            <IoMdCheckmarkCircleOutline aria-hidden="true" size={40} />
-            <p className="font-semibold">Step 4</p>
-            <h3 className="w-8/12 text-center font-bold text-2xl">Get hired</h3>
-            <p className="w-8/12 text-center text-lg">Achieve success as you secure your dream job with ease.</p>
+            <Link href="/auth?mode=register" className="inline-flex min-h-11 items-center justify-center border border-slate-300 px-5 text-sm font-semibold text-[#101A35] hover:border-slate-400 hover:bg-slate-50">
+              Create your account
+            </Link>
           </div>
         </div>
       </section>
-
-      <section className="borde py-12 px-12 space-y-12">
-        <div className="relative flex flex-col-reverse sm:flex-row ">
-          <div className="w-full sm:w-1/2 h-72">
-            {/* <Image src='/mission.webp' fill sizes="50vw" priority className="z-100 object-contain object-left" alt="mission icon" /> */}
-            <Image
-              src="/mission.webp"
-              width={600}
-              height={400}
-              className="object-contain object-left w-full h-full"
-              alt="Colleagues collaborating around a table"
-              priority
-            />
-          </div>
-          <div className="w-full sm:w-1/2 text-center sm:text-right space-y-4 borde">
-            <p className="text-[#335F84]">Driving positive transformation</p>
-            <h2 className="text-4xl font-black text-[#003B6D]">OUR MISSION</h2>
-            <p className="md:w-8/12 ml-auto leading-8 font-semibold text-[#335F84]">At Jobs Lounge, our mission is to revolutionize the job search experience by providing a user-friendly platform that seamlessly connects job seekers with employers.</p>
-          </div>
-        </div>
-
-        <div className="relative flex flex-col-reverse sm:flex-row-reverse">
-          <div className="w-full sm:w-1/2 h-72">
-            <Image
-              src="/vision.webp"
-              width={600}
-              height={400}
-              className="object-contain object-right w-full h-full"
-              alt="Professional looking toward future opportunities"
-              priority
-            />
-          </div>
-          <div className="w-full sm:w-1/2 text-center sm:text-left space-y-4 borde">
-            <p className="text-[#335F84]">Picturing tomorrow, today</p>
-            <h2 className="text-4xl font-black text-[#003B6D]">OUR VISION</h2>
-            <p className="md:w-8/12 mr-auto leading-8 font-semibold text-[#335F84]">To be the leading online job portal, connecting individuals with meaningful employment opportunities and empowering organizations to build their dream teams, while fostering a dynamic and inclusive global workforce.</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="px-12 py-12 bg-[#3C3CC6] my-6 text-center w-[80%] mx-auto rounded-2xl">
-        <h2 className="text-white font-black text-5xl">FAQs</h2>
-        <p className="text-white my-3 text-2xl">Frequently Asked Questions</p>
-
-        <div className="text-left max-w-6xl mx-auto grid grid-cols-1 gap-3 md:grid-cols-2">
-          <details className="group bg-white p-6 mb-4 max-w-xl h-max" open>
-            <summary className="flex justify-between items-center cursor-pointer rounded text-slate-800 font-semibold">
-              <span>How do I create an account on MCC Job Lounge?</span>
-              <span aria-hidden="true" className="flex items-center justify-center w-8 h-8 shrink-0 ml-4 bg-blue-600 text-white text-xl font-normal group-open:bg-blue-600 group-open:text-white">
-                <span className="block group-open:hidden">+</span>
-                <span className="hidden group-open:block">&minus;</span>
-              </span>
-            </summary>
-
-            <p className="mt-4 text-slate-500 text-sm leading-relaxed pr-10">
-              All you need to do is sign up on the website or mobile app
-            </p>
-          </details>
-
-          <details className="group bg-white p-6 mb-4 max-w-xl h-max" >
-            <summary className="flex justify-between items-center cursor-pointer rounded text-slate-800 font-semibold">
-              <span>Can I apply for multiple positions at the same time?</span>
-              <span aria-hidden="true" className="flex items-center justify-center w-8 h-8 shrink-0 ml-4 bg-blue-600 text-white text-xl font-normal group-open:bg-blue-600 group-open:text-white">
-                <span className="block group-open:hidden">+</span>
-                <span className="hidden group-open:block">&minus;</span>
-              </span>
-            </summary>
-
-            <p className="mt-4 text-slate-500 text-sm leading-relaxed pr-10">
-              Yes, you are welcome to apply for multiple roles that match your skills and experience. However, we recommend focusing your applications on the positions that best align with your primary career goals.
-            </p>
-          </details>
-
-          <details className="group bg-white p-6 mb-4 max-w-xl h-max" >
-            <summary className="flex justify-between items-center cursor-pointer rounded text-slate-800 font-semibold">
-              <span>What happens after I submit my application?</span>
-              <span aria-hidden="true" className="flex items-center justify-center w-8 h-8 shrink-0 ml-4 bg-blue-600 text-white text-xl font-normal group-open:bg-blue-600 group-open:text-white">
-                <span className="block group-open:hidden">+</span>
-                <span className="hidden group-open:block">&minus;</span>
-              </span>
-            </summary>
-
-            <p className="mt-4 text-slate-500 text-sm leading-relaxed pr-10">
-              Once submitted, your profile and resume will be reviewed by our recruitment team. If your qualifications match our requirements, we will reach out to you via email to schedule the next steps, which may include an initial screening call or an online assessment.
-            </p>
-          </details>
-
-          <details className="group bg-white p-6 mb-4 max-w-xl h-max" >
-            <summary className="flex justify-between items-center cursor-pointer rounded text-slate-800 font-semibold">
-              <span>How can I get notified about new job openings at MCC?</span>
-              <span aria-hidden="true" className="flex items-center justify-center w-8 h-8 shrink-0 ml-4 bg-blue-600 text-white text-xl font-normal group-open:bg-blue-600 group-open:text-white">
-                <span className="block group-open:hidden">+</span>
-                <span className="hidden group-open:block">&minus;</span>
-              </span>
-            </summary>
-
-            <p className="mt-4 text-slate-500 text-sm leading-relaxed pr-10">
-              To stay updated on the latest opportunities, you can set up &quot;Job Alerts&quot; in your profile settings and we will email you as soon as a matching position is posted.
-            </p>
-          </details>
-
-          <details className="group bg-white p-6 mb-4 max-w-xl h-max" >
-            <summary className="flex justify-between items-center cursor-pointer rounded text-slate-800 font-semibold">
-              <span>Can I update my resume or cover letter after applying for a role?</span>
-              <span aria-hidden="true" className="flex items-center justify-center w-8 h-8 shrink-0 ml-4 bg-blue-600 text-white text-xl font-normal group-open:bg-blue-600 group-open:text-white">
-                <span className="block group-open:hidden">+</span>
-                <span className="hidden group-open:block">&minus;</span>
-              </span>
-            </summary>
-
-            <p className="mt-4 text-slate-500 text-sm leading-relaxed pr-10">
-              You can update your master profile and resume at any time in your Account Settings. However, changes made after you have already submitted an application for a specific role may not reflect on that specific application.
-            </p>
-          </details>
-
-          <details className="group bg-white p-6 mb-4 max-w-xl h-max" >
-            <summary className="flex justify-between items-center cursor-pointer rounded text-slate-800 font-semibold">
-              <span>How long does the hiring process typically take?</span>
-              <span aria-hidden="true" className="flex items-center justify-center w-8 h-8 shrink-0 ml-4 bg-blue-600 text-white text-xl font-normal group-open:bg-blue-600 group-open:text-white">
-                <span className="block group-open:hidden">+</span>
-                <span className="hidden group-open:block">&minus;</span>
-              </span>
-            </summary>
-
-            <p className="mt-4 text-slate-500 text-sm leading-relaxed pr-10">
-              We strive to move quickly, but the process usually takes between 2 to 4 weeks from the application closing date to the final offer, depending on the seniority of the role and the number of interview stages.
-            </p>
-          </details>
-        </div>
-      </section>
-
-      <section className="text-center my-6 py-12">
-        <Image width={70} height={70} className="mx-auto" src='/logo.svg' alt="" />
-        <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold my-7 text-[#003B6D]">Be the first to know about new <br /> opportunities at MCC</h2>
-        <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
-          <div className="flex relative w-max">
-            <LuUserRound aria-hidden="true" color="#4B5563" className="absolute left-2 top-1/2 -translate-y-1/2" />
-            <label htmlFor="job-alert-email" className="sr-only">Email address for job alerts</label>
-            <input id="job-alert-email" name="email" autoComplete="email" className="border border-gray-600 rounded-full px-8 py-2 w-72" placeholder="Enter your email" type="email" />
-          </div>
-          <button type="button" className="bg-[#3C3CC6] text-white rounded-full w-48 sm:w-max py-2 px-4 cursor-pointer">Get alerts</button>
-        </div>
-      </section>
-    </Container>
-    // </div>
-  );
+    </div>
+  )
 }

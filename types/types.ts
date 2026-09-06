@@ -647,7 +647,8 @@ export type StaffMember = {
   email: string
   telephone: string
   role: Extract<UserRole, 'admin' | 'recruiter' | 'super-admin'>
-  setupStatus: 'active' | 'invited'
+  setupStatus: 'active' | 'invited' | 'suspended'
+  suspendedAt: string | null
   lastLoginAt: string | null
   createdAt: string
   updatedAt: string
@@ -668,15 +669,7 @@ export type PublicPlatformSettings = {
     timeZone: string
 }
 
-export type VacancyCreationDefaults = {
-    defaultJobStatus: 'Draft' | 'Open'
-    defaultDeadlineMode: 'none' | 'required'
-    timeZone: string
-}
-
 export type OrganizationSettings = PublicPlatformSettings & {
-  defaultJobStatus: Extract<JobStatus, 'Draft' | 'Open'>
-  defaultDeadlineMode: 'none' | 'required'
   revision: number
   updatedAt?: string
   updatedBy?: {
@@ -687,7 +680,7 @@ export type OrganizationSettings = PublicPlatformSettings & {
 
 export type OrganizationSettingsUpdate = Partial<Pick<
   OrganizationSettings,
-  'supportEmail' | 'timeZone' | 'defaultJobStatus' | 'defaultDeadlineMode'
+  'supportEmail' | 'timeZone'
 >> & {
   revision: number
 }

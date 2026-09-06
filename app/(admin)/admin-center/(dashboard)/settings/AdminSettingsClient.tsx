@@ -2,13 +2,13 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
     FiArrowRight,
-    FiBriefcase,
     FiCheckCircle,
     FiClock,
     FiLock,
+    FiLogOut,
     FiMail,
     FiSave,
     FiSend,
@@ -18,12 +18,14 @@ import {
 import { toast } from 'sonner'
 
 import { useEmailVerificationRequest } from '@/hooks/useAuth'
+import { useSignOutAllTeamMembers } from '@/hooks/useAdmin'
 import {
     useOrganizationSettings,
     useUpdateOrganizationSettings,
 } from '@/hooks/useSettings'
 import { useUser } from '@/hooks/useUsers'
 import type { OrganizationSettings } from '@/types/types'
+import Modal from '@/components/Modal'
 
 const roleLabel = (role?: string) => {
     if (role === 'super-admin') return 'Super administrator'
@@ -146,19 +148,11 @@ const TIME_ZONE_SUGGESTIONS = [
 const OrganizationSettingsPanel = () => {
     const query = useOrganizationSettings()
     const update = useUpdateOrganizationSettings()
-    const [supportEmail, setSupportEmail] = useState('')
-    const [timeZone, setTimeZone] = useState('')
-    const [defaultJobStatus, setDefaultJobStatus] = useState<'Draft' | 'Open'>('Draft')
-    const [defaultDeadlineMode, setDefaultDeadlineMode] = useState<'none' | 'required'>('none')
-    const [sectionError, setSectionError] = useState<Record<'regional' | 'vacancy', string | null>>({ regional: null, vacancy: null })
-
-    useEffect(() => {
-        if (!query.data) return
-        setSupportEmail(query.data.supportEmail)
-        setTimeZone(query.data.timeZone)
-        setDefaultJobStatus(query.data.defaultJobStatus)
-        setDefaultDeadlineMode(query.data.defaultDeadlineMode)
-    }, [query.data])
+    const signOutTeam = useSignOutAllTeamMembers()
+    const [supportEmail, setSupportEmail] = useState<string | null>(null)
+    const [timeZone, setTimeZone] = useState<string | null>(null)
+    const [sectionError, setSectionError] = useState<string | null>(null)
+    const [confirmTeamSignOut, setConfirmTeamSignOut] = useState(false)
 
     if (query.isLoading) return <p role="status">Loading organization settings…</p>
     if (query.isError || !query.data) {
@@ -169,20 +163,26 @@ const OrganizationSettingsPanel = () => {
             </div>
         )
     }
+    const supportEmailValue = supportEmail ?? query.data.supportEmail
+    const timeZoneValue = timeZone ?? query.data.timeZone
 
-    const save = async (
-        section: 'regional' | 'vacancy',
-        payload: Partial<OrganizationSettings>,
-    ) => {
-        setSectionError((current) => ({ ...current, [section]: null }))
+    const save = async (payload: Partial<OrganizationSettings>) => {
+        setSectionError(null)
         try {
             await update.mutateAsync({ ...payload, revision: query.data.revision })
-            toast.success(section === 'regional' ? 'Support and regional settings saved' : 'Vacancy defaults saved')
+            toast.success('Support and regional settings saved')
         } catch (error) {
-            setSectionError((current) => ({
-                ...current,
-                [section]: error instanceof Error ? error.message : 'Unable to save organization settings.',
-            }))
+            setSectionError(error instanceof Error ? error.message : 'Unable to save organization settings.')
+        }
+    }
+
+    const signOutAllTeam = async () => {
+        try {
+            const result = await signOutTeam.mutateAsync()
+            toast.success(`${result.affectedAccounts} team account${result.affectedAccounts === 1 ? '' : 's'} signed out.`)
+            setConfirmTeamSignOut(false)
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Unable to sign out team members.')
         }
     }
 
@@ -206,22 +206,22 @@ const OrganizationSettingsPanel = () => {
                 </div>
                 <form onSubmit={(event) => {
                     event.preventDefault()
-                    void save('regional', { supportEmail: supportEmail.trim(), timeZone: timeZone.trim() })
+                    void save({ supportEmail: supportEmailValue.trim(), timeZone: timeZoneValue.trim() })
                 }} className="mt-5 grid gap-5 sm:grid-cols-2">
                     <div>
                         <label htmlFor="organization-support-email" className="text-sm font-medium text-gray-800">Support email</label>
-                        <input id="organization-support-email" required type="email" value={supportEmail} onChange={(event) => setSupportEmail(event.target.value)} className="mt-1.5 w-full rounded-md border border-gray-300 px-3 py-2.5 focus:border-[#184aa2] focus:outline-none" />
+                        <input id="organization-support-email" required type="email" value={supportEmailValue} onChange={(event) => setSupportEmail(event.target.value)} className="mt-1.5 w-full rounded-md border border-gray-300 px-3 py-2.5 focus:border-[#184aa2] focus:outline-none" />
                         <p className="mt-1 text-xs leading-5 text-gray-500">This does not change the no-reply sender or contact-form delivery mailbox.</p>
                     </div>
                     <div>
                         <label htmlFor="organization-time-zone" className="text-sm font-medium text-gray-800">Time zone</label>
-                        <input id="organization-time-zone" required list="organization-time-zones" value={timeZone} onChange={(event) => setTimeZone(event.target.value)} className="mt-1.5 w-full rounded-md border border-gray-300 px-3 py-2.5 focus:border-[#184aa2] focus:outline-none" />
+                        <input id="organization-time-zone" required list="organization-time-zones" value={timeZoneValue} onChange={(event) => setTimeZone(event.target.value)} className="mt-1.5 w-full rounded-md border border-gray-300 px-3 py-2.5 focus:border-[#184aa2] focus:outline-none" />
                         <datalist id="organization-time-zones">{TIME_ZONE_SUGGESTIONS.map((zone) => <option key={zone} value={zone} />)}</datalist>
                         <p className="mt-1 text-xs leading-5 text-gray-500">Use an IANA time zone such as Africa/Lagos.</p>
                     </div>
-                    {sectionError.regional ? (
+                    {sectionError ? (
                         <p role="alert" className="text-sm text-red-700 sm:col-span-2">
-                            {sectionError.regional}
+                            {sectionError}
                             <button type="button" onClick={() => void query.refetch()} className="ml-2 font-semibold underline">
                                 Refresh settings
                             </button>
@@ -233,45 +233,59 @@ const OrganizationSettingsPanel = () => {
                 </form>
             </section>
 
-            <section className="rounded-xl border border-gray-200 bg-white p-5 sm:p-6" aria-labelledby="vacancy-defaults-heading">
-                <div className="flex items-start gap-3">
-                    <span aria-hidden="true" className="grid size-10 place-items-center rounded-lg bg-blue-50 text-[#184aa2]"><FiBriefcase /></span>
-                    <div>
-                        <h2 id="vacancy-defaults-heading" className="text-lg font-semibold text-gray-950">Vacancy creation defaults</h2>
-                        <p className="mt-1 text-sm text-gray-600">These initialize new forms only. Staff can override them before saving, and existing vacancies never change.</p>
+            <section className="overflow-hidden rounded-xl border border-gray-200 bg-white" aria-labelledby="team-access-heading">
+                <div className="border-b border-gray-100 p-5 sm:p-6">
+                    <div className="flex items-start gap-3">
+                        <span aria-hidden="true" className="grid size-10 place-items-center rounded-lg bg-slate-100 text-slate-700"><FiShield /></span>
+                        <div>
+                            <h2 id="team-access-heading" className="text-lg font-semibold text-gray-950">Team access</h2>
+                            <p className="mt-1 text-sm text-gray-600">Security controls for Administrator and Recruiter accounts.</p>
+                        </div>
                     </div>
                 </div>
-                <form onSubmit={(event) => {
-                    event.preventDefault()
-                    void save('vacancy', { defaultJobStatus, defaultDeadlineMode })
-                }} className="mt-5 grid gap-5 sm:grid-cols-2">
-                    <div>
-                        <label htmlFor="default-job-status" className="text-sm font-medium text-gray-800">Initial vacancy status</label>
-                        <select id="default-job-status" value={defaultJobStatus} onChange={(event) => setDefaultJobStatus(event.target.value as 'Draft' | 'Open')} className="mt-1.5 w-full rounded-md border border-gray-300 bg-white px-3 py-2.5">
-                            <option value="Draft">Draft — private until published</option>
-                            <option value="Open">Open — publish immediately</option>
-                        </select>
+                <div className="divide-y divide-gray-100">
+                    <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                        <div>
+                            <h3 className="font-semibold text-gray-950">Suspend an account</h3>
+                            <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-600">Temporarily block one team member without deleting their account or work.</p>
+                        </div>
+                        <Link href="/admin-center/team" className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-md border border-gray-300 px-4 text-sm font-semibold text-[#003B6D]">
+                            Manage team <FiArrowRight aria-hidden="true" />
+                        </Link>
                     </div>
-                    <div>
-                        <label htmlFor="default-deadline-mode" className="text-sm font-medium text-gray-800">Initial deadline mode</label>
-                        <select id="default-deadline-mode" value={defaultDeadlineMode} onChange={(event) => setDefaultDeadlineMode(event.target.value as 'none' | 'required')} className="mt-1.5 w-full rounded-md border border-gray-300 bg-white px-3 py-2.5">
-                            <option value="none">No deadline</option>
-                            <option value="required">Ask for a deadline</option>
-                        </select>
+                    <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                        <div>
+                            <h3 className="font-semibold text-gray-950">Sign out the team</h3>
+                            <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-600">End every Administrator and Recruiter session. Candidate and Super-admin sessions are not affected.</p>
+                        </div>
+                        <button type="button" onClick={() => setConfirmTeamSignOut(true)} className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-md border border-red-300 px-4 text-sm font-semibold text-red-700 hover:bg-red-50">
+                            <FiLogOut aria-hidden="true" /> Sign out team
+                        </button>
                     </div>
-                    {sectionError.vacancy ? (
-                        <p role="alert" className="text-sm text-red-700 sm:col-span-2">
-                            {sectionError.vacancy}
-                            <button type="button" onClick={() => void query.refetch()} className="ml-2 font-semibold underline">
-                                Refresh settings
-                            </button>
-                        </p>
-                    ) : null}
-                    <div className="sm:col-span-2">
-                        <button type="submit" disabled={update.isPending} className="inline-flex items-center gap-2 rounded-md bg-[#003B6D] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"><FiSave aria-hidden="true" />{update.isPending ? 'Saving…' : 'Save vacancy defaults'}</button>
-                    </div>
-                </form>
+                </div>
             </section>
+
+            <Modal
+                isOpen={confirmTeamSignOut}
+                onClose={() => setConfirmTeamSignOut(false)}
+                onSubmit={() => void signOutAllTeam()}
+                title="Sign out all team members?"
+                actionLabel={signOutTeam.isPending ? 'Signing out…' : 'Sign out team'}
+                actionTone="danger"
+                disabled={signOutTeam.isPending}
+                size="compact"
+                body={(
+                    <div className="space-y-3 text-sm leading-6 text-gray-200">
+                        <p>All Administrators and Recruiters will need to sign in again on every device.</p>
+                        <p>Candidate and Super-admin sessions will remain active. This does not suspend or delete any account.</p>
+                    </div>
+                )}
+                footer={(
+                    <button type="button" disabled={signOutTeam.isPending} onClick={() => setConfirmTeamSignOut(false)} className="w-full rounded-md border border-gray-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10 disabled:opacity-60">
+                        Keep sessions active
+                    </button>
+                )}
+            />
 
             {lastUpdated ? (
                 <p className="flex items-center gap-2 text-xs text-gray-500"><FiClock aria-hidden="true" />Last updated {lastUpdated}{query.data.updatedBy?.name ? ` by ${query.data.updatedBy.name}` : ''}.</p>
@@ -301,7 +315,7 @@ const AdminSettingsClient = () => {
         <div className="mx-auto max-w-5xl">
             <header>
                 <h1 className="text-3xl font-bold tracking-tight text-gray-950">Settings</h1>
-                <p className="mt-2 max-w-2xl text-gray-600">Manage your staff account and the organization defaults available to your role.</p>
+                <p className="mt-2 max-w-2xl text-gray-600">Manage your staff account, organization details, and team access.</p>
             </header>
 
             {isSuperAdmin ? (

@@ -58,11 +58,13 @@ const PasswordVisibilityButton = ({
 const AuthForm = ({
     nextPath,
     passwordResetComplete = false,
+    initialMode = 'login',
 }: {
     nextPath?: string
     passwordResetComplete?: boolean
+    initialMode?: FormMode
 }) => {
-    const [mode, setMode] = useState<FormMode>('login')
+    const [mode, setMode] = useState<FormMode>(initialMode)
     const [loginPasswordVisible, setLoginPasswordVisible] = useState(false)
     const [registerPasswordVisible, setRegisterPasswordVisible] = useState(false)
     const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false)

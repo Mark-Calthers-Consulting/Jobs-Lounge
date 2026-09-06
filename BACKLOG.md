@@ -2,6 +2,23 @@
 
 This file records intentionally deferred product and design work that should survive beyond the current development conversation.
 
+## Homepage hero imagery
+
+Status: deferred
+
+- Replace the current compressed, blurry hero image with a genuinely high-resolution alternative that preserves the strong professional, people-led composition.
+- Source the replacement from a clearly licensed, completely free commercial-use library; do not use paid stock or imagery with uncertain reuse rights.
+- Review shortlisted images at their original resolution before selection, then create responsive, web-optimized variants without visibly degrading the desktop hero.
+- Revisit the surrounding hero layout and copy as part of the later homepage visual refinement rather than forcing a weaker temporary image.
+
+## Homepage expansion
+
+Status: deferred
+
+- Define and add up to three further homepage sections once each has a clear content purpose and trustworthy source material.
+- Do not publish empty placeholders, fabricated company endorsements, vanity statistics, or testimonials that have not been supplied and approved.
+- Reassess the page rhythm after real traffic and analytics are available before deciding whether the additions should cover editorial guidance, candidate outcomes, employer context, or another verified need.
+
 ## Archive job status
 
 Status: deferred

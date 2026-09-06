@@ -2,11 +2,10 @@
 
 import { useCreatejob } from '@/hooks/useApplications';
 import { useUpdateAdminJob } from '@/hooks/useAdmin'
-import { useVacancyCreationDefaults } from '@/hooks/useSettings'
 import { useUser } from '@/hooks/useUsers'
 import { JOB_ENUMS } from '@/constants/enums';
 import { jobFormSchema } from '@/schemas/jobSchema';
-import type { Job, VacancyCreationDefaults } from '@/types/types'
+import type { Job } from '@/types/types'
 import Modal from '@/components/Modal';
 import JobUploadGuideModal from '@/components/JobUploadGuideModal'
 import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
@@ -17,7 +16,7 @@ import {
     NIGERIAN_STATE_OPTIONS,
 } from '@/constants/nigeria'
 import { getJobDetailSuggestions } from '@/constants/jobDetailSuggestions'
-import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
+import { ChangeEvent, FormEvent, KeyboardEvent, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner';
 
@@ -116,10 +115,8 @@ const formatImportIssue = (path: PropertyKey[], message: string) => {
 
 const CreateJobFormContent = ({
     initialJob,
-    creationDefaults,
 }: {
     initialJob?: Job
-    creationDefaults?: VacancyCreationDefaults
 }) => {
     const router = useRouter()
     const platformSettings = usePlatformSettings()
@@ -144,26 +141,20 @@ const CreateJobFormContent = ({
             ? dateInputValueInTimeZone(initialJob.deadline, platformSettings.timeZone)
             : '',
         applyLink: initialJob?.applyLink ?? '',
-        status: initialJob?.status ?? creationDefaults?.defaultJobStatus ?? 'Draft',
+        status: initialJob?.status ?? 'Draft',
     });
     const [companyLogo, setCompanyLogo] = useState(initialJob?.company.logo ?? '')
     const [hasNoDeadline, setHasNoDeadline] = useState(
-        initialJob ? !initialJob.deadline : creationDefaults?.defaultDeadlineMode !== 'required',
+        initialJob ? !initialJob.deadline : true,
     )
-    const [isDevModeEnabled, setIsDevModeEnabled] = useState(false)
+    const [devModeOverride, setDevModeOverride] = useState<boolean | null>(null)
+    const isDevModeEnabled = devModeOverride ?? Boolean(isSuperAdmin && !initialJob)
+    const setIsDevModeEnabled = (enabled: boolean) => setDevModeOverride(enabled)
     const [isDevModeConfirmationOpen, setIsDevModeConfirmationOpen] = useState(false)
     const [isJsonPanelExpanded, setIsJsonPanelExpanded] = useState(true)
     const [jobJson, setJobJson] = useState('')
     const [importFeedback, setImportFeedback] = useState<ImportFeedback | null>(null)
     const [isUploadGuideOpen, setIsUploadGuideOpen] = useState(!initialJob)
-
-    useEffect(() => {
-        if (isSuperAdmin && !initialJob) {
-            setIsDevModeEnabled(true)
-            setIsDevModeConfirmationOpen(false)
-            setIsJsonPanelExpanded(true)
-        }
-    }, [initialJob, isSuperAdmin])
 
     const [listInputs, setListInputs] = useState<ListInputs>({
         benefits: '',
@@ -316,7 +307,7 @@ const CreateJobFormContent = ({
                 deadline: job.deadline
                     ? dateInputValueInTimeZone(
                         job.deadline,
-                        creationDefaults?.timeZone || platformSettings.timeZone,
+                        platformSettings.timeZone,
                     )
                     : '',
                 applyLink: job.applyLink ?? '',
@@ -1049,16 +1040,7 @@ const CreateJobFormContent = ({
 };
 
 const CreateJobForm = ({ initialJob }: { initialJob?: Job }) => {
-    const defaultsQuery = useVacancyCreationDefaults(!initialJob)
-    if (!initialJob && defaultsQuery.isLoading) {
-        return <p role="status" className="px-4 py-6">Loading vacancy defaults…</p>
-    }
-    return (
-        <CreateJobFormContent
-            initialJob={initialJob}
-            creationDefaults={defaultsQuery.data}
-        />
-    )
+    return <CreateJobFormContent initialJob={initialJob} />
 }
 
 export default CreateJobForm;

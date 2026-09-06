@@ -1,10 +1,11 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import AdminSettingsClient from './AdminSettingsClient'
 
 let currentRole: 'admin' | 'recruiter' | 'super-admin' = 'admin'
 let currentSection = ''
+const signOutAll = vi.hoisted(() => vi.fn())
 
 vi.mock('next/navigation', () => ({
     usePathname: () => '/admin-center/settings',
@@ -35,8 +36,6 @@ vi.mock('@/hooks/useSettings', () => ({
         data: {
             supportEmail: 'support@example.com',
             timeZone: 'Africa/Lagos',
-            defaultJobStatus: 'Draft',
-            defaultDeadlineMode: 'none',
             revision: 1,
         },
         isLoading: false,
@@ -49,14 +48,22 @@ vi.mock('@/hooks/useSettings', () => ({
     }),
 }))
 
+vi.mock('@/hooks/useAdmin', () => ({
+    useSignOutAllTeamMembers: () => ({
+        isPending: false,
+        mutateAsync: signOutAll,
+    }),
+}))
+
 vi.mock('sonner', () => ({
-    toast: { success: vi.fn() },
+    toast: { error: vi.fn(), success: vi.fn() },
 }))
 
 describe('role-aware admin settings', () => {
     beforeEach(() => {
         currentRole = 'admin'
         currentSection = ''
+        signOutAll.mockReset()
     })
 
     it('shows personal account settings to an Administrator without Organization access', () => {
@@ -74,6 +81,22 @@ describe('role-aware admin settings', () => {
         render(<AdminSettingsClient />)
         expect(screen.getByRole('tab', { name: 'Organization' })).toHaveAttribute('aria-selected', 'true')
         expect(screen.getByRole('heading', { name: 'Support and region' })).toBeInTheDocument()
-        expect(screen.getByRole('heading', { name: 'Vacancy creation defaults' })).toBeInTheDocument()
+        expect(screen.getByRole('heading', { name: 'Team access' })).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Sign out team' })).toBeInTheDocument()
+        expect(screen.queryByRole('heading', { name: 'Vacancy creation defaults' })).not.toBeInTheDocument()
+    })
+
+    it('confirms that team-wide sign-out excludes candidates and Super-admins', async () => {
+        currentRole = 'super-admin'
+        currentSection = 'section=organization'
+        signOutAll.mockResolvedValue({ affectedAccounts: 3 })
+        render(<AdminSettingsClient />)
+
+        fireEvent.click(screen.getByRole('button', { name: 'Sign out team' }))
+        const dialog = screen.getByRole('dialog', { name: 'Sign out all team members?' })
+        expect(dialog).toHaveTextContent('Candidate and Super-admin sessions will remain active')
+        fireEvent.click(within(dialog).getByRole('button', { name: 'Sign out team' }))
+
+        await waitFor(() => expect(signOutAll).toHaveBeenCalledTimes(1))
     })
 })

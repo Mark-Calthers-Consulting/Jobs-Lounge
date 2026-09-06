@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
     fetchOrganizationSettings,
     fetchPublicPlatformSettings,
-    fetchVacancyCreationDefaults,
     updateOrganizationSettings,
 } from '@/api/settings'
 import type { PublicPlatformSettings } from '@/types/types'
@@ -24,13 +23,6 @@ export const useOrganizationSettings = (enabled = true) => useQuery({
     queryKey: ['platformSettings', 'organization'],
     queryFn: fetchOrganizationSettings,
     enabled,
-})
-
-export const useVacancyCreationDefaults = (enabled = true) => useQuery({
-    queryKey: ['platformSettings', 'vacancyDefaults'],
-    queryFn: fetchVacancyCreationDefaults,
-    enabled,
-    staleTime: 60_000,
 })
 
 export const useUpdateOrganizationSettings = () => {

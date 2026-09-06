@@ -1,5 +1,6 @@
 import {
     checkApplicationStatus,
+    fetchFeaturedJobs,
     fetchJobFilterOptions,
     fetchVacancies,
     getRecommendedJobs,
@@ -39,6 +40,12 @@ export const useJobFilterOptions = () => useQuery({
     queryKey: ['vacancyFilterOptions'],
     queryFn: ({ signal }) => fetchJobFilterOptions(signal),
     staleTime: 5 * 60_000,
+})
+
+export const useFeaturedJobs = () => useQuery({
+    queryKey: ['featuredVacancies'],
+    queryFn: ({ signal }) => fetchFeaturedJobs(signal),
+    staleTime: 30_000,
 })
 
 export const useSaveJob = () => {

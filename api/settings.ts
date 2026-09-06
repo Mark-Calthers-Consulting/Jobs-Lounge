@@ -6,7 +6,6 @@ import type {
     OrganizationSettings,
     OrganizationSettingsUpdate,
     PublicPlatformSettings,
-    VacancyCreationDefaults,
 } from '@/types/types'
 
 export const fetchPublicPlatformSettings = async (): Promise<PublicPlatformSettings> => {
@@ -30,19 +29,6 @@ export const fetchOrganizationSettings = async (): Promise<OrganizationSettings>
     const result = await readApiResponse<ApiSuccess<OrganizationSettings>>(
         response,
         'Unable to load organization settings',
-    )
-    return result.data
-}
-
-export const fetchVacancyCreationDefaults = async (): Promise<VacancyCreationDefaults> => {
-    const response = await fetch(apiPath('/admin/settings/vacancy-defaults'), {
-        method: 'GET',
-        credentials: 'include',
-        cache: 'no-store',
-    })
-    const result = await readApiResponse<ApiSuccess<VacancyCreationDefaults>>(
-        response,
-        'Unable to load vacancy defaults',
     )
     return result.data
 }

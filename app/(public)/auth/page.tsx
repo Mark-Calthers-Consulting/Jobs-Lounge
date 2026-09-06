@@ -10,11 +10,13 @@ const Auth = async ({
     searchParams: Promise<{
         next?: string | string[]
         passwordReset?: string | string[]
+        mode?: string | string[]
     }>
 }) => {
     const query = await searchParams
     const nextPath = safeNextPath(query.next, 'candidate')
     const passwordResetComplete = query.passwordReset === 'success'
+    const initialMode = query.mode === 'register' ? 'register' : 'login'
 
     return (
         <GuestOnlyRoute area="candidate" nextPath={nextPath}>
@@ -31,6 +33,7 @@ const Auth = async ({
                 <AuthForm
                     nextPath={nextPath}
                     passwordResetComplete={passwordResetComplete}
+                    initialMode={initialMode}
                 />
             </section>
           </main>

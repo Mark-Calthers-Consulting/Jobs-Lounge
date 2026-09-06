@@ -53,6 +53,17 @@ export const fetchJobFilterOptions = async (
     return result.data
 }
 
+export const fetchFeaturedJobs = async (
+    signal?: AbortSignal,
+): Promise<Job[]> => {
+    const res = await fetch(apiPath('/jobs/featured'), { signal })
+    const result = await readApiResponse<ApiSuccess<Job[]>>(
+        res,
+        'Failed to load latest vacancies',
+    )
+    return result.data
+}
+
 export const saveJob = async (jobId: string): Promise<SavedJobMutation> => {
     const res = await csrfFetch(apiPath(`/users/me/${encodeURIComponent(jobId)}/save`), {
         method: 'POST',

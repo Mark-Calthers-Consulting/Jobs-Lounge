@@ -73,7 +73,7 @@ export type TeamFilters = {
     limit?: number
     search?: string
     role?: 'admin' | 'recruiter' | 'super-admin' | ''
-    setupStatus?: 'active' | 'invited' | ''
+    setupStatus?: 'active' | 'invited' | 'suspended' | ''
 }
 
 export const fetchTeamMembers = async (
@@ -144,6 +144,38 @@ export const cancelStaffInvitation = async (userId: string): Promise<void> => {
         res,
         'Unable to cancel staff invitation',
     )
+}
+
+export const updateStaffSuspension = async ({
+    userId,
+    suspended,
+}: {
+    userId: string
+    suspended: boolean
+}): Promise<StaffMember> => {
+    const res = await csrfFetch(apiPath(`/admin/team/${encodeURIComponent(userId)}/suspension`), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ suspended }),
+    })
+    const result = await readApiResponse<ApiSuccess<StaffMember>>(
+        res,
+        suspended ? 'Unable to suspend staff account' : 'Unable to restore staff account',
+    )
+    return result.data
+}
+
+export const signOutAllTeamMembers = async (): Promise<{ affectedAccounts: number }> => {
+    const res = await csrfFetch(apiPath('/admin/team/sign-out-all'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+    })
+    const result = await readApiResponse<ApiSuccess<{ affectedAccounts: number }>>(
+        res,
+        'Unable to sign out team members',
+    )
+    return result.data
 }
 
 export const fetchJobCandidates = async (

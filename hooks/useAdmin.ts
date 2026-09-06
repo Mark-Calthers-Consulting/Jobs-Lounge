@@ -1,4 +1,4 @@
-import { cancelStaffInvitation, createStaffMember, deleteAdminJob, deleteCandidateAccount, fetchAdminCandidate, fetchAdminDashboard, fetchAdminJob, fetchAdminJobs, fetchAllUsers, fetchCandidateApplications, fetchCandidateFilterOptions, fetchJobCandidates, fetchTeamMembers, resendStaffInvitation, restoreAdminJob, type TeamFilters, updateAdminJob, updateAdminJobStatus, updateStaffRole } from "@/api/admin"
+import { cancelStaffInvitation, createStaffMember, deleteAdminJob, deleteCandidateAccount, fetchAdminCandidate, fetchAdminDashboard, fetchAdminJob, fetchAdminJobs, fetchAllUsers, fetchCandidateApplications, fetchCandidateFilterOptions, fetchJobCandidates, fetchTeamMembers, resendStaffInvitation, restoreAdminJob, signOutAllTeamMembers, type TeamFilters, updateAdminJob, updateAdminJobStatus, updateStaffRole, updateStaffSuspension } from "@/api/admin"
 import { AdminJobListFilters, CandidateListFilters, Job, PaginatedResponse, StaffMember, User } from "@/types/types"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
@@ -64,6 +64,18 @@ export const useCancelStaffInvitation = () => {
         },
     })
 }
+
+export const useUpdateStaffSuspension = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: updateStaffSuspension,
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['teamMembers'] }),
+    })
+}
+
+export const useSignOutAllTeamMembers = () => useMutation({
+    mutationFn: signOutAllTeamMembers,
+})
 
 export const useGetJobCandidates = (filters: CandidateListFilters = {}) => {
     return useQuery({
