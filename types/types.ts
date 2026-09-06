@@ -650,6 +650,7 @@ export type StaffMember = {
   setupStatus: 'active' | 'invited' | 'suspended'
   suspendedAt: string | null
   lastLoginAt: string | null
+  lastActiveAt: string | null
   createdAt: string
   updatedAt: string
 }

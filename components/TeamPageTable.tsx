@@ -37,6 +37,35 @@ const lastLoginLabel = (
     })
 }
 
+const lastActiveDetails = (member: StaffMember, timeZone: string) => {
+    if (member.setupStatus === 'invited') {
+        return { label: 'No activity yet', timestamp: null }
+    }
+    if (!member.lastActiveAt) {
+        return { label: 'Not recorded yet', timestamp: null }
+    }
+
+    const activeAt = new Date(member.lastActiveAt)
+    const elapsedMinutes = Math.max(0, Math.floor((Date.now() - activeAt.getTime()) / 60_000))
+    let label = 'Active now'
+    if (elapsedMinutes >= 60) {
+        const hours = Math.floor(elapsedMinutes / 60)
+        label = hours < 24
+            ? `${hours} hour${hours === 1 ? '' : 's'} ago`
+            : `${Math.floor(hours / 24)} day${Math.floor(hours / 24) === 1 ? '' : 's'} ago`
+    } else if (elapsedMinutes >= 5) {
+        label = `${elapsedMinutes} minutes ago`
+    }
+
+    return {
+        label,
+        timestamp: formatDateInTimeZone(member.lastActiveAt, timeZone, {
+            dateStyle: 'medium',
+            timeStyle: 'short',
+        }),
+    }
+}
+
 const emptyForm: CreateStaffPayload & { confirmPassword: string } = {
     firstName: '',
     lastName: '',
@@ -396,11 +425,11 @@ const TeamPageTable = () => {
             ) : null}
             {!isLoading && !isError ? (
                 <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
-                    <table className="w-full min-w-[1000px] border-collapse text-left">
+                    <table className="w-full min-w-[1120px] border-collapse text-left">
                         <caption className="sr-only">Administration team members</caption>
                         <thead className="border-b border-gray-200 bg-gray-50">
                             <tr>
-                                {['Member', 'Role', 'Account state', 'Last login', 'Date joined', 'Actions'].map((header) => (
+                                {['Member', 'Role', 'Account state', 'Last login', 'Last active', 'Date joined', 'Actions'].map((header) => (
                                     <th scope="col" key={header} className="p-4 text-sm font-medium text-gray-600">{header}</th>
                                 ))}
                             </tr>
@@ -408,6 +437,7 @@ const TeamPageTable = () => {
                         <tbody>
                             {(members?.data ?? []).map((member) => {
                                 const canChangeRole = member.role !== 'super-admin' && member._id !== currentUser?._id
+                                const activity = lastActiveDetails(member, timeZone)
                                 return (
                                     <tr key={member._id} className="border-b border-gray-100 last:border-0">
                                         <td className="p-4">
@@ -452,6 +482,12 @@ const TeamPageTable = () => {
                                         <td className="p-4 text-sm text-gray-600">
                                             {lastLoginLabel(member, timeZone)}
                                         </td>
+                                        <td className="p-4 text-sm">
+                                            <span className="block font-medium text-gray-800">{activity.label}</span>
+                                            {activity.timestamp ? (
+                                                <time dateTime={member.lastActiveAt || undefined} className="mt-0.5 block text-xs text-gray-500">{activity.timestamp}</time>
+                                            ) : null}
+                                        </td>
                                         <td className="p-4 text-sm text-gray-600">{formatDateInTimeZone(member.createdAt, timeZone)}</td>
                                         <td className="p-4">
                                             {member.setupStatus === 'invited' ? (
@@ -491,7 +527,7 @@ const TeamPageTable = () => {
                                 )
                             })}
                             {(members?.data.length ?? 0) === 0 ? (
-                                <tr><td colSpan={6} className="p-8 text-center text-gray-500">No team members match these filters.</td></tr>
+                                <tr><td colSpan={7} className="p-8 text-center text-gray-500">No team members match these filters.</td></tr>
                             ) : null}
                         </tbody>
                     </table>

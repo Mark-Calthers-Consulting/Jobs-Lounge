@@ -21,6 +21,7 @@ vi.mock('@/hooks/useAdmin', () => ({
                 setupStatus: 'active',
                 suspendedAt: null,
                 lastLoginAt: '2026-09-05T09:00:00.000Z',
+                lastActiveAt: '2026-09-06T09:00:00.000Z',
                 createdAt: '2026-08-01T09:00:00.000Z',
                 updatedAt: '2026-09-05T09:00:00.000Z',
             }],
@@ -64,8 +65,13 @@ describe('team account suspension', () => {
     })
 
     it('requires confirmation before suspending an active team member', async () => {
+        const now = vi.spyOn(Date, 'now').mockReturnValue(
+            new Date('2026-09-06T09:03:00.000Z').getTime(),
+        )
         render(<TeamPageTable />)
 
+        expect(screen.getByRole('columnheader', { name: 'Last active' })).toBeInTheDocument()
+        expect(screen.getByText('Active now')).toBeInTheDocument()
         fireEvent.click(screen.getByRole('button', { name: 'Suspend access' }))
         const dialog = screen.getByRole('dialog', { name: 'Suspend this account?' })
         expect(dialog).toHaveTextContent('account and work will remain intact')
@@ -75,5 +81,6 @@ describe('team account suspension', () => {
             userId: 'member-1',
             suspended: true,
         }))
+        now.mockRestore()
     })
 })
