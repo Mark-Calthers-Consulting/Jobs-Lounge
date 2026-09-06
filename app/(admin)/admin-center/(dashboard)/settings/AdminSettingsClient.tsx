@@ -14,6 +14,7 @@ import {
     FiSend,
     FiShield,
     FiUser,
+    FiUserPlus,
 } from 'react-icons/fi'
 import { toast } from 'sonner'
 
@@ -24,7 +25,11 @@ import {
     useUpdateOrganizationSettings,
 } from '@/hooks/useSettings'
 import { useUser } from '@/hooks/useUsers'
-import type { OrganizationSettings } from '@/types/types'
+import type {
+    OrganizationSettings,
+    StaffSessionDurationHours,
+    StaffSessionDurationPolicy,
+} from '@/types/types'
 import Modal from '@/components/Modal'
 
 const roleLabel = (role?: string) => {
@@ -145,6 +150,22 @@ const TIME_ZONE_SUGGESTIONS = [
     'UTC',
 ]
 
+const SESSION_DURATION_OPTIONS: Array<{
+    label: string
+    value: StaffSessionDurationHours
+}> = [
+    { label: '8 hours', value: 8 },
+    { label: '24 hours', value: 24 },
+    { label: '3 days', value: 72 },
+    { label: '7 days', value: 168 },
+]
+
+const DEFAULT_STAFF_SESSION_POLICY: StaffSessionDurationPolicy = {
+    admin: 168,
+    recruiter: 24,
+    superAdmin: 8,
+}
+
 const OrganizationSettingsPanel = () => {
     const query = useOrganizationSettings()
     const update = useUpdateOrganizationSettings()
@@ -152,7 +173,11 @@ const OrganizationSettingsPanel = () => {
     const [supportEmail, setSupportEmail] = useState<string | null>(null)
     const [timeZone, setTimeZone] = useState<string | null>(null)
     const [sectionError, setSectionError] = useState<string | null>(null)
+    const [registrationError, setRegistrationError] = useState<string | null>(null)
+    const [sessionPolicy, setSessionPolicy] = useState<StaffSessionDurationPolicy | null>(null)
+    const [sessionPolicyError, setSessionPolicyError] = useState<string | null>(null)
     const [confirmTeamSignOut, setConfirmTeamSignOut] = useState(false)
+    const [confirmRegistrationPause, setConfirmRegistrationPause] = useState(false)
 
     if (query.isLoading) return <p role="status">Loading organization settings…</p>
     if (query.isError || !query.data) {
@@ -165,6 +190,9 @@ const OrganizationSettingsPanel = () => {
     }
     const supportEmailValue = supportEmail ?? query.data.supportEmail
     const timeZoneValue = timeZone ?? query.data.timeZone
+    const candidateRegistrationEnabled = query.data.candidateRegistrationEnabled !== false
+    const savedSessionPolicy = query.data.staffSessionDurationHours || DEFAULT_STAFF_SESSION_POLICY
+    const sessionPolicyValue = sessionPolicy || savedSessionPolicy
 
     const save = async (payload: Partial<OrganizationSettings>) => {
         setSectionError(null)
@@ -186,6 +214,52 @@ const OrganizationSettingsPanel = () => {
         }
     }
 
+    const updateCandidateRegistration = async (enabled: boolean) => {
+        setRegistrationError(null)
+        try {
+            await update.mutateAsync({
+                candidateRegistrationEnabled: enabled,
+                revision: query.data.revision,
+            })
+            setConfirmRegistrationPause(false)
+            toast.success(enabled ? 'Candidate registration resumed.' : 'Candidate registration paused.')
+        } catch (error) {
+            setRegistrationError(error instanceof Error
+                ? error.message
+                : 'Unable to update candidate registration.')
+        }
+    }
+
+    const updateSessionPolicy = async () => {
+        setSessionPolicyError(null)
+        try {
+            await update.mutateAsync({
+                staffSessionDurationHours: sessionPolicyValue,
+                revision: query.data.revision,
+            })
+            setSessionPolicy(null)
+            toast.success('Staff session policy saved.')
+        } catch (error) {
+            setSessionPolicyError(error instanceof Error
+                ? error.message
+                : 'Unable to update staff session policy.')
+        }
+    }
+
+    const setRoleSessionDuration = (
+        role: keyof StaffSessionDurationPolicy,
+        duration: StaffSessionDurationHours,
+    ) => {
+        setSessionPolicy({ ...sessionPolicyValue, [role]: duration })
+        setSessionPolicyError(null)
+    }
+
+    const sessionPolicyChanged = (
+        sessionPolicyValue.admin !== savedSessionPolicy.admin
+        || sessionPolicyValue.recruiter !== savedSessionPolicy.recruiter
+        || sessionPolicyValue.superAdmin !== savedSessionPolicy.superAdmin
+    )
+
     const lastUpdated = query.data.updatedAt
         ? new Intl.DateTimeFormat('en-NG', {
             dateStyle: 'medium',
@@ -196,6 +270,104 @@ const OrganizationSettingsPanel = () => {
 
     return (
         <div className="space-y-6">
+            <section className="overflow-hidden rounded-xl border border-gray-200 bg-white" aria-labelledby="candidate-access-heading">
+                <div className="border-b border-gray-100 p-5 sm:p-6">
+                    <div className="flex items-start gap-3">
+                        <span aria-hidden="true" className="grid size-10 place-items-center rounded-lg bg-slate-100 text-slate-700"><FiUserPlus /></span>
+                        <div>
+                            <h2 id="candidate-access-heading" className="text-lg font-semibold text-gray-950">Candidate access</h2>
+                            <p className="mt-1 text-sm text-gray-600">Control whether new candidates can create accounts.</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                    <div>
+                        <p className={`text-sm font-semibold ${candidateRegistrationEnabled ? 'text-emerald-700' : 'text-amber-700'}`}>
+                            {candidateRegistrationEnabled ? 'Registration is open' : 'Registration is paused'}
+                        </p>
+                        <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-600">
+                            {candidateRegistrationEnabled
+                                ? 'New candidates can create accounts normally.'
+                                : 'New candidate accounts are blocked. Existing users and staff can still sign in.'}
+                        </p>
+                        {registrationError ? <p role="alert" className="mt-2 text-sm text-red-700">{registrationError}</p> : null}
+                    </div>
+                    {candidateRegistrationEnabled ? (
+                        <button type="button" onClick={() => setConfirmRegistrationPause(true)} disabled={update.isPending} className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-md border border-amber-300 px-4 text-sm font-semibold text-amber-800 hover:bg-amber-50 disabled:opacity-60">
+                            Pause registration
+                        </button>
+                    ) : (
+                        <button type="button" onClick={() => void updateCandidateRegistration(true)} disabled={update.isPending} className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-md bg-[#003B6D] px-4 text-sm font-semibold text-white disabled:opacity-60">
+                            {update.isPending ? 'Resuming…' : 'Resume registration'}
+                        </button>
+                    )}
+                </div>
+            </section>
+
+            <section className="overflow-hidden rounded-xl border border-gray-200 bg-white" aria-labelledby="team-access-heading">
+                <div className="border-b border-gray-100 p-5 sm:p-6">
+                    <div className="flex items-start gap-3">
+                        <span aria-hidden="true" className="grid size-10 place-items-center rounded-lg bg-slate-100 text-slate-700"><FiShield /></span>
+                        <div>
+                            <h2 id="team-access-heading" className="text-lg font-semibold text-gray-950">Team access</h2>
+                            <p className="mt-1 text-sm text-gray-600">Session and security controls for staff accounts.</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="divide-y divide-gray-100">
+                    <div className="p-5 sm:px-6">
+                        <div>
+                            <h3 className="font-semibold text-gray-950">Session duration</h3>
+                            <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-600">Set how long each staff role stays signed in. New durations apply after the person signs in again.</p>
+                        </div>
+                        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                            {([
+                                ['admin', 'Administrators'],
+                                ['recruiter', 'Recruiters'],
+                                ['superAdmin', 'Super-admins'],
+                            ] as const).map(([role, label]) => (
+                                <div key={role}>
+                                    <label htmlFor={`session-duration-${role}`} className="text-sm font-medium text-gray-800">{label}</label>
+                                    <select
+                                        id={`session-duration-${role}`}
+                                        value={sessionPolicyValue[role]}
+                                        onChange={(event) => setRoleSessionDuration(role, Number(event.target.value) as StaffSessionDurationHours)}
+                                        className="mt-1.5 w-full rounded-md border border-gray-300 bg-white px-3 py-2.5 focus:border-[#184aa2] focus:outline-none"
+                                    >
+                                        {SESSION_DURATION_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                                    </select>
+                                </div>
+                            ))}
+                        </div>
+                        {sessionPolicyError ? <p role="alert" className="mt-3 text-sm text-red-700">{sessionPolicyError}</p> : null}
+                        <div className="mt-4 flex flex-wrap items-center gap-3">
+                            <button type="button" onClick={() => void updateSessionPolicy()} disabled={update.isPending || !sessionPolicyChanged} className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#003B6D] px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">
+                                <FiSave aria-hidden="true" />{update.isPending ? 'Saving…' : 'Save session policy'}
+                            </button>
+                            <p className="text-xs leading-5 text-gray-500">Current sessions keep their existing expiry. Use Sign out team below to enforce a change immediately for Administrators and Recruiters.</p>
+                        </div>
+                    </div>
+                    <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                        <div>
+                            <h3 className="font-semibold text-gray-950">Suspend an account</h3>
+                            <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-600">Temporarily block one team member without deleting their account or work.</p>
+                        </div>
+                        <Link href="/admin-center/team" className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-md border border-gray-300 px-4 text-sm font-semibold text-[#003B6D]">
+                            Manage team <FiArrowRight aria-hidden="true" />
+                        </Link>
+                    </div>
+                    <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                        <div>
+                            <h3 className="font-semibold text-gray-950">Sign out the team</h3>
+                            <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-600">End every Administrator and Recruiter session. Candidate and Super-admin sessions are not affected.</p>
+                        </div>
+                        <button type="button" onClick={() => setConfirmTeamSignOut(true)} className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-md border border-red-300 px-4 text-sm font-semibold text-red-700 hover:bg-red-50">
+                            <FiLogOut aria-hidden="true" /> Sign out team
+                        </button>
+                    </div>
+                </div>
+            </section>
+
             <section className="rounded-xl border border-gray-200 bg-white p-5 sm:p-6" aria-labelledby="regional-settings-heading">
                 <div className="flex items-start gap-3">
                     <span aria-hidden="true" className="grid size-10 place-items-center rounded-lg bg-blue-50 text-[#184aa2]"><FiMail /></span>
@@ -233,37 +405,27 @@ const OrganizationSettingsPanel = () => {
                 </form>
             </section>
 
-            <section className="overflow-hidden rounded-xl border border-gray-200 bg-white" aria-labelledby="team-access-heading">
-                <div className="border-b border-gray-100 p-5 sm:p-6">
-                    <div className="flex items-start gap-3">
-                        <span aria-hidden="true" className="grid size-10 place-items-center rounded-lg bg-slate-100 text-slate-700"><FiShield /></span>
-                        <div>
-                            <h2 id="team-access-heading" className="text-lg font-semibold text-gray-950">Team access</h2>
-                            <p className="mt-1 text-sm text-gray-600">Security controls for Administrator and Recruiter accounts.</p>
-                        </div>
+            <Modal
+                isOpen={confirmRegistrationPause}
+                onClose={() => setConfirmRegistrationPause(false)}
+                onSubmit={() => void updateCandidateRegistration(false)}
+                title="Pause candidate registration?"
+                actionLabel={update.isPending ? 'Pausing…' : 'Pause registration'}
+                actionTone="danger"
+                disabled={update.isPending}
+                size="compact"
+                body={(
+                    <div className="space-y-3 text-sm leading-6 text-gray-200">
+                        <p>New candidates will be unable to create accounts until registration is resumed.</p>
+                        <p>Existing candidate accounts, staff access, and staff invitations will continue to work.</p>
                     </div>
-                </div>
-                <div className="divide-y divide-gray-100">
-                    <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                        <div>
-                            <h3 className="font-semibold text-gray-950">Suspend an account</h3>
-                            <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-600">Temporarily block one team member without deleting their account or work.</p>
-                        </div>
-                        <Link href="/admin-center/team" className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-md border border-gray-300 px-4 text-sm font-semibold text-[#003B6D]">
-                            Manage team <FiArrowRight aria-hidden="true" />
-                        </Link>
-                    </div>
-                    <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                        <div>
-                            <h3 className="font-semibold text-gray-950">Sign out the team</h3>
-                            <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-600">End every Administrator and Recruiter session. Candidate and Super-admin sessions are not affected.</p>
-                        </div>
-                        <button type="button" onClick={() => setConfirmTeamSignOut(true)} className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-md border border-red-300 px-4 text-sm font-semibold text-red-700 hover:bg-red-50">
-                            <FiLogOut aria-hidden="true" /> Sign out team
-                        </button>
-                    </div>
-                </div>
-            </section>
+                )}
+                footer={(
+                    <button type="button" disabled={update.isPending} onClick={() => setConfirmRegistrationPause(false)} className="w-full rounded-md border border-gray-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10 disabled:opacity-60">
+                        Keep registration open
+                    </button>
+                )}
+            />
 
             <Modal
                 isOpen={confirmTeamSignOut}
@@ -320,8 +482,8 @@ const AdminSettingsClient = () => {
 
             {isSuperAdmin ? (
                 <div className="mt-6 flex w-fit rounded-lg border border-gray-200 bg-white p-1" role="tablist" aria-label="Settings sections">
-                    <button type="button" role="tab" aria-selected={section === 'personal'} onClick={() => setSection('personal')} className={`rounded-md px-4 py-2 text-sm font-semibold ${section === 'personal' ? 'bg-[#003B6D] text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Personal</button>
                     <button type="button" role="tab" aria-selected={section === 'organization'} onClick={() => setSection('organization')} className={`rounded-md px-4 py-2 text-sm font-semibold ${section === 'organization' ? 'bg-[#003B6D] text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Organization</button>
+                    <button type="button" role="tab" aria-selected={section === 'personal'} onClick={() => setSection('personal')} className={`rounded-md px-4 py-2 text-sm font-semibold ${section === 'personal' ? 'bg-[#003B6D] text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Personal</button>
                 </div>
             ) : null}
 

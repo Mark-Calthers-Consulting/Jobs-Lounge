@@ -6,6 +6,7 @@ import AdminSettingsClient from './AdminSettingsClient'
 let currentRole: 'admin' | 'recruiter' | 'super-admin' = 'admin'
 let currentSection = ''
 const signOutAll = vi.hoisted(() => vi.fn())
+const updateOrganization = vi.hoisted(() => vi.fn())
 
 vi.mock('next/navigation', () => ({
     usePathname: () => '/admin-center/settings',
@@ -36,6 +37,12 @@ vi.mock('@/hooks/useSettings', () => ({
         data: {
             supportEmail: 'support@example.com',
             timeZone: 'Africa/Lagos',
+            candidateRegistrationEnabled: true,
+            staffSessionDurationHours: {
+                admin: 168,
+                recruiter: 24,
+                superAdmin: 8,
+            },
             revision: 1,
         },
         isLoading: false,
@@ -44,7 +51,7 @@ vi.mock('@/hooks/useSettings', () => ({
     }),
     useUpdateOrganizationSettings: () => ({
         isPending: false,
-        mutateAsync: vi.fn(),
+        mutateAsync: updateOrganization,
     }),
 }))
 
@@ -64,6 +71,7 @@ describe('role-aware admin settings', () => {
         currentRole = 'admin'
         currentSection = ''
         signOutAll.mockReset()
+        updateOrganization.mockReset()
     })
 
     it('shows personal account settings to an Administrator without Organization access', () => {
@@ -79,11 +87,58 @@ describe('role-aware admin settings', () => {
         currentRole = 'super-admin'
         currentSection = 'section=organization'
         render(<AdminSettingsClient />)
+        expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['Organization', 'Personal'])
         expect(screen.getByRole('tab', { name: 'Organization' })).toHaveAttribute('aria-selected', 'true')
-        expect(screen.getByRole('heading', { name: 'Support and region' })).toBeInTheDocument()
+        expect(screen.getByRole('heading', { name: 'Candidate access' })).toBeInTheDocument()
         expect(screen.getByRole('heading', { name: 'Team access' })).toBeInTheDocument()
+        expect(screen.getByRole('heading', { name: 'Support and region' })).toBeInTheDocument()
+        expect(screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent))
+            .toEqual(['Candidate access', 'Team access', 'Support and region'])
         expect(screen.getByRole('button', { name: 'Sign out team' })).toBeInTheDocument()
         expect(screen.queryByRole('heading', { name: 'Vacancy creation defaults' })).not.toBeInTheDocument()
+    })
+
+    it('requires confirmation before pausing candidate registration', async () => {
+        currentRole = 'super-admin'
+        currentSection = 'section=organization'
+        updateOrganization.mockResolvedValue({})
+        render(<AdminSettingsClient />)
+
+        fireEvent.click(screen.getByRole('button', { name: 'Pause registration' }))
+        const dialog = screen.getByRole('dialog', { name: 'Pause candidate registration?' })
+        expect(dialog).toHaveTextContent('Existing candidate accounts, staff access, and staff invitations will continue to work.')
+        fireEvent.click(within(dialog).getByRole('button', { name: 'Pause registration' }))
+
+        await waitFor(() => expect(updateOrganization).toHaveBeenCalledWith({
+            candidateRegistrationEnabled: false,
+            revision: 1,
+        }))
+    })
+
+    it('saves controlled session durations for each staff role', async () => {
+        currentRole = 'super-admin'
+        currentSection = 'section=organization'
+        updateOrganization.mockResolvedValue({})
+        render(<AdminSettingsClient />)
+
+        expect(screen.getByLabelText('Administrators')).toHaveValue('168')
+        expect(screen.getByLabelText('Recruiters')).toHaveValue('24')
+        expect(screen.getByLabelText('Super-admins')).toHaveValue('8')
+        const saveButton = screen.getByRole('button', { name: 'Save session policy' })
+        expect(saveButton).toBeDisabled()
+
+        fireEvent.change(screen.getByLabelText('Administrators'), { target: { value: '72' } })
+        expect(saveButton).toBeEnabled()
+        fireEvent.click(saveButton)
+
+        await waitFor(() => expect(updateOrganization).toHaveBeenCalledWith({
+            staffSessionDurationHours: {
+                admin: 72,
+                recruiter: 24,
+                superAdmin: 8,
+            },
+            revision: 1,
+        }))
     })
 
     it('confirms that team-wide sign-out excludes candidates and Super-admins', async () => {

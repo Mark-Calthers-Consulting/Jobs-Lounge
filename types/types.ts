@@ -668,9 +668,19 @@ export type CreateStaffPayload = {
 export type PublicPlatformSettings = {
     supportEmail: string
     timeZone: string
+    candidateRegistrationEnabled: boolean
+}
+
+export type StaffSessionDurationHours = 8 | 24 | 72 | 168
+
+export type StaffSessionDurationPolicy = {
+  admin: StaffSessionDurationHours
+  recruiter: StaffSessionDurationHours
+  superAdmin: StaffSessionDurationHours
 }
 
 export type OrganizationSettings = PublicPlatformSettings & {
+  staffSessionDurationHours: StaffSessionDurationPolicy
   revision: number
   updatedAt?: string
   updatedBy?: {
@@ -681,7 +691,7 @@ export type OrganizationSettings = PublicPlatformSettings & {
 
 export type OrganizationSettingsUpdate = Partial<Pick<
   OrganizationSettings,
-  'supportEmail' | 'timeZone'
+  'supportEmail' | 'timeZone' | 'candidateRegistrationEnabled' | 'staffSessionDurationHours'
 >> & {
   revision: number
 }

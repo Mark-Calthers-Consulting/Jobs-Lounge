@@ -10,6 +10,7 @@ import { FiEye, FiEyeOff } from 'react-icons/fi'
 import { toast } from 'sonner'
 
 import { useLogin, useRegister } from '@/hooks/useAuth'
+import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
 import { ApiError } from '@/api/errors'
 import {
     LoginFormValues,
@@ -72,6 +73,7 @@ const AuthForm = ({
     const loginMutation = useLogin()
     const registerMutation = useRegister()
     const router = useRouter()
+    const { candidateRegistrationEnabled } = usePlatformSettings()
 
     const loginForm = useForm<LoginFormValues>({
         resolver: zodResolver(loginSchema),
@@ -179,12 +181,18 @@ const AuthForm = ({
             </Link>
 
             <h1 id="auth-title" className="text-2xl font-bold text-[#003B6D] md:text-3xl">
-                {mode === 'login' ? 'Sign in to Jobs Lounge' : 'Create a Jobs Lounge account'}
+                {mode === 'login'
+                    ? 'Sign in to Jobs Lounge'
+                    : candidateRegistrationEnabled
+                        ? 'Create a Jobs Lounge account'
+                        : 'Candidate registration is paused'}
             </h1>
             <p className="text-sm text-gray-600 md:text-base">
                 {mode === 'login'
                     ? 'Access your account and continue your job search.'
-                    : 'Create your account to start applying for opportunities.'}
+                    : candidateRegistrationEnabled
+                        ? 'Create your account to start applying for opportunities.'
+                        : 'We are not accepting new candidate accounts at the moment. Existing candidates can still sign in.'}
             </p>
             {passwordResetComplete && mode === 'login'
                 ? (
@@ -241,7 +249,7 @@ const AuthForm = ({
                         {loginMutation.isPending ? 'Signing in…' : 'Sign in'}
                     </button>
                 </form>
-            ) : (
+            ) : candidateRegistrationEnabled ? (
                 <form onSubmit={submitRegistration} onChange={() => setServerError(null)} aria-labelledby="auth-title" aria-busy={registerMutation.isPending} noValidate className="space-y-3">
                     {serverError ? <p role="alert" className={errorClassName}>{serverError}</p> : null}
                     <div className="flex flex-col gap-3 lg:flex-row">
@@ -349,13 +357,23 @@ const AuthForm = ({
                         {registerMutation.isPending ? 'Creating account…' : 'Sign up'}
                     </button>
                 </form>
+            ) : (
+                <div role="status" className="border-l-2 border-amber-500 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950">
+                    Please check back later or sign in if you already have an account.
+                </div>
             )}
 
             <p className="mt-4 text-center">
-                {mode === 'login' ? 'Don’t have an account? ' : 'Already have an account? '}
-                <button type="button" onClick={changeMode} className="cursor-pointer font-medium underline">
-                    {mode === 'login' ? 'Sign up' : 'Sign in'}
-                </button>
+                {mode === 'login' && !candidateRegistrationEnabled
+                    ? 'New candidate registration is temporarily unavailable.'
+                    : (
+                        <>
+                            {mode === 'login' ? 'Don’t have an account? ' : 'Already have an account? '}
+                            <button type="button" onClick={changeMode} className="cursor-pointer font-medium underline">
+                                {mode === 'login' ? 'Sign up' : 'Sign in'}
+                            </button>
+                        </>
+                    )}
             </p>
         </div>
     )

@@ -10,6 +10,7 @@ import type { PublicPlatformSettings } from '@/types/types'
 export const DEFAULT_PUBLIC_SETTINGS: PublicPlatformSettings = {
     supportEmail: 'support@jobslounge.markcalthers.com',
     timeZone: 'Africa/Lagos',
+    candidateRegistrationEnabled: true,
 }
 
 export const usePublicPlatformSettings = () => useQuery({
@@ -36,6 +37,7 @@ export const useUpdateOrganizationSettings = () => {
                 {
                     supportEmail: settings.supportEmail,
                     timeZone: settings.timeZone,
+                    candidateRegistrationEnabled: settings.candidateRegistrationEnabled,
                 },
             )
         },

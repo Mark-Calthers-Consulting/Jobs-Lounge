@@ -12,8 +12,11 @@ const PlatformSettingsContext = createContext<PublicPlatformSettings>(DEFAULT_PU
 
 export const PlatformSettingsProvider = ({ children }: { children: React.ReactNode }) => {
     const query = usePublicPlatformSettings()
+    const settings = query.data
+        ? { ...DEFAULT_PUBLIC_SETTINGS, ...query.data }
+        : DEFAULT_PUBLIC_SETTINGS
     return (
-        <PlatformSettingsContext.Provider value={query.data || DEFAULT_PUBLIC_SETTINGS}>
+        <PlatformSettingsContext.Provider value={settings}>
             {children}
         </PlatformSettingsContext.Provider>
     )
