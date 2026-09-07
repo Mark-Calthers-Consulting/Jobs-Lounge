@@ -7,6 +7,15 @@ import Home, { metadata } from './page'
 vi.mock('@/components/HomepageDiscovery', () => ({
   default: () => <div data-testid="homepage-discovery">Live discovery</div>,
 }))
+vi.mock('@/components/HomepageHeroVacancy', () => ({
+  default: () => <div data-testid="homepage-hero-vacancy">Latest vacancy</div>,
+}))
+vi.mock('@/components/HomepageCareerInsights', () => ({
+  default: () => <div data-testid="homepage-career-insights">Career insights</div>,
+}))
+vi.mock('@/components/PartnerLogoMarquee', () => ({
+  default: () => <div data-testid="partner-logo-marquee">Partner logos</div>,
+}))
 vi.mock('next/image', () => ({
   default: ({ alt, src }: { alt: string; src: string }) => <img alt={alt} src={src} />,
 }))
@@ -16,7 +25,7 @@ describe('homepage', () => {
     render(<Home />)
 
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
-    expect(screen.getByRole('heading', { name: 'Find the opportunity that moves you forward.' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Find work that moves you forward.' })).toBeInTheDocument()
     expect(screen.getAllByRole('link', { name: /Browse (opportunities|vacancies)/ })).not.toHaveLength(0)
     for (const link of screen.getAllByRole('link', { name: /Create your (profile|account)/ })) {
       expect(link).toHaveAttribute('href', '/auth?mode=register')
@@ -26,8 +35,11 @@ describe('homepage', () => {
   it('retains the mission and vision, accurate FAQs, and no email capture', () => {
     render(<Home />)
 
+    expect(screen.getByRole('heading', { name: /Better opportunities/ })).toBeInTheDocument()
     expect(screen.getByText(/our mission is to revolutionize the job search experience/)).toBeInTheDocument()
     expect(screen.getByText(/To be the leading online job portal/)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'What you can expect' })).toBeInTheDocument()
+    expect(screen.getByText('Personalised discovery')).toBeInTheDocument()
     expect(screen.getByText('What do I need before I apply?')).toBeInTheDocument()
     expect(screen.queryByRole('textbox', { name: /email/i })).not.toBeInTheDocument()
     expect(screen.queryByText(/YouTube/i)).not.toBeInTheDocument()

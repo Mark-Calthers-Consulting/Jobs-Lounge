@@ -88,6 +88,7 @@ describe('homepage discovery', () => {
     expect(screen.getByRole('link', { name: 'View Vacancy 1 at Example Company' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'View Vacancy 6 at Example Company' })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'View Vacancy 7 at Example Company' })).not.toBeInTheDocument()
+    expect(screen.queryByText('Salary not specified')).not.toBeInTheDocument()
   })
 
   it('formats missing, bounded, and partially disclosed salaries', () => {

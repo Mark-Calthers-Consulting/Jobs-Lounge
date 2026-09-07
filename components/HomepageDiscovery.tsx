@@ -4,6 +4,7 @@ import Link from 'next/link'
 import type { IconType } from 'react-icons'
 import {
   FiArrowRight,
+  FiBarChart2,
   FiBookOpen,
   FiBriefcase,
   FiCode,
@@ -12,7 +13,6 @@ import {
   FiHeadphones,
   FiHeart,
   FiHome,
-  FiLayers,
   FiMap,
   FiMapPin,
   FiRefreshCw,
@@ -26,29 +26,31 @@ import {
   FiUsers,
   FiZap,
 } from 'react-icons/fi'
+import { PiSuitcaseSimpleFill } from 'react-icons/pi'
 
 import { useFeaturedJobs, useJobFilterOptions } from '@/hooks/useVacancies'
 import type { Job, JobFilterOption } from '@/types/types'
+import { publicEmployerName } from '@/utils/jobPresentation'
 
 const categoryIcons: Record<string, IconType> = {
   FMCG: FiShoppingBag,
   'Manufacturing & Production': FiSettings,
   'Oil, Gas & Energy': FiZap,
-  'Banking, Finance & Insurance': FiTrendingUp,
+  'Banking, Finance & Insurance': FiBarChart2,
   'Technology & ICT': FiCode,
   'Legal, Compliance & Audit': FiShield,
   'Real Estate & Construction': FiHome,
   'Consulting & Strategy': FiCompass,
   'Supply Chain, Procurement & Logistics': FiTruck,
   'Human Resources & Admin': FiUsers,
-  'Sales, Marketing & Retail': FiTarget,
+  'Sales, Marketing & Retail': FiTrendingUp,
   'Customer Service & Support': FiHeadphones,
   'Healthcare & Pharmaceuticals': FiHeart,
   'Hospitality, Travel & Tourism': FiMap,
   'Education & Training': FiBookOpen,
   'Engineering (Non-IT)': FiTool,
   'NGO & Non-Profit': FiGlobe,
-  Other: FiBriefcase,
+  Other: FiTarget,
 }
 
 export const featuredCategories = (categories: JobFilterOption[] = []) => (
@@ -83,22 +85,44 @@ export const vacancySalary = (job: Job) => {
   return `Up to ${money(maximum as number, currency)}`
 }
 
-const LoadingTiles = ({ cards = false }: { cards?: boolean }) => (
+const LoadingTiles = () => (
   <div
     role="status"
-    aria-label={cards ? 'Loading latest vacancies' : 'Loading vacancy categories'}
-    className={`grid gap-3 ${cards ? 'md:grid-cols-2 xl:grid-cols-3' : 'sm:grid-cols-2 lg:grid-cols-3'}`}
+    aria-label="Loading vacancy categories"
+    className="grid grid-cols-2 border-y border-slate-200 sm:grid-cols-3 lg:grid-cols-6"
   >
     {Array.from({ length: 6 }, (_, index) => (
       <div
         key={index}
-        className={`animate-pulse border border-slate-200 bg-white ${cards ? 'min-h-64 p-6' : 'min-h-32 p-5'}`}
+        className="min-h-24 animate-pulse border-l border-slate-200 bg-white p-4 first:border-l-0"
       >
         <div className="h-4 w-2/3 bg-slate-200" />
         <div className="mt-4 h-3 w-1/3 bg-slate-100" />
-        {cards ? <div className="mt-16 h-3 w-full bg-slate-100" /> : null}
+        <div className="mt-3 h-3 w-1/2 bg-slate-100" />
       </div>
     ))}
+    <span className="sr-only">Loading…</span>
+  </div>
+)
+
+const LatestVacanciesLoading = () => (
+  <div role="status" aria-label="Loading latest vacancies" className="grid animate-pulse gap-4 lg:grid-cols-[0.92fr_1.08fr]">
+    <div className="min-h-[340px] rounded-md bg-blue-100 p-7">
+      <div className="h-3 w-24 bg-blue-200" />
+      <div className="mt-28 h-8 w-3/4 bg-blue-200" />
+      <div className="mt-5 h-4 w-1/2 bg-blue-200" />
+    </div>
+    <div className="divide-y divide-slate-200 rounded-md border border-slate-200 bg-white">
+      {Array.from({ length: 5 }, (_, index) => (
+        <div key={index} className="flex min-h-[68px] items-center gap-4 px-5">
+          <div className="size-9 bg-slate-100" />
+          <div className="flex-1">
+            <div className="h-3 w-1/2 bg-slate-200" />
+            <div className="mt-2 h-2.5 w-1/3 bg-slate-100" />
+          </div>
+        </div>
+      ))}
+    </div>
     <span className="sr-only">Loading…</span>
   </div>
 )
@@ -121,21 +145,21 @@ const CategoryDirectory = () => {
   const categories = featuredCategories(query.data?.categories)
 
   return (
-    <section aria-labelledby="category-heading" className="bg-white py-16 sm:py-20">
+    <section aria-labelledby="category-heading" className="bg-white py-10 sm:py-12">
       <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-[#184aa2]">Explore your field</p>
-            <h2 id="category-heading" className="mt-2 max-w-xl text-3xl font-bold tracking-[-0.025em] text-[#101A35] sm:text-4xl">
-              Find opportunities in the work you know
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <span aria-hidden="true" className="h-9 w-0.5 bg-[#e23845]" />
+            <h2 id="category-heading" className="font-editorial text-3xl font-normal tracking-[-0.025em] text-[#101A35] sm:text-[2rem]">
+              Find the right opportunity for you
             </h2>
           </div>
           <Link href="/vacancies" className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-[#184aa2] hover:underline">
-            View every category <FiArrowRight aria-hidden="true" />
+            Browse all vacancies <FiArrowRight aria-hidden="true" />
           </Link>
         </div>
 
-        <div className="mt-9" aria-busy={query.isLoading}>
+        <div className="mt-7" aria-busy={query.isLoading}>
           {query.isLoading ? <LoadingTiles /> : null}
           {query.isError ? (
             <SectionError
@@ -153,24 +177,21 @@ const CategoryDirectory = () => {
             </div>
           ) : null}
           {!query.isLoading && !query.isError && categories.length > 0 ? (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {categories.map((category) => {
-                const Icon = categoryIcons[category.value] || FiLayers
+            <div className="grid grid-cols-2 border-t border-slate-200 sm:grid-cols-3 lg:grid-cols-6 lg:border-b">
+              {categories.map((category, index) => {
                 const countLabel = `${category.count.toLocaleString('en-NG')} ${category.count === 1 ? 'vacancy' : 'vacancies'}`
+                const mobileBorder = index % 2 === 0 ? 'border-l-0' : 'border-l'
+                const tabletBorder = index % 3 === 0 ? 'sm:border-l-0' : 'sm:border-l'
+                const desktopBorder = index === 0 ? 'lg:border-l-0' : 'lg:border-l'
                 return (
                   <Link
                     key={category.value}
                     href={`/vacancies?category=${encodeURIComponent(category.value)}`}
-                    className="group flex min-h-32 items-start justify-between border border-slate-200 bg-white p-5 transition-colors hover:border-slate-400 hover:bg-slate-50"
+                    className={`group relative flex min-h-24 flex-col justify-center border-b border-slate-200 px-4 py-4 transition-colors hover:bg-slate-50 sm:min-h-28 lg:border-b-0 ${mobileBorder} ${tabletBorder} ${desktopBorder}`}
                   >
-                    <span>
-                      <span className="flex size-9 items-center justify-center bg-slate-100 text-[#184aa2]">
-                        <Icon aria-hidden="true" />
-                      </span>
-                      <span className="mt-5 block font-semibold text-[#101A35]">{category.value}</span>
-                      <span className="mt-1 block text-sm text-slate-500">{countLabel}</span>
-                    </span>
-                    <FiArrowRight aria-hidden="true" className="mt-1 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-[#184aa2]" />
+                    <span className="block pr-5 text-sm font-semibold leading-5 text-[#101A35]">{category.value}</span>
+                    <span className="mt-1 block text-xs text-slate-500">{countLabel}</span>
+                    <FiArrowRight aria-hidden="true" className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 transition-[color,transform] group-hover:translate-x-0.5 group-hover:text-[#184aa2]" />
                   </Link>
                 )
               })}
@@ -182,51 +203,86 @@ const CategoryDirectory = () => {
   )
 }
 
-const VacancyCard = ({ job }: { job: Job }) => (
-  <article className="flex min-h-72 flex-col border border-slate-200 bg-white p-6">
-    <div className="flex items-start justify-between gap-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#184aa2]">{job.category}</p>
-      <span className="shrink-0 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">{job.jobType}</span>
-    </div>
-    <h3 className="mt-5 text-xl font-semibold leading-7 text-[#101A35]">{job.title}</h3>
-    <p className="mt-2 text-sm font-medium text-slate-700">{job.company.name}</p>
+const FeaturedVacancy = ({ job }: { job: Job }) => {
+  const employer = publicEmployerName(job.company.name)
+  const salary = vacancySalary(job)
 
-    <dl className="mt-6 space-y-2.5 text-sm text-slate-600">
-      <div className="flex items-start gap-2">
-        <FiMapPin aria-hidden="true" className="mt-0.5 shrink-0 text-slate-400" />
+  return (
+    <article className="flex min-h-[340px] flex-col rounded-md bg-[#0d4fd7] p-7 text-white sm:p-9">
+    <div className="flex items-center justify-between gap-4">
+      <p className="text-xs font-semibold uppercase text-blue-100">Newest vacancy</p>
+      <span className="border border-white/30 px-2.5 py-1 text-xs font-medium text-white">{job.jobType}</span>
+    </div>
+    <span aria-hidden="true" className="mt-8 grid size-12 place-items-center rounded-md bg-white text-xl text-[#0d4fd7]">
+      <PiSuitcaseSimpleFill />
+    </span>
+    <p className="mt-auto text-xs font-semibold uppercase text-blue-100">{job.category}</p>
+    <h3 className="mt-3 max-w-md text-2xl font-semibold leading-tight tracking-[-0.025em] sm:text-3xl">{job.title}</h3>
+    <p className="mt-2 text-sm text-blue-100">{employer}</p>
+    <dl className="mt-5 flex flex-col gap-2 text-sm text-blue-50 sm:flex-row sm:flex-wrap sm:gap-x-6">
+      <div className="flex items-center gap-2">
+        <FiMapPin aria-hidden="true" />
         <dt className="sr-only">Location and work arrangement</dt>
         <dd>{job.location} <span aria-hidden="true">·</span> {job.workMode}</dd>
       </div>
-      <div className="flex items-start gap-2">
-        <FiBriefcase aria-hidden="true" className="mt-0.5 shrink-0 text-slate-400" />
-        <dt className="sr-only">Salary</dt>
-        <dd>{vacancySalary(job)}</dd>
-      </div>
+      {salary !== 'Salary not specified' ? (
+        <div className="flex items-center gap-2">
+          <FiBriefcase aria-hidden="true" />
+          <dt className="sr-only">Salary</dt>
+          <dd>{salary}</dd>
+        </div>
+      ) : null}
     </dl>
-
-    <div className="mt-auto border-t border-slate-200 pt-5">
+    <div className="mt-7 border-t border-white/25 pt-5">
       <Link
         href={`/vacancies/${job._id}`}
-        aria-label={`View ${job.title} at ${job.company.name}`}
-        className="inline-flex items-center gap-2 text-sm font-semibold text-[#184aa2] hover:underline"
+        aria-label={`View ${job.title} at ${employer}`}
+        className="inline-flex items-center gap-2 text-sm font-semibold text-white hover:underline"
       >
         View vacancy <FiArrowRight aria-hidden="true" />
       </Link>
     </div>
   </article>
-)
+  )
+}
+
+const VacancyRow = ({ job }: { job: Job }) => {
+  const Icon = categoryIcons[job.category] || FiBriefcase
+  const employer = publicEmployerName(job.company.name)
+
+  return (
+    <article>
+    <Link
+      href={`/vacancies/${job._id}`}
+      aria-label={`View ${job.title} at ${employer}`}
+      className="group grid min-h-[68px] grid-cols-[40px_1fr_auto] items-center gap-4 px-4 py-3 transition-colors hover:bg-slate-50 sm:px-5"
+    >
+      <span aria-hidden="true" className="grid size-10 place-items-center rounded-md bg-slate-100 text-[#184aa2]">
+        <Icon />
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate text-sm font-semibold text-[#101A35]">{job.title}</span>
+        <span className="mt-1 block truncate text-xs text-slate-500">
+          {employer} <span aria-hidden="true">·</span> {job.location} <span aria-hidden="true">·</span> {job.workMode}
+        </span>
+      </span>
+      <FiArrowRight aria-hidden="true" className="text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-[#184aa2]" />
+    </Link>
+  </article>
+  )
+}
 
 const LatestVacancies = () => {
   const query = useFeaturedJobs()
   const jobs = query.data?.slice(0, 6) ?? []
 
   return (
-    <section aria-labelledby="latest-vacancies-heading" className="border-y border-slate-200 bg-slate-50 py-16 sm:py-20">
+    <section aria-labelledby="latest-vacancies-heading" className="border-y border-slate-200 bg-[#fbfcfe] py-12 sm:py-16">
       <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-[#184aa2]">Recently added</p>
-            <h2 id="latest-vacancies-heading" className="mt-2 text-3xl font-bold tracking-[-0.025em] text-[#101A35] sm:text-4xl">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <span aria-hidden="true" className="h-9 w-0.5 bg-[#e23845]" />
+            <h2 id="latest-vacancies-heading" className="font-editorial text-3xl font-normal tracking-[-0.025em] text-[#101A35] sm:text-[2rem]">
               Latest opportunities
             </h2>
           </div>
@@ -236,7 +292,7 @@ const LatestVacancies = () => {
         </div>
 
         <div className="mt-9" aria-busy={query.isLoading}>
-          {query.isLoading ? <LoadingTiles cards /> : null}
+          {query.isLoading ? <LatestVacanciesLoading /> : null}
           {query.isError ? (
             <SectionError
               message="We couldn’t load the latest vacancies."
@@ -250,8 +306,13 @@ const LatestVacancies = () => {
             </div>
           ) : null}
           {!query.isLoading && !query.isError && jobs.length > 0 ? (
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {jobs.map((job) => <VacancyCard key={job._id} job={job} />)}
+            <div className={`grid gap-4 ${jobs.length > 1 ? 'lg:grid-cols-[0.92fr_1.08fr]' : ''}`}>
+              <FeaturedVacancy job={jobs[0]} />
+              {jobs.length > 1 ? (
+                <div className="divide-y divide-slate-200 overflow-hidden rounded-md border border-slate-200 bg-white">
+                  {jobs.slice(1).map((job) => <VacancyRow key={job._id} job={job} />)}
+                </div>
+              ) : null}
             </div>
           ) : null}
         </div>
