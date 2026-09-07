@@ -78,11 +78,11 @@ export default function Footer(): React.JSX.Element {
                                 className="inline-flex rounded-md"
                             >
                                 <Image
-                                    src="/logowhite.svg"
-                                    width={400}
-                                    height={48}
+                                    src="/logo.svg"
+                                    width={98}
+                                    height={67}
                                     alt=""
-                                    className="h-auto w-[210px] max-w-full"
+                                    className="h-auto w-[98px] brightness-0 invert"
                                 />
                             </Link>
                             <p className="mt-5 max-w-md text-sm leading-6 text-slate-300">

@@ -98,7 +98,7 @@ const faqs = [
 export default function Home() {
   return (
     <div className="overflow-hidden bg-white">
-      <section className="border-b border-slate-200 bg-[#fbfcfe]">
+      <section className="border-b border-slate-200 bg-white">
         <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 py-12 sm:px-6 sm:py-16 lg:min-h-[570px] lg:grid-cols-[0.88fr_1.12fr] lg:gap-16 lg:px-8 lg:py-14">
           <div className="max-w-xl">
             <h1 className="font-editorial text-balance text-[3.35rem] font-normal leading-[0.98] tracking-[-0.045em] text-[#0b1734] sm:text-6xl lg:text-[4.65rem]">
@@ -258,14 +258,6 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-[#0d4cd3] text-white">
-        <div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-          <h2 className="font-editorial text-2xl font-normal sm:text-[2rem]">Your next opportunity is closer than you think.</h2>
-          <Link href="/vacancies" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-3 bg-white px-5 text-sm font-semibold text-[#0b1734] transition-colors hover:bg-slate-100">
-            Browse vacancies <FiArrowRight aria-hidden="true" />
-          </Link>
-        </div>
-      </section>
     </div>
   )
 }

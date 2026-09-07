@@ -39,15 +39,12 @@ const Navbar = (): React.JSX.Element => {
   )
   const accountHref = user?.role === 'user' ? '/dashboard' : '/admin-center'
   const accountLabel = user ? 'Dashboard' : 'Sign in'
-  const accountButtonTone = user
-    ? 'bg-[#1B1F87] hover:bg-[#15196D]'
-    : 'bg-[#003B6D] hover:bg-[#002F57]'
 
   return (
     <header className="relative z-[100] w-full bg-white">
       <nav
         aria-label="Primary navigation"
-        className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5 sm:px-6 md:grid md:h-[92px] md:grid-cols-[1fr_auto_1fr] lg:px-8"
+        className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-5 sm:px-6 md:grid md:h-[82px] md:grid-cols-[1fr_auto_1fr] lg:px-8"
       >
         <Link
           href="/"
@@ -56,16 +53,16 @@ const Navbar = (): React.JSX.Element => {
           onClick={() => setIsMenuOpen(false)}
         >
           <Image
-            width={84}
-            height={58}
+            width={76}
+            height={52}
             src="/logo.svg"
             alt=""
             priority
-            className="h-auto w-[84px]"
+            className="h-auto w-[76px]"
           />
         </Link>
 
-        <div className="hidden items-center gap-7 md:flex lg:gap-9">
+        <div className="hidden h-full items-center gap-8 md:flex lg:gap-11">
           {navigationItems.map(({ href, label }) => {
             const active = isActive(href)
             return (
@@ -73,10 +70,10 @@ const Navbar = (): React.JSX.Element => {
                 key={href}
                 href={href}
                 aria-current={active ? 'page' : undefined}
-                className={`border-b-2 px-0.5 py-2 text-sm font-medium transition-colors ${
+                className={`relative inline-flex h-full items-center px-0.5 pt-0.5 text-[13px] font-medium transition-colors after:absolute after:inset-x-0 after:bottom-[17px] after:h-0.5 after:origin-center after:bg-[#e23845] after:transition-transform ${
                   active
-                    ? 'border-[#1B1F87] text-[#101A35]'
-                    : 'border-transparent text-slate-600 hover:text-[#101A35]'
+                    ? 'text-[#101A35] after:scale-x-100'
+                    : 'text-slate-600 after:scale-x-0 hover:text-[#101A35] hover:after:scale-x-100'
                 }`}
               >
                 {label}
@@ -88,7 +85,7 @@ const Navbar = (): React.JSX.Element => {
         <div className="hidden justify-self-end md:block">
           <Link
             href={user ? accountHref : '/auth'}
-            className={`inline-flex min-h-10 items-center justify-center rounded-lg px-5 py-2 text-sm font-semibold text-white transition-colors focus-visible:outline-[#1B1F87] ${accountButtonTone}`}
+            className="inline-flex min-h-10 items-center justify-center rounded-[4px] bg-[#071a3d] px-5 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#102957] focus-visible:outline-[#184aa2]"
           >
             {accountLabel}
           </Link>
@@ -97,7 +94,7 @@ const Navbar = (): React.JSX.Element => {
         <button
           ref={menuButtonRef}
           type="button"
-          className="inline-flex size-10 items-center justify-center rounded-lg border border-slate-200 text-[#101A35] transition-colors hover:border-slate-300 hover:bg-slate-50 md:hidden"
+          className="inline-flex size-10 items-center justify-center rounded-md border border-slate-200 text-[#101A35] transition-colors hover:border-slate-300 hover:bg-slate-50 md:hidden"
           onClick={() => setIsMenuOpen((open) => !open)}
           aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
           aria-expanded={isMenuOpen}
@@ -141,7 +138,7 @@ const Navbar = (): React.JSX.Element => {
               <Link
                 href={user ? accountHref : '/auth'}
                 onClick={() => setIsMenuOpen(false)}
-                className={`inline-flex min-h-11 w-full items-center justify-center rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition-colors focus-visible:outline-[#1B1F87] ${accountButtonTone}`}
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-[4px] bg-[#071a3d] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#102957] focus-visible:outline-[#184aa2]"
               >
                 {accountLabel}
               </Link>
