@@ -2,6 +2,7 @@
 
 import { useLogout } from "@/hooks/useAuth"
 import { useUser } from "@/hooks/useUsers"
+import { useStaffFeatureSettings } from "@/hooks/useSettings"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -16,6 +17,7 @@ import {
     LuLogOut,
     LuBookOpen,
     LuLifeBuoy,
+    LuMail,
 } from "react-icons/lu"
 import { PiSuitcase, PiUsersThree } from "react-icons/pi"
 
@@ -23,6 +25,7 @@ const AdminSidebar = () => {
     const pathname = usePathname()
     const router = useRouter()
     const { data: user } = useUser()
+    const featureSettings = useStaffFeatureSettings(user?.role === 'recruiter')
 
     const logoutMutation = useLogout()
 
@@ -76,6 +79,12 @@ const AdminSidebar = () => {
             permission: 'team:manage',
         },
         {
+            name: "Emails",
+            href: "/admin-center/emails",
+            icon: <LuMail size={20} />,
+            permission: 'team-emails:send',
+        },
+        {
             name: "My Profile",
             href: "/admin-center/profile",
             icon: <LuUser size={20} />,
@@ -104,7 +113,12 @@ const AdminSidebar = () => {
 
             {/* 2. Navigation */}
             <nav aria-label="Administration navigation" className="flex flex-1 gap-2 overflow-x-auto px-4 py-3 md:flex-col md:space-y-2 md:overflow-visible md:py-6">
-                {menuItems.filter((item) => hasStaffPermission(user?.role, item.permission)).map((item) => {
+                {menuItems.filter((item) => (
+                    hasStaffPermission(user?.role, item.permission)
+                    && (item.href !== '/admin-center/emails'
+                        || user?.role === 'super-admin'
+                        || featureSettings.data?.recruiterCandidateEmailsEnabled === true)
+                )).map((item) => {
                     const isActive = item.href === '/admin-center'
                         ? pathname === item.href
                         : pathname === item.href || pathname.startsWith(`${item.href}/`)

@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
     fetchOrganizationSettings,
     fetchPublicPlatformSettings,
+    fetchStaffFeatureSettings,
     updateOrganizationSettings,
 } from '@/api/settings'
 import type { PublicPlatformSettings } from '@/types/types'
@@ -26,6 +27,14 @@ export const useOrganizationSettings = (enabled = true) => useQuery({
     enabled,
 })
 
+export const useStaffFeatureSettings = (enabled = true) => useQuery({
+    queryKey: ['platformSettings', 'staffFeatures'],
+    queryFn: fetchStaffFeatureSettings,
+    enabled,
+    staleTime: 60_000,
+    retry: 1,
+})
+
 export const useUpdateOrganizationSettings = () => {
     const queryClient = useQueryClient()
     return useMutation({
@@ -39,6 +48,10 @@ export const useUpdateOrganizationSettings = () => {
                     timeZone: settings.timeZone,
                     candidateRegistrationEnabled: settings.candidateRegistrationEnabled,
                 },
+            )
+            queryClient.setQueryData(
+                ['platformSettings', 'staffFeatures'],
+                { recruiterCandidateEmailsEnabled: settings.recruiterCandidateEmailsEnabled },
             )
         },
     })

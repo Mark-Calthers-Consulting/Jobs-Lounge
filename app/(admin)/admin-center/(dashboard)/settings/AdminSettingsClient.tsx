@@ -177,6 +177,7 @@ const OrganizationSettingsPanel = () => {
     const [registrationError, setRegistrationError] = useState<string | null>(null)
     const [sessionPolicy, setSessionPolicy] = useState<StaffSessionDurationPolicy | null>(null)
     const [sessionPolicyError, setSessionPolicyError] = useState<string | null>(null)
+    const [emailFeatureError, setEmailFeatureError] = useState<string | null>(null)
     const [confirmTeamSignOut, setConfirmTeamSignOut] = useState(false)
     const [confirmRegistrationPause, setConfirmRegistrationPause] = useState(false)
 
@@ -192,6 +193,7 @@ const OrganizationSettingsPanel = () => {
     const supportEmailValue = supportEmail ?? query.data.supportEmail
     const timeZoneValue = timeZone ?? query.data.timeZone
     const candidateRegistrationEnabled = query.data.candidateRegistrationEnabled !== false
+    const recruiterCandidateEmailsEnabled = query.data.recruiterCandidateEmailsEnabled === true
     const savedSessionPolicy = query.data.staffSessionDurationHours || DEFAULT_STAFF_SESSION_POLICY
     const sessionPolicyValue = sessionPolicy || savedSessionPolicy
 
@@ -244,6 +246,23 @@ const OrganizationSettingsPanel = () => {
             setSessionPolicyError(error instanceof Error
                 ? error.message
                 : 'Unable to update staff session policy.')
+        }
+    }
+
+    const updateRecruiterEmailAccess = async () => {
+        setEmailFeatureError(null)
+        try {
+            await update.mutateAsync({
+                recruiterCandidateEmailsEnabled: !recruiterCandidateEmailsEnabled,
+                revision: query.data.revision,
+            })
+            toast.success(recruiterCandidateEmailsEnabled
+                ? 'Recruiter email access disabled.'
+                : 'Recruiter email access enabled.')
+        } catch (error) {
+            setEmailFeatureError(error instanceof Error
+                ? error.message
+                : 'Unable to update recruiter email access.')
         }
     }
 
@@ -316,6 +335,29 @@ const OrganizationSettingsPanel = () => {
                     </div>
                 </div>
                 <div className="divide-y divide-gray-100">
+                    <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <h3 className="font-semibold text-gray-950">Recruiter candidate emails</h3>
+                                <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${recruiterCandidateEmailsEnabled ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>
+                                    {recruiterCandidateEmailsEnabled ? 'Enabled' : 'Disabled'}
+                                </span>
+                            </div>
+                            <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-600">Allow Recruiters to email candidates who applied to vacancies they personally uploaded.</p>
+                            {emailFeatureError ? <p role="alert" className="mt-2 text-sm text-red-700">{emailFeatureError}</p> : null}
+                        </div>
+                        <button
+                            type="button"
+                            role="switch"
+                            aria-checked={recruiterCandidateEmailsEnabled}
+                            aria-label="Recruiter candidate email access"
+                            onClick={() => void updateRecruiterEmailAccess()}
+                            disabled={update.isPending}
+                            className={`relative h-7 w-12 shrink-0 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2] focus-visible:ring-offset-2 disabled:opacity-60 ${recruiterCandidateEmailsEnabled ? 'bg-[#184aa2]' : 'bg-gray-300'}`}
+                        >
+                            <span className={`absolute top-1 size-5 rounded-full bg-white shadow-sm transition-transform ${recruiterCandidateEmailsEnabled ? 'left-6' : 'left-1'}`} />
+                        </button>
+                    </div>
                     <div className="p-5 sm:px-6">
                         <div>
                             <h3 className="font-semibold text-gray-950">Session duration</h3>

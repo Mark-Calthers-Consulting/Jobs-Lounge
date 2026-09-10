@@ -38,6 +38,7 @@ vi.mock('@/hooks/useSettings', () => ({
             supportEmail: 'support@example.com',
             timeZone: 'Africa/Lagos',
             candidateRegistrationEnabled: true,
+            recruiterCandidateEmailsEnabled: false,
             staffSessionDurationHours: {
                 admin: 720,
                 recruiter: 720,
@@ -137,6 +138,22 @@ describe('role-aware admin settings', () => {
                 recruiter: 720,
                 superAdmin: 720,
             },
+            revision: 1,
+        }))
+    })
+
+    it('toggles recruiter candidate email access', async () => {
+        currentRole = 'super-admin'
+        currentSection = 'section=organization'
+        updateOrganization.mockResolvedValue({})
+        render(<AdminSettingsClient />)
+
+        const accessSwitch = screen.getByRole('switch', { name: 'Recruiter candidate email access' })
+        expect(accessSwitch).toHaveAttribute('aria-checked', 'false')
+        fireEvent.click(accessSwitch)
+
+        await waitFor(() => expect(updateOrganization).toHaveBeenCalledWith({
+            recruiterCandidateEmailsEnabled: true,
             revision: 1,
         }))
     })

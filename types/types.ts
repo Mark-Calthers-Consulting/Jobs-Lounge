@@ -665,6 +665,114 @@ export type CreateStaffPayload = {
   password?: string
 }
 
+export type TeamEmailTemplate =
+  | 'staff-activity-reminder'
+  | 'staff-applications-waiting'
+  | 'staff-stale-drafts'
+  | 'staff-closing-vacancies'
+  | 'staff-custom'
+
+export type TeamEmailContextItem = {
+  jobId: string
+  title: string
+  count?: number
+  date?: string
+}
+
+export type TeamEmailRecipient = {
+  id: string
+  name: string
+  email: string
+  role: Extract<UserRole, 'admin' | 'recruiter' | 'super-admin'>
+  accountState: 'active' | 'suspended'
+  lastActiveAt: string | null
+  eligible: boolean
+  context: {
+    label?: string
+    itemCount?: number
+    vacancyCount?: number
+    items?: TeamEmailContextItem[]
+  }
+}
+
+export type TeamEmailRecipientFilters = {
+  template: TeamEmailTemplate
+  threshold?: number
+  search?: string
+  page?: number
+  limit?: number
+  scope?: 'eligible' | 'all-team'
+}
+
+export type TeamEmailHistoryItem = {
+  dispatchId: string
+  template: TeamEmailTemplate
+  requestedByName?: string
+  queuedAt: string
+  latestDeliveryAt?: string
+  recipientCount: number
+  recipientPreview: string[]
+  statusCounts: {
+    pending: number
+    retry: number
+    sent: number
+    dead: number
+  }
+}
+
+export type TeamEmailDispatchPayload = {
+  requestId: string
+  template: TeamEmailTemplate
+  recipientIds: string[]
+  manualRecipients?: string[]
+  recipientScope?: 'eligible' | 'all-team'
+  threshold?: number
+  message: string
+  subject?: string
+}
+
+export type TeamEmailDispatchResult = {
+  dispatchId: string
+  recipientCount: number
+  idempotent: boolean
+}
+
+export type CandidateEmailRecipient = {
+  applicationId: string
+  candidateId: string
+  name: string
+  email: string
+  status: string
+  submittedAt: string
+  vacancy: {
+    id: string
+    title: string
+    status: string
+  }
+}
+
+export type CandidateEmailRecipientFilters = {
+  vacancyId?: string
+  search?: string
+  page?: number
+  limit?: number
+}
+
+export type CandidateEmailRecipientsResponse = PaginatedResponse<CandidateEmailRecipient> & {
+  vacancies: Array<{ id: string; title: string; status: string }>
+}
+
+export type CandidateEmailHistoryItem = Omit<TeamEmailHistoryItem, 'template'> & {
+  template: 'candidate-custom'
+}
+
+export type CandidateEmailDispatchPayload = {
+  requestId: string
+  applicationIds: string[]
+  subject: string
+  message: string
+}
+
 export type PublicPlatformSettings = {
     supportEmail: string
     timeZone: string
@@ -680,6 +788,7 @@ export type StaffSessionDurationPolicy = {
 }
 
 export type OrganizationSettings = PublicPlatformSettings & {
+  recruiterCandidateEmailsEnabled: boolean
   staffSessionDurationHours: StaffSessionDurationPolicy
   revision: number
   updatedAt?: string
@@ -691,9 +800,13 @@ export type OrganizationSettings = PublicPlatformSettings & {
 
 export type OrganizationSettingsUpdate = Partial<Pick<
   OrganizationSettings,
-  'supportEmail' | 'timeZone' | 'candidateRegistrationEnabled' | 'staffSessionDurationHours'
+  'supportEmail' | 'timeZone' | 'candidateRegistrationEnabled' | 'recruiterCandidateEmailsEnabled' | 'staffSessionDurationHours'
 >> & {
   revision: number
+}
+
+export type StaffFeatureSettings = {
+  recruiterCandidateEmailsEnabled: boolean
 }
 
 export type StaffProfilePayload = {

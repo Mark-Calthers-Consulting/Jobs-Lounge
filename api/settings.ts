@@ -6,6 +6,7 @@ import type {
     OrganizationSettings,
     OrganizationSettingsUpdate,
     PublicPlatformSettings,
+    StaffFeatureSettings,
 } from '@/types/types'
 
 export const fetchPublicPlatformSettings = async (): Promise<PublicPlatformSettings> => {
@@ -29,6 +30,19 @@ export const fetchOrganizationSettings = async (): Promise<OrganizationSettings>
     const result = await readApiResponse<ApiSuccess<OrganizationSettings>>(
         response,
         'Unable to load organization settings',
+    )
+    return result.data
+}
+
+export const fetchStaffFeatureSettings = async (): Promise<StaffFeatureSettings> => {
+    const response = await fetch(apiPath('/admin/settings/features'), {
+        method: 'GET',
+        credentials: 'include',
+        cache: 'no-store',
+    })
+    const result = await readApiResponse<ApiSuccess<StaffFeatureSettings>>(
+        response,
+        'Unable to load staff feature settings',
     )
     return result.data
 }

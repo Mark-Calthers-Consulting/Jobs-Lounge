@@ -7,6 +7,10 @@ import type {
     CandidateApplication,
     CandidateDeletionResult,
     CandidateFilterOptions,
+    CandidateEmailDispatchPayload,
+    CandidateEmailHistoryItem,
+    CandidateEmailRecipientFilters,
+    CandidateEmailRecipientsResponse,
     CandidateListFilters,
     CandidateSummary,
     CreateStaffPayload,
@@ -14,6 +18,11 @@ import type {
     Job,
     PaginatedResponse,
     StaffMember,
+    TeamEmailDispatchPayload,
+    TeamEmailDispatchResult,
+    TeamEmailHistoryItem,
+    TeamEmailRecipient,
+    TeamEmailRecipientFilters,
     User,
 } from '@/types/types'
 import { readApiResponse } from './errors'
@@ -174,6 +183,98 @@ export const signOutAllTeamMembers = async (): Promise<{ affectedAccounts: numbe
     const result = await readApiResponse<ApiSuccess<{ affectedAccounts: number }>>(
         res,
         'Unable to sign out team members',
+    )
+    return result.data
+}
+
+export const fetchTeamEmailRecipients = async (
+    filters: TeamEmailRecipientFilters,
+): Promise<PaginatedResponse<TeamEmailRecipient>> => {
+    const params = new URLSearchParams()
+    Object.entries({ page: 1, limit: 20, ...filters }).forEach(([key, value]) => {
+        if (value !== undefined && value !== '') params.set(key, String(value))
+    })
+    const res = await fetch(`${apiPath('/admin/team-emails/recipients')}?${params}`, {
+        credentials: 'include',
+        cache: 'no-store',
+    })
+    return readApiResponse<PaginatedResponse<TeamEmailRecipient>>(
+        res,
+        'Unable to load eligible recipients',
+    )
+}
+
+export const fetchTeamEmailHistory = async (
+    page = 1,
+    limit = 20,
+): Promise<PaginatedResponse<TeamEmailHistoryItem>> => {
+    const res = await fetch(`${apiPath('/admin/team-emails/history')}?${pageQuery(page, limit)}`, {
+        credentials: 'include',
+        cache: 'no-store',
+    })
+    return readApiResponse<PaginatedResponse<TeamEmailHistoryItem>>(
+        res,
+        'Unable to load team email history',
+    )
+}
+
+export const queueTeamEmail = async (
+    payload: TeamEmailDispatchPayload,
+): Promise<TeamEmailDispatchResult> => {
+    const res = await csrfFetch(apiPath('/admin/team-emails'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    })
+    const result = await readApiResponse<ApiSuccess<TeamEmailDispatchResult>>(
+        res,
+        'Unable to queue team emails',
+    )
+    return result.data
+}
+
+export const fetchCandidateEmailRecipients = async (
+    filters: CandidateEmailRecipientFilters,
+): Promise<CandidateEmailRecipientsResponse> => {
+    const params = new URLSearchParams()
+    Object.entries({ page: 1, limit: 20, ...filters }).forEach(([key, value]) => {
+        if (value !== undefined && value !== '') params.set(key, String(value))
+    })
+    const response = await fetch(`${apiPath('/admin/candidate-emails/recipients')}?${params}`, {
+        credentials: 'include',
+        cache: 'no-store',
+    })
+    return readApiResponse<CandidateEmailRecipientsResponse>(
+        response,
+        'Unable to load candidate recipients',
+    )
+}
+
+export const fetchCandidateEmailHistory = async (
+    page = 1,
+    limit = 20,
+): Promise<PaginatedResponse<CandidateEmailHistoryItem>> => {
+    const response = await fetch(`${apiPath('/admin/candidate-emails/history')}?${pageQuery(page, limit)}`, {
+        credentials: 'include',
+        cache: 'no-store',
+    })
+    return readApiResponse<PaginatedResponse<CandidateEmailHistoryItem>>(
+        response,
+        'Unable to load candidate email history',
+    )
+}
+
+export const queueCandidateEmail = async (
+    payload: CandidateEmailDispatchPayload,
+): Promise<TeamEmailDispatchResult> => {
+    const response = await csrfFetch(apiPath('/admin/candidate-emails'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    })
+    const result = await readApiResponse<ApiSuccess<TeamEmailDispatchResult>>(
+        response,
+        'Unable to queue candidate emails',
     )
     return result.data
 }

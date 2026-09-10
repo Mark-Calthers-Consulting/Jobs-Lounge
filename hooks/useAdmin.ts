@@ -1,5 +1,5 @@
-import { cancelStaffInvitation, createStaffMember, deleteAdminJob, deleteCandidateAccount, fetchAdminCandidate, fetchAdminDashboard, fetchAdminJob, fetchAdminJobs, fetchAllUsers, fetchCandidateApplications, fetchCandidateFilterOptions, fetchJobCandidates, fetchTeamMembers, resendStaffInvitation, restoreAdminJob, signOutAllTeamMembers, type TeamFilters, updateAdminJob, updateAdminJobStatus, updateStaffRole, updateStaffSuspension } from "@/api/admin"
-import { AdminJobListFilters, CandidateListFilters, Job, PaginatedResponse, StaffMember, User } from "@/types/types"
+import { cancelStaffInvitation, createStaffMember, deleteAdminJob, deleteCandidateAccount, fetchAdminCandidate, fetchAdminDashboard, fetchAdminJob, fetchAdminJobs, fetchAllUsers, fetchCandidateApplications, fetchCandidateEmailHistory, fetchCandidateEmailRecipients, fetchCandidateFilterOptions, fetchJobCandidates, fetchTeamEmailHistory, fetchTeamEmailRecipients, fetchTeamMembers, queueCandidateEmail, queueTeamEmail, resendStaffInvitation, restoreAdminJob, signOutAllTeamMembers, type TeamFilters, updateAdminJob, updateAdminJobStatus, updateStaffRole, updateStaffSuspension } from "@/api/admin"
+import { AdminJobListFilters, CandidateEmailRecipientFilters, CandidateListFilters, Job, PaginatedResponse, StaffMember, TeamEmailRecipientFilters, User } from "@/types/types"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 
@@ -76,6 +76,48 @@ export const useUpdateStaffSuspension = () => {
 export const useSignOutAllTeamMembers = () => useMutation({
     mutationFn: signOutAllTeamMembers,
 })
+
+export const useTeamEmailRecipients = (filters: TeamEmailRecipientFilters) => useQuery({
+    queryKey: ['teamEmailRecipients', filters],
+    queryFn: () => fetchTeamEmailRecipients(filters),
+})
+
+export const useTeamEmailHistory = (page = 1) => useQuery({
+    queryKey: ['teamEmailHistory', page],
+    queryFn: () => fetchTeamEmailHistory(page),
+    refetchInterval: (query) => query.state.data?.data.some((dispatch) => (
+        dispatch.statusCounts.pending > 0 || dispatch.statusCounts.retry > 0
+    )) ? 10000 : false,
+})
+
+export const useQueueTeamEmail = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: queueTeamEmail,
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['teamEmailHistory'] }),
+    })
+}
+
+export const useCandidateEmailRecipients = (filters: CandidateEmailRecipientFilters) => useQuery({
+    queryKey: ['candidateEmailRecipients', filters],
+    queryFn: () => fetchCandidateEmailRecipients(filters),
+})
+
+export const useCandidateEmailHistory = (page = 1) => useQuery({
+    queryKey: ['candidateEmailHistory', page],
+    queryFn: () => fetchCandidateEmailHistory(page),
+    refetchInterval: (query) => query.state.data?.data.some((dispatch) => (
+        dispatch.statusCounts.pending > 0 || dispatch.statusCounts.retry > 0
+    )) ? 10000 : false,
+})
+
+export const useQueueCandidateEmail = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: queueCandidateEmail,
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['candidateEmailHistory'] }),
+    })
+}
 
 export const useGetJobCandidates = (filters: CandidateListFilters = {}) => {
     return useQuery({

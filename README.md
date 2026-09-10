@@ -49,6 +49,7 @@ Treat unit tests, lint, and build as required pre-deployment checks.
 - `/accept-staff-invitation`: secure staff password creation
 - `/admin-center/*`: role-protected staff area for Administrators, Recruiters, and Super administrators
 - `/admin-center/blog/*`: Recruiter/Super-admin article management and Markdown editing
+- `/admin-center/emails`: Super-admin-only team email composition and 30-day delivery history
 - `/api/backend/*`: same-origin proxy to the Express `/api/*` routes
 
 Route protection is enforced in the dashboard/admin layouts and again by the backend authorization middleware. Frontend checks improve navigation but are not a security boundary.

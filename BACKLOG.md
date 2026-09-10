@@ -42,8 +42,10 @@ Status: deferred
 
 Status: deferred
 
+- Extend the Super-admin **Emails** centre with governed candidate-recipient selection and appropriate consent, targeting, rate-limit, preview, audit, and delivery controls.
 - Implement actual job-alert delivery for candidates who enable `New vacancy alerts`; the current setting only persists their preference.
 - Implement the career newsletter campaign for candidates who enable `Career newsletter`; the current setting only persists their preference.
+- Consider scheduling and automatic staff reminders only after the manual team-email workflows have reliable delivery history and clear operational ownership.
 - Before launch, define targeting and scheduling, use the durable email outbox for retries, add delivery telemetry, and provide a reliable unsubscribe path.
 
 ## Candidate last-active visibility
