@@ -26,6 +26,7 @@ import type {
   TeamEmailTemplate,
 } from '@/types/types'
 import { formatDateInTimeZone } from '@/utils/dateTime'
+import RecipientWindowSelect from './RecipientWindowSelect'
 
 type TemplateDefinition = {
   key: TeamEmailTemplate
@@ -45,7 +46,7 @@ const templates: TemplateDefinition[] = [
     description: 'Reach active team members who have not used the dashboard recently.',
     subject: 'A reminder to return to Jobs Lounge',
     defaultMessage: 'It has been a while since your last visit. Please return to your dashboard when you can and review anything that may need your attention.',
-    thresholds: [30, 60, 90],
+    thresholds: [7, 30, 60, 90],
     thresholdLabel: (value) => `${value}+ days inactive`,
     icon: LuClock3,
   },
@@ -163,6 +164,18 @@ export default function TeamEmailCenter() {
   const [recipientScope, setRecipientScope] = useState<'eligible' | 'all-team'>('eligible')
   const [manualRecipientInput, setManualRecipientInput] = useState('')
   const requestIdRef = useRef<string | null>(null)
+  const recipientWindowOptions = template.thresholds
+    ? [
+      ...template.thresholds.map((value) => ({
+        value: String(value),
+        label: template.thresholdLabel?.(value) || String(value),
+      })),
+      { value: 'all-team', label: 'All active team' },
+    ]
+    : [
+      { value: 'eligible', label: 'Matches this reminder' },
+      { value: 'all-team', label: 'All active team' },
+    ]
 
   const recipientsQuery = useTeamEmailRecipients({
     template: templateKey,
@@ -335,36 +348,18 @@ export default function TeamEmailCenter() {
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
             {templateKey !== 'staff-custom' ? (
-              <label className="flex min-h-10 items-center gap-2 self-end rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={recipientScope === 'all-team'}
-                  onChange={(event) => {
-                    setRecipientScope(event.target.checked ? 'all-team' : 'eligible')
+              <RecipientWindowSelect
+                options={recipientWindowOptions}
+                value={recipientScope === 'all-team' ? 'all-team' : String(threshold ?? 'eligible')}
+                onChange={(nextValue) => {
+                    const showAll = nextValue === 'all-team'
+                    setRecipientScope(showAll ? 'all-team' : 'eligible')
+                    if (!showAll && template.thresholds) setThreshold(Number(nextValue))
                     setPage(1)
                     setSelected(new Map())
                     setPreviewId(undefined)
-                  }}
-                  className="size-4 accent-blue-700"
-                />
-                Show all active team
-              </label>
-            ) : null}
-            {template.thresholds ? (
-              <label className="text-xs font-semibold text-slate-700">
-                Eligibility window
-                <select
-                  value={threshold}
-                  onChange={(event) => {
-                    setThreshold(Number(event.target.value))
-                    setPage(1)
-                    setSelected(new Map())
-                  }}
-                  className="mt-1 block min-h-10 rounded-md border border-slate-300 bg-white px-3 text-sm font-normal text-slate-900"
-                >
-                  {template.thresholds.map((value) => <option key={value} value={value}>{template.thresholdLabel?.(value)}</option>)}
-                </select>
-              </label>
+                }}
+              />
             ) : null}
             <label className="text-xs font-semibold text-slate-700">
               Search team

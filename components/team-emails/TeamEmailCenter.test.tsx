@@ -93,9 +93,25 @@ describe('TeamEmailCenter', () => {
     expect(screen.getByRole('button', { name: /Vacancies closing soon/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Custom email/ })).toBeInTheDocument()
     expect(screen.getByText('Active')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Recipient window/ }))
+    expect(screen.getByRole('option', { name: '7+ days inactive' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'All active team' })).toBeInTheDocument()
     expect(recipientFilters).toHaveBeenCalledWith(expect.objectContaining({
       template: 'staff-activity-reminder',
       threshold: 30,
+    }))
+  })
+
+  it('uses one recipient-window control for eligibility and all-team selection', () => {
+    render(<TeamEmailCenter />)
+
+    const windowSelect = screen.getByRole('button', { name: /Recipient window/ })
+    fireEvent.click(windowSelect)
+    fireEvent.click(screen.getByRole('option', { name: 'All active team' }))
+
+    expect(windowSelect).toHaveTextContent('All active team')
+    expect(recipientFilters).toHaveBeenLastCalledWith(expect.objectContaining({
+      scope: 'all-team',
     }))
   })
 
