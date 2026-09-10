@@ -568,6 +568,8 @@ export type CandidateSummary = {
   }
   applicationCount: number
   latestApplicationAt?: string
+  lastActiveAt?: string | null
+  lastLoginAt?: string | null
   createdAt: string
   updatedAt: string
 }
@@ -600,6 +602,8 @@ export type CandidateFilterOptions = {
 export type AdminCandidateDetail = {
   candidate: Omit<User, 'role' | 'lastLogin' | 'notificationPreferences'> & {
     profileCompletion: ProfileCompletion
+    lastActiveAt?: string | null
+    lastLoginAt?: string | null
   }
   applicationSummary: {
     total: number

@@ -17,6 +17,10 @@ const formatDate = (value: string | undefined, timeZone: string, options?: Intl.
     ? formatDateInTimeZone(value, timeZone, options)
     : 'Not provided'
 
+const formatActivityDate = (value: string | null | undefined, timeZone: string) => value
+    ? formatDateInTimeZone(value, timeZone, { dateStyle: 'medium', timeStyle: 'short' })
+    : 'Not recorded yet'
+
 const formatCalendarDate = (value?: string) => {
     if (!value) return 'Not provided'
     const [year, month, day] = value.slice(0, 10).split('-').map(Number)
@@ -96,6 +100,7 @@ const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
     const completion = candidate.profileCompletion
     const confirmationMatches = confirmationEmail.trim().toLowerCase()
         === candidate.email.trim().toLowerCase()
+    const canViewAccountActivity = currentUser.data?.role === 'super-admin'
 
     const closeDeleteDialog = () => {
         if (deleteCandidate.isPending) return
@@ -146,6 +151,12 @@ const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
                             </span>
                         </div>
                         <p className="mt-2 text-sm text-gray-600">Joined {formatDate(candidate.createdAt, timeZone)} · Updated {formatDate(candidate.updatedAt, timeZone)}</p>
+                        {canViewAccountActivity && (
+                            <p className="mt-1 text-sm text-gray-600">
+                                Last active {formatActivityDate(candidate.lastActiveAt, timeZone)}
+                                {' · '}Last login {formatActivityDate(candidate.lastLoginAt, timeZone)}
+                            </p>
+                        )}
                     </div>
                     <div className="flex flex-wrap gap-2">
                         <a href={`mailto:${candidate.email}`} className="inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50"><FiMail aria-hidden="true" />Email</a>

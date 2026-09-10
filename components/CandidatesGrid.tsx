@@ -32,6 +32,13 @@ const formatDate = (value: string | undefined, timeZone: string) => value
     ? formatDateInTimeZone(value, timeZone)
     : '—'
 
+const formatActivityDate = (value: string | null | undefined, timeZone: string) => value
+    ? formatDateInTimeZone(value, timeZone, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+    })
+    : 'Not recorded yet'
+
 const experienceLabel = (years?: number) => {
     if (years === undefined) return 'Not provided'
     return `${years} ${years === 1 ? 'year' : 'years'}`
@@ -339,6 +346,7 @@ const CandidatesGrid = () => {
         filters.view,
     )
     const rows = candidatesQuery.data?.data ?? []
+    const canViewAccountActivity = currentUser.data?.role === 'super-admin'
     const setJobOptionSearchStable = useCallback((value: string) => setJobOptionSearch(value), [])
 
     const activeFilters = useMemo(() => [
@@ -578,7 +586,7 @@ const CandidatesGrid = () => {
 
                     <div className="hidden overflow-hidden rounded-xl border border-gray-200 bg-white md:block">
                         <div className="overflow-x-auto">
-                            <table className="w-full min-w-[940px] text-left">
+                            <table className={`w-full text-left ${canViewAccountActivity ? 'min-w-[1160px]' : 'min-w-[940px]'}`}>
                                 <caption className="sr-only">{isRegisteredView ? 'Registered user' : 'Candidate'} directory. Rows can be clicked to open the full profile.</caption>
                                 <thead className="border-b border-gray-200 bg-gray-50">
                                     <tr>
@@ -587,6 +595,7 @@ const CandidatesGrid = () => {
                                         <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Education and experience</th>
                                         <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Profile</th>
                                         {!isRegisteredView && <SortHeading label="Applications" current={filters.sort || 'newest'} primary="applications" secondary="applications-asc" primaryDirection="descending" onChange={sortCandidates} />}
+                                        {canViewAccountActivity && <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Account activity</th>}
                                         <SortHeading label="Joined" current={filters.sort || 'newest'} primary="newest" secondary="oldest" primaryDirection="descending" onChange={sortCandidates} />
                                         <th scope="col" className="px-4 py-3"><span className="sr-only">Actions</span></th>
                                     </tr>
@@ -618,6 +627,17 @@ const CandidatesGrid = () => {
                                                     <p className="mt-1 text-xs text-gray-500">Latest {formatDate(candidate.latestApplicationAt, timeZone)}</p>
                                                 </td>
                                             )}
+                                            {canViewAccountActivity && (
+                                                <td className="px-4 py-4 text-sm">
+                                                    <p className="font-medium text-gray-800">Last active</p>
+                                                    <time dateTime={candidate.lastActiveAt || undefined} className="mt-0.5 block text-xs text-gray-500">
+                                                        {formatActivityDate(candidate.lastActiveAt, timeZone)}
+                                                    </time>
+                                                    <p className="mt-2 text-xs text-gray-500">
+                                                        Last login: {formatActivityDate(candidate.lastLoginAt, timeZone)}
+                                                    </p>
+                                                </td>
+                                            )}
                                             <td className="px-4 py-4 text-sm text-gray-600">{formatDate(candidate.createdAt, timeZone)}</td>
                                             <td className="px-4 py-4 text-right">
                                                 <Link href={`/admin-center/candidates/${candidate._id}`} className="whitespace-nowrap text-sm font-semibold text-[#184aa2] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]">
@@ -647,6 +667,13 @@ const CandidatesGrid = () => {
                                     <div><dt className="text-gray-500">Experience</dt><dd className="mt-0.5 font-medium">{experienceLabel(candidate.postNyscExperience)}</dd></div>
                                     {!isRegisteredView && <div><dt className="text-gray-500">Applications</dt><dd className="mt-0.5 font-medium">{candidate.applicationCount}</dd></div>}
                                     <div><dt className="text-gray-500">Joined</dt><dd className="mt-0.5 font-medium">{formatDate(candidate.createdAt, timeZone)}</dd></div>
+                                    {canViewAccountActivity && (
+                                        <div className="col-span-2 border-t border-gray-100 pt-3">
+                                            <dt className="text-gray-500">Account activity</dt>
+                                            <dd className="mt-1 font-medium">Last active: {formatActivityDate(candidate.lastActiveAt, timeZone)}</dd>
+                                            <dd className="mt-1 text-xs text-gray-500">Last login: {formatActivityDate(candidate.lastLoginAt, timeZone)}</dd>
+                                        </div>
+                                    )}
                                 </dl>
                                 <Link href={`/admin-center/candidates/${candidate._id}`} className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-md bg-[#184aa2] px-4 text-sm font-semibold text-white">
                                     View {isRegisteredView ? 'user' : 'candidate'}

@@ -31,15 +31,6 @@ Status: deferred
 - Consider scheduling and automatic staff reminders only after the manual team-email workflows have reliable delivery history and clear operational ownership.
 - Before launch, define targeting and scheduling, use the durable email outbox for retries, add delivery telemetry, and provide a reliable unsubscribe path.
 
-## Candidate last-active visibility
-
-Status: deferred
-
-- Track a candidate `lastActiveAt` timestamp from authenticated product activity using the same throttled-write approach as staff activity tracking, avoiding a database write on every request.
-- Show the timestamp to Super-admins in the Candidates and Registered users views, with a clear distinction between last login and last activity.
-- Keep candidate activity hidden from Recruiters and ordinary Administrators, avoid storing page-level browsing history, and define privacy and retention expectations before rollout.
-- Add sorting or filtering by last activity only if operationally useful, with an appropriate database index and tests for legacy candidates who have no activity timestamp.
-
 ## Staff security centre
 
 Status: partially implemented
