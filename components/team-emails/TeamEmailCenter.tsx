@@ -495,22 +495,23 @@ export default function TeamEmailCenter() {
                 <p className="font-semibold text-slate-950">{templateKey === 'staff-custom' ? subject || 'Your subject' : template.subject}</p>
                 <p className="mt-5">Hello {preview.name || 'there'},</p>
                 <p className="mt-3 whitespace-pre-line">{message || 'Your message will appear here.'}</p>
-                {templateKey !== 'staff-custom' ? (
+                {templateKey !== 'staff-custom' && templateKey !== 'staff-activity-reminder' ? (
                   <div className="mt-4 rounded-md border border-slate-200 bg-white p-3">
                     <p className="text-xs font-semibold text-slate-500">Added automatically</p>
-                    {templateKey === 'staff-activity-reminder' && preview.lastActiveAt ? (
-                      <p className="mt-2">Last recorded activity: {formatDateInTimeZone(preview.lastActiveAt, timeZone)}</p>
-                    ) : null}
                     {preview.context.items?.length ? (
                       <ul className="mt-2 list-disc space-y-1 pl-5">
                         {preview.context.items.map((item) => (
                           <li key={item.jobId}>{previewItemText(templateKey, item, timeZone)}</li>
                         ))}
                       </ul>
-                    ) : templateKey !== 'staff-activity-reminder' ? <p className="mt-2 text-amber-800">No live items currently match this reminder.</p> : null}
+                    ) : <p className="mt-2 text-amber-800">No live items currently match this reminder.</p>}
                   </div>
                 ) : null}
-                {templateKey !== 'staff-custom' ? <p className="mt-5 text-xs text-slate-500">The final email also includes the appropriate dashboard link.</p> : null}
+                {templateKey !== 'staff-custom' ? (
+                  <div className="mt-5 rounded-md bg-slate-100 px-3 py-2 text-xs text-slate-600">
+                    The email includes a clear link to log in to the team dashboard.
+                  </div>
+                ) : null}
               </div>
             ) : (
               <div className="flex min-h-56 items-center justify-center text-center text-sm text-slate-500">Select at least one recipient to preview the email.</div>
