@@ -51,7 +51,7 @@ const templates: TemplateDefinition[] = [
     title: 'Activity check-in',
     description: 'Send a friendly check-in to team members who have not used the dashboard recently.',
     subject: 'A quick check-in from Jobs Lounge',
-    defaultMessage: 'We wanted to check in and let you know that your Jobs Lounge dashboard is ready whenever you are. You can sign in when it suits you to catch up on anything new.',
+    defaultMessage: 'It’s been a while since your last visit to Jobs Lounge. When you have a moment, sign in to catch up on any recent activity.',
     thresholds: [7, 30, 60, 90],
     thresholdLabel: (value) => `${value}+ days inactive`,
     icon: LuClock3,
