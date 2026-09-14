@@ -1,0 +1,99 @@
+.page {
+  --admin-surface: #fff;
+  --admin-ink: oklch(0.22 0.035 260);
+  --admin-shadow: 0 2rem 5rem rgb(3 10 23 / 0.34), 0 0.375rem 1.5rem rgb(3 10 23 / 0.15);
+  --text-heading: 2.5rem;
+  --text-body: 1rem;
+  --text-secondary: 0.875rem;
+  --text-caption: 0.75rem;
+  --leading-heading: 1.05;
+  --leading-body: 1.5;
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2.25rem;
+
+  position: relative;
+  isolation: isolate;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  padding: clamp(2rem, 6vh, 4.5rem) 1rem;
+  background: #0b1422;
+  color: var(--admin-ink);
+  font-family: var(--font-admin-body), var(--font-geist-sans), sans-serif;
+  font-kerning: normal;
+}
+
+.backgroundImage {
+  position: absolute;
+  z-index: -2;
+  object-fit: cover;
+  object-position: center;
+}
+
+.scrim {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(4, 10, 20, 0.38), rgba(4, 10, 20, 0.56)),
+    radial-gradient(circle at center, transparent 0, rgba(3, 8, 18, 0.18) 72%);
+}
+
+.card {
+  width: min(100%, 25rem);
+  padding: var(--space-4);
+  border: 0;
+  border-radius: 1rem;
+  background: var(--admin-surface);
+  box-shadow: var(--admin-shadow);
+}
+
+.logoLink {
+  display: block;
+  width: fit-content;
+  margin: 0 auto var(--space-3);
+  border-radius: 0.25rem;
+}
+
+.logoLink:focus-visible {
+  outline: 2px solid #0e3c78;
+  outline-offset: 5px;
+}
+
+.logo {
+  display: block;
+  width: 5.5rem;
+  height: auto;
+}
+
+.accessNote {
+  position: relative;
+  margin: var(--space-2) 0 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: var(--text-caption);
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  text-align: center;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.65);
+}
+
+@media (max-width: 30rem) {
+  .page {
+    justify-content: flex-start;
+    padding: 1.25rem 0.875rem;
+  }
+
+  .card {
+    margin: auto 0;
+    padding: 1.75rem 1.25rem;
+  }
+
+  .page {
+    --text-heading: 2.25rem;
+  }
+}

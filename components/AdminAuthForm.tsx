@@ -1,9 +1,10 @@
 'use client'
 import { useLogin } from "@/hooks/useAuth"
-import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { FiEye, FiEyeOff } from "react-icons/fi"
+import { LuArrowRight, LuCircleCheck } from "react-icons/lu"
 import { toast } from "sonner"
 
 type formValues = {
@@ -24,6 +25,8 @@ const AdminAuthForm = ({
         email: '',
         password: '',
     })
+    const [passwordVisible, setPasswordVisible] = useState(false)
+    const [serverError, setServerError] = useState<string | null>(null)
 
     const loginMutation = useLogin()
 
@@ -40,6 +43,7 @@ const AdminAuthForm = ({
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        setServerError(null)
         const toastId = toast.loading('Logging in...')
         try {
             const data = await loginMutation.mutateAsync({
@@ -48,58 +52,104 @@ const AdminAuthForm = ({
             })
 
             if (!['admin', 'recruiter', 'super-admin'].includes(data.role)) {
-                toast.error('Access denied. Not an admin account.', { id: toastId })
+                const message = 'This account does not have access to the team workspace.'
+                setServerError(message)
+                toast.error(message, { id: toastId })
                 router.replace('/dashboard')
                 return
             }
 
-
-            toast.success('Success!', { id: toastId })
+            toast.success('Signed in.', { id: toastId })
             router.replace(nextPath || '/admin-center')
 
         } catch (error) {
-            toast.error(
-                (error as Error).message || "Something went wrong",
-                { id: toastId }
-            )
+            const message = (error as Error).message || 'Unable to sign in.'
+            setServerError(message)
+            toast.error(message, { id: toastId })
         }
     };
 
     return (
-        <div className="space-y-4">
-            <Link href='/' aria-label="Jobs Lounge home"><Image width={70} height={70} src='/logo.svg' alt="" /></Link>
-            <h1 id="admin-auth-title" className="text-[#003B6D] text-2xl font-bold">Jobs Lounge Admin Panel</h1>
-            <p>Sign in to access the Jobs Lounge administration dashboard and manage the platform.</p>
+        <div>
+            <h1 id="admin-auth-title" className="text-center text-[length:var(--text-heading)] font-semibold leading-[var(--leading-heading)] tracking-[-0.045em] text-[#10182b]">Team sign in</h1>
+            <p className="mt-3 text-center text-[length:var(--text-body)] leading-[var(--leading-body)] text-slate-600">Enter your staff account details to continue.</p>
             {passwordResetComplete
                 ? (
-                    <p role="status" className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
+                    <p role="status" className="mt-6 flex items-start gap-2.5 rounded-md border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-sm leading-5 text-emerald-900">
+                        <LuCircleCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
                         Your password has been changed. Sign in with your new password.
                     </p>
                 )
                 : null}
             {invitationAccepted ? (
-                <p role="status" className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
+                <p role="status" className="mt-6 flex items-start gap-2.5 rounded-md border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-sm leading-5 text-emerald-900">
+                    <LuCircleCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
                     Your staff account is ready. Sign in with the password you created.
                 </p>
             ) : null}
-            <form onSubmit={handleSubmit} aria-labelledby="admin-auth-title" aria-busy={loginMutation.isPending}>
-                <label htmlFor="admin-email" className="flex flex-col">
-                    Email Address
-                    <input id="admin-email" required autoComplete="email" onChange={handleChange} name="email" className="my-2 rounded border border-gray-300 px-4 py-2 shadow-sm" type="email" />
-                </label>
-                <label htmlFor="admin-password" className="flex flex-col">
-                    Password
-                    <input id="admin-password" required autoComplete="current-password" onChange={handleChange} name="password" className="my-2 rounded border border-gray-300 px-4 py-2 shadow-sm" type="password" />
-                </label>
-                <div className="text-right">
-                    <Link
-                        href="/forgot-password?area=admin"
-                        className="rounded text-sm font-semibold text-[#003B6D] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003B6D]"
-                    >
-                        Forgot password?
-                    </Link>
+
+            {serverError ? (
+                <p role="alert" className="mt-6 rounded-md border border-red-200 bg-red-50 px-3.5 py-3 text-sm leading-5 text-red-800">
+                    {serverError}
+                </p>
+            ) : null}
+
+            <form className="mt-6 space-y-6" onSubmit={handleSubmit} aria-labelledby="admin-auth-title" aria-busy={loginMutation.isPending}>
+                <div>
+                    <label htmlFor="admin-email" className="block text-[length:var(--text-secondary)] font-semibold text-slate-800">Email address</label>
+                    <input
+                        id="admin-email"
+                        required
+                        autoComplete="email"
+                        onChange={handleChange}
+                        name="email"
+                        value={authData.email}
+                        className="mt-2 min-h-12 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-base text-slate-950 placeholder:text-slate-400 focus:border-[#003B6D] focus:outline-none focus:ring-2 focus:ring-[#003B6D]/15"
+                        placeholder="name@company.com"
+                        type="email"
+                    />
                 </div>
-                <button disabled={loginMutation.isPending} type="submit" className="w-full p-3 my-4 rounded cursor-pointer text-white bg-[#003B6D] disabled:cursor-wait disabled:opacity-70">{loginMutation.isPending ? 'Signing in…' : 'Sign in'}</button>
+                <div>
+                    <div className="flex items-center justify-between gap-4">
+                        <label htmlFor="admin-password" className="block text-[length:var(--text-secondary)] font-semibold text-slate-800">Password</label>
+                        <Link
+                            href="/forgot-password?area=admin"
+                            className="text-[length:var(--text-secondary)] font-semibold text-[#003B6D] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003B6D]"
+                        >
+                            Forgot password?
+                        </Link>
+                    </div>
+                    <div className="relative mt-2">
+                        <input
+                            id="admin-password"
+                            required
+                            autoComplete="current-password"
+                            onChange={handleChange}
+                            name="password"
+                            value={authData.password}
+                            className="min-h-12 w-full rounded-lg border border-slate-300 bg-white px-3.5 pr-12 text-base text-slate-950 focus:border-[#003B6D] focus:outline-none focus:ring-2 focus:ring-[#003B6D]/15"
+                            type={passwordVisible ? 'text' : 'password'}
+                        />
+                        <button
+                            type="button"
+                            aria-label={passwordVisible ? 'Hide password' : 'Show password'}
+                            aria-pressed={passwordVisible}
+                            onClick={() => setPasswordVisible((current) => !current)}
+                            className="absolute inset-y-0 right-0 flex w-12 items-center justify-center rounded-r-lg text-slate-500 transition-colors hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#003B6D]"
+                        >
+                            {passwordVisible ? <FiEyeOff aria-hidden="true" /> : <FiEye aria-hidden="true" />}
+                        </button>
+                    </div>
+                </div>
+                <button
+                    disabled={loginMutation.isPending}
+                    type="submit"
+                    className="flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-[#101a35] px-4 text-[length:var(--text-secondary)] font-semibold text-white transition-colors duration-200 ease-out hover:bg-[#172447] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#101a35] focus-visible:ring-offset-2 active:translate-y-px disabled:cursor-wait disabled:opacity-65"
+                >
+                    {loginMutation.isPending ? 'Signing in…' : (
+                        <>Sign in <LuArrowRight aria-hidden="true" className="size-4" /></>
+                    )}
+                </button>
             </form>
         </div>
     )
