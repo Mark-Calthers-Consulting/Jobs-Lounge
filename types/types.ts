@@ -713,6 +713,7 @@ export type TeamEmailHistoryItem = {
   template: TeamEmailTemplate
   requestedByName?: string
   queuedAt: string
+  scheduledFor?: string | null
   latestDeliveryAt?: string
   recipientCount: number
   recipientPreview: string[]
@@ -721,6 +722,7 @@ export type TeamEmailHistoryItem = {
     retry: number
     sent: number
     dead: number
+    cancelled?: number
   }
 }
 
@@ -733,12 +735,19 @@ export type TeamEmailDispatchPayload = {
   threshold?: number
   message: string
   subject?: string
+  scheduledFor?: string
 }
 
 export type TeamEmailDispatchResult = {
   dispatchId: string
   recipientCount: number
   idempotent: boolean
+  scheduledFor?: string | null
+}
+
+export type TeamEmailCancellationResult = {
+  dispatchId: string
+  cancelledRecipientCount: number
 }
 
 export type CandidateEmailRecipient = {

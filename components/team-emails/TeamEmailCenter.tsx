@@ -4,6 +4,7 @@ import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import {
   LuBellRing,
   LuBriefcaseBusiness,
+  LuCalendarClock,
   LuClock3,
   LuFilePenLine,
   LuMail,
@@ -16,6 +17,7 @@ import Modal from '@/components/Modal'
 import PaginationControls from '@/components/PaginationControls'
 import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
 import {
+  useCancelScheduledTeamEmail,
   useQueueTeamEmail,
   useTeamEmailHistory,
   useTeamEmailRecipients,
@@ -25,7 +27,11 @@ import type {
   TeamEmailRecipient,
   TeamEmailTemplate,
 } from '@/types/types'
-import { formatDateInTimeZone } from '@/utils/dateTime'
+import {
+  dateTimeInputToUtc,
+  dateTimeInputValueInTimeZone,
+  formatDateInTimeZone,
+} from '@/utils/dateTime'
 import RecipientWindowSelect from './RecipientWindowSelect'
 
 type TemplateDefinition = {
@@ -42,38 +48,38 @@ type TemplateDefinition = {
 const templates: TemplateDefinition[] = [
   {
     key: 'staff-activity-reminder',
-    title: 'Activity reminder',
-    description: 'Reach active team members who have not used the dashboard recently.',
-    subject: 'A reminder to return to Jobs Lounge',
-    defaultMessage: 'It has been a while since your last visit. Please return to your dashboard when you can and review anything that may need your attention.',
+    title: 'Activity check-in',
+    description: 'Send a friendly check-in to team members who have not used the dashboard recently.',
+    subject: 'A quick check-in from Jobs Lounge',
+    defaultMessage: 'We wanted to check in and let you know that your Jobs Lounge dashboard is ready whenever you are. You can sign in when it suits you to catch up on anything new.',
     thresholds: [7, 30, 60, 90],
     thresholdLabel: (value) => `${value}+ days inactive`,
     icon: LuClock3,
   },
   {
     key: 'staff-applications-waiting',
-    title: 'Applications waiting',
-    description: 'Remind reviewers about Pending applications on vacancies they uploaded.',
-    subject: 'Applications are waiting for your review',
-    defaultMessage: 'There are candidate applications waiting for review on vacancies you uploaded. Please check the application workspace and move each submission to the appropriate stage.',
+    title: 'Application review update',
+    description: 'Share a summary of Pending applications on vacancies the recipient uploaded.',
+    subject: 'An update on applications to your vacancies',
+    defaultMessage: 'Some vacancies you uploaded have applications awaiting review. When convenient, you can open the application workspace to review the submissions and update their stages.',
     icon: LuBellRing,
   },
   {
     key: 'staff-stale-drafts',
-    title: 'Stale vacancy drafts',
-    description: 'Prompt uploaders to revisit vacancy drafts that have not been edited recently.',
-    subject: 'Your vacancy drafts need attention',
-    defaultMessage: 'You have vacancy drafts that have not been updated recently. Please review them and either complete the listing or leave it in Draft if it is intentionally paused.',
+    title: 'Vacancy draft check-in',
+    description: 'Share a check-in about vacancy drafts that have not been edited recently.',
+    subject: 'A check-in on your vacancy drafts',
+    defaultMessage: 'Some vacancy drafts you started have not been updated recently. They will remain safely in Draft until you are ready to continue or decide to leave them paused.',
     thresholds: [7, 14, 30],
     thresholdLabel: (value) => `${value}+ days untouched`,
     icon: LuFilePenLine,
   },
   {
     key: 'staff-closing-vacancies',
-    title: 'Vacancies closing soon',
-    description: 'Notify uploaders about Open vacancies approaching their deadline.',
-    subject: 'Vacancies closing soon',
-    defaultMessage: 'One or more vacancies you uploaded are approaching their deadline. Please review the listings and their applications before they close.',
+    title: 'Upcoming vacancy deadlines',
+    description: 'Share upcoming deadlines for Open vacancies the recipient uploaded.',
+    subject: 'Upcoming deadlines for your vacancies',
+    defaultMessage: 'Some of your open vacancies are approaching their deadlines. When convenient, you can review the listings and any applications before they close.',
     thresholds: [3, 7, 14],
     thresholdLabel: (value) => `Closing within ${value} days`,
     icon: LuBriefcaseBusiness,
@@ -110,6 +116,13 @@ const contextLabel = (recipient: TeamEmailRecipient) => {
 }
 
 const historyStatus = (dispatch: TeamEmailHistoryItem) => {
+  if ((dispatch.statusCounts.cancelled || 0) === dispatch.recipientCount) return { label: 'Cancelled', tone: 'bg-slate-100 text-slate-600' }
+  if (
+    dispatch.scheduledFor
+    && new Date(dispatch.scheduledFor).getTime() > Date.now()
+    && dispatch.statusCounts.sent === 0
+    && dispatch.statusCounts.dead === 0
+  ) return { label: 'Scheduled', tone: 'bg-violet-50 text-violet-700' }
   if (dispatch.statusCounts.dead === dispatch.recipientCount) return { label: 'Failed', tone: 'bg-red-50 text-red-700' }
   if (dispatch.statusCounts.dead > 0) return { label: 'Partially sent', tone: 'bg-amber-50 text-amber-800' }
   if (dispatch.statusCounts.pending > 0 || dispatch.statusCounts.retry > 0) return { label: 'Delivering', tone: 'bg-blue-50 text-blue-700' }
@@ -163,6 +176,9 @@ export default function TeamEmailCenter() {
   const [confirming, setConfirming] = useState(false)
   const [recipientScope, setRecipientScope] = useState<'eligible' | 'all-team'>('eligible')
   const [manualRecipientInput, setManualRecipientInput] = useState('')
+  const [deliveryMode, setDeliveryMode] = useState<'now' | 'scheduled'>('now')
+  const [scheduledLocal, setScheduledLocal] = useState('')
+  const [cancellingDispatch, setCancellingDispatch] = useState<TeamEmailHistoryItem | null>(null)
   const requestIdRef = useRef<string | null>(null)
   const recipientWindowOptions = template.thresholds
     ? [
@@ -187,6 +203,7 @@ export default function TeamEmailCenter() {
   })
   const historyQuery = useTeamEmailHistory(historyPage)
   const queueMutation = useQueueTeamEmail()
+  const cancelMutation = useCancelScheduledTeamEmail()
   const recipients = recipientsQuery.data?.data || []
   const selectedRecipients = useMemo(() => [...selected.values()], [selected])
   const manualResult = useMemo(
@@ -216,16 +233,30 @@ export default function TeamEmailCenter() {
       : totalSelected > 50
         ? 'You can select up to 50 recipients in total.'
         : null)
+  const scheduledFor = deliveryMode === 'scheduled'
+    ? dateTimeInputToUtc(scheduledLocal, timeZone)
+    : undefined
+  const scheduledTime = scheduledFor ? new Date(scheduledFor).getTime() : Number.NaN
+  const scheduleError = deliveryMode === 'scheduled'
+    ? !scheduledFor
+      ? 'Choose a valid delivery date and time.'
+      : scheduledTime < Date.now() + 5 * 60 * 1000
+        ? 'Choose a time at least five minutes from now.'
+        : scheduledTime > Date.now() + 90 * 24 * 60 * 60 * 1000
+          ? 'Choose a time within the next 90 days.'
+          : null
+    : null
   const canReview = totalSelected > 0
     && !manualRecipientError
     && totalSelected <= 50
     && message.trim().length > 0
     && message.trim().length <= 4000
+    && !scheduleError
     && (templateKey !== 'staff-custom' || (subject.trim().length >= 3 && subject.trim().length <= 150))
 
   useEffect(() => {
     requestIdRef.current = null
-  }, [manualRecipientInput, message, recipientScope, selected, subject, templateKey, threshold])
+  }, [deliveryMode, manualRecipientInput, message, recipientScope, scheduledLocal, selected, subject, templateKey, threshold])
 
   const chooseTemplate = (next: TemplateDefinition) => {
     setTemplateKey(next.key)
@@ -275,16 +306,21 @@ export default function TeamEmailCenter() {
         recipientScope,
         threshold,
         message: message.trim(),
+        ...(scheduledFor ? { scheduledFor } : {}),
         ...(templateKey === 'staff-custom' ? {
           subject: subject.trim(),
           manualRecipients: manualResult.emails,
         } : {}),
       })
-      toast.success(`${result.recipientCount} email${result.recipientCount === 1 ? '' : 's'} queued for delivery.`)
+      toast.success(result.scheduledFor
+        ? `${result.recipientCount} email${result.recipientCount === 1 ? '' : 's'} scheduled for ${formatDateInTimeZone(result.scheduledFor, timeZone, { dateStyle: 'medium', timeStyle: 'short' })}.`
+        : `${result.recipientCount} email${result.recipientCount === 1 ? '' : 's'} queued for delivery.`)
       setConfirming(false)
       requestIdRef.current = null
       setSelected(new Map())
       setPreviewId(undefined)
+      setDeliveryMode('now')
+      setScheduledLocal('')
       if (templateKey === 'staff-custom') {
         setSubject('')
         setMessage('')
@@ -331,7 +367,7 @@ export default function TeamEmailCenter() {
         </div>
       </section>
 
-      <section aria-labelledby="select-recipients-heading" className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <section aria-labelledby="select-recipients-heading" className="relative overflow-visible rounded-xl border border-slate-200 bg-white">
         <div className="flex flex-col gap-4 border-b border-slate-200 px-5 py-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="flex items-start gap-3">
             <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#101A35] text-xs font-bold text-white">2</span>
@@ -479,6 +515,56 @@ export default function TeamEmailCenter() {
               />
               <span className="mt-1 block text-right text-xs font-normal text-slate-500">{message.length}/4000</span>
             </div>
+            <fieldset>
+              <legend className="text-sm font-semibold text-slate-800">Delivery</legend>
+              <div className="mt-2 grid grid-cols-2 gap-2 rounded-lg bg-slate-100 p-1">
+                <button
+                  type="button"
+                  aria-pressed={deliveryMode === 'now'}
+                  onClick={() => setDeliveryMode('now')}
+                  className={`min-h-10 rounded-md px-3 text-sm font-semibold transition-colors ${deliveryMode === 'now' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-600 hover:text-slate-950'}`}
+                >
+                  Send now
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={deliveryMode === 'scheduled'}
+                  onClick={() => {
+                    setDeliveryMode('scheduled')
+                    if (!scheduledLocal) {
+                      setScheduledLocal(dateTimeInputValueInTimeZone(
+                        new Date(Date.now() + 15 * 60 * 1000),
+                        timeZone,
+                      ))
+                    }
+                  }}
+                  className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-3 text-sm font-semibold transition-colors ${deliveryMode === 'scheduled' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-600 hover:text-slate-950'}`}
+                >
+                  <LuCalendarClock aria-hidden="true" /> Schedule
+                </button>
+              </div>
+              {deliveryMode === 'scheduled' ? (
+                <div className="mt-3 rounded-lg border border-slate-200 p-4">
+                  <label htmlFor="team-email-scheduled-for" className="block text-sm font-semibold text-slate-800">
+                    Delivery date and time
+                  </label>
+                  <input
+                    id="team-email-scheduled-for"
+                    type="datetime-local"
+                    value={scheduledLocal}
+                    min={dateTimeInputValueInTimeZone(new Date(Date.now() + 5 * 60 * 1000), timeZone)}
+                    max={dateTimeInputValueInTimeZone(new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), timeZone)}
+                    onChange={(event) => setScheduledLocal(event.target.value)}
+                    aria-describedby="team-email-schedule-help"
+                    aria-invalid={Boolean(scheduleError)}
+                    className="mt-2 min-h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950 focus:border-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  />
+                  <p id="team-email-schedule-help" className={`mt-2 text-xs leading-5 ${scheduleError ? 'text-red-700' : 'text-slate-500'}`}>
+                    {scheduleError || `Time shown in ${timeZone}. Delivery starts when the backend email worker is awake.`}
+                  </p>
+                </div>
+              ) : null}
+            </fieldset>
           </div>
 
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-5">
@@ -546,10 +632,18 @@ export default function TeamEmailCenter() {
                     <div>
                       <p className="text-sm font-semibold text-slate-950">{templateName(dispatch.template)}</p>
                       <p className="text-xs text-slate-500">Queued by {dispatch.requestedByName || 'Super administrator'} · {formatDateInTimeZone(dispatch.queuedAt, timeZone, { dateStyle: 'medium', timeStyle: 'short' })}</p>
+                      {dispatch.scheduledFor ? <p className="text-xs font-medium text-violet-700">Scheduled for {formatDateInTimeZone(dispatch.scheduledFor, timeZone, { dateStyle: 'medium', timeStyle: 'short' })}</p> : null}
                       {dispatch.latestDeliveryAt ? <p className="text-xs text-slate-500">Latest delivery {formatDateInTimeZone(dispatch.latestDeliveryAt, timeZone, { dateStyle: 'medium', timeStyle: 'short' })}</p> : null}
                     </div>
-                    <div><p className="text-sm text-slate-700">{dispatch.recipientPreview.join(', ')}{dispatch.recipientCount > dispatch.recipientPreview.length ? ` +${dispatch.recipientCount - dispatch.recipientPreview.length}` : ''}</p><p className="text-xs text-slate-500">{dispatch.statusCounts.sent} sent · {dispatch.statusCounts.pending} queued · {dispatch.statusCounts.retry} retrying · {dispatch.statusCounts.dead} failed</p></div>
-                    <span className={`w-fit rounded-full px-2.5 py-1 text-xs font-semibold ${status.tone}`}>{status.label}</span>
+                    <div><p className="text-sm text-slate-700">{dispatch.recipientPreview.join(', ')}{dispatch.recipientCount > dispatch.recipientPreview.length ? ` +${dispatch.recipientCount - dispatch.recipientPreview.length}` : ''}</p><p className="text-xs text-slate-500">{dispatch.statusCounts.sent} sent · {dispatch.statusCounts.pending} queued · {dispatch.statusCounts.retry} retrying · {dispatch.statusCounts.dead} failed{dispatch.statusCounts.cancelled ? ` · ${dispatch.statusCounts.cancelled} cancelled` : ''}</p></div>
+                    <div className="flex items-center gap-3 sm:justify-end">
+                      {status.label === 'Scheduled' ? (
+                        <button type="button" onClick={() => setCancellingDispatch(dispatch)} className="text-xs font-semibold text-red-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600">
+                          Cancel
+                        </button>
+                      ) : null}
+                      <span className={`w-fit rounded-full px-2.5 py-1 text-xs font-semibold ${status.tone}`}>{status.label}</span>
+                    </div>
                   </li>
                 )
               })}
@@ -562,8 +656,10 @@ export default function TeamEmailCenter() {
         isOpen={confirming}
         onClose={() => setConfirming(false)}
         onSubmit={() => void send()}
-        title="Queue team emails?"
-        actionLabel={queueMutation.isPending ? 'Queueing…' : `Queue ${totalSelected} email${totalSelected === 1 ? '' : 's'}`}
+        title={deliveryMode === 'scheduled' ? 'Schedule team emails?' : 'Queue team emails?'}
+        actionLabel={queueMutation.isPending
+          ? deliveryMode === 'scheduled' ? 'Scheduling…' : 'Queueing…'
+          : `${deliveryMode === 'scheduled' ? 'Schedule' : 'Queue'} ${totalSelected} email${totalSelected === 1 ? '' : 's'}`}
         disabled={queueMutation.isPending}
         actionDisabled={!canReview}
         size="compact"
@@ -571,7 +667,37 @@ export default function TeamEmailCenter() {
           <div className="space-y-3 text-sm leading-6 text-slate-200">
             <p><strong className="text-white">{template.title}</strong> will be sent to {totalSelected} recipient{totalSelected === 1 ? '' : 's'}.</p>
             {selectedRecipients.some((recipient) => !recipient.eligible) ? <p>Some selected team members are outside this reminder&apos;s current criteria.</p> : null}
-            <p>The messages will be queued immediately. Delivery progress will appear in Recent email activity.</p>
+            {scheduledFor ? (
+              <p>Delivery is scheduled for <strong className="text-white">{formatDateInTimeZone(scheduledFor, timeZone, { dateStyle: 'full', timeStyle: 'short' })}</strong> ({timeZone}). If the backend is asleep then, delivery begins when it wakes.</p>
+            ) : (
+              <p>The messages will be queued immediately. Delivery progress will appear in Recent email activity.</p>
+            )}
+          </div>
+        )}
+      />
+      <Modal
+        isOpen={Boolean(cancellingDispatch)}
+        onClose={() => {
+          if (!cancelMutation.isPending) setCancellingDispatch(null)
+        }}
+        onSubmit={() => {
+          if (!cancellingDispatch) return
+          void cancelMutation.mutateAsync(cancellingDispatch.dispatchId)
+            .then((result) => {
+              toast.success(`${result.cancelledRecipientCount} scheduled email${result.cancelledRecipientCount === 1 ? '' : 's'} cancelled.`)
+              setCancellingDispatch(null)
+            })
+            .catch((error) => toast.error(error instanceof Error ? error.message : 'Unable to cancel scheduled emails'))
+        }}
+        title="Cancel scheduled emails?"
+        actionLabel={cancelMutation.isPending ? 'Cancelling…' : 'Cancel schedule'}
+        disabled={cancelMutation.isPending}
+        actionDisabled={!cancellingDispatch}
+        size="compact"
+        body={(
+          <div className="space-y-3 text-sm leading-6 text-slate-200">
+            <p>This will stop delivery to all {cancellingDispatch?.recipientCount || 0} recipients in this dispatch.</p>
+            <p>This action cannot be undone. You can create a new schedule afterward.</p>
           </div>
         )}
       />

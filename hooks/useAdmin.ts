@@ -1,4 +1,4 @@
-import { cancelStaffInvitation, createStaffMember, deleteAdminJob, deleteCandidateAccount, fetchAdminCandidate, fetchAdminDashboard, fetchAdminJob, fetchAdminJobs, fetchAllUsers, fetchCandidateApplications, fetchCandidateEmailHistory, fetchCandidateEmailRecipients, fetchCandidateFilterOptions, fetchJobCandidates, fetchTeamEmailHistory, fetchTeamEmailRecipients, fetchTeamMembers, queueCandidateEmail, queueTeamEmail, resendStaffInvitation, restoreAdminJob, signOutAllTeamMembers, type TeamFilters, updateAdminJob, updateAdminJobStatus, updateStaffRole, updateStaffSuspension } from "@/api/admin"
+import { cancelScheduledTeamEmail, cancelStaffInvitation, createStaffMember, deleteAdminJob, deleteCandidateAccount, fetchAdminCandidate, fetchAdminDashboard, fetchAdminJob, fetchAdminJobs, fetchAllUsers, fetchCandidateApplications, fetchCandidateEmailHistory, fetchCandidateEmailRecipients, fetchCandidateFilterOptions, fetchJobCandidates, fetchTeamEmailHistory, fetchTeamEmailRecipients, fetchTeamMembers, queueCandidateEmail, queueTeamEmail, resendStaffInvitation, restoreAdminJob, signOutAllTeamMembers, type TeamFilters, updateAdminJob, updateAdminJobStatus, updateStaffRole, updateStaffSuspension } from "@/api/admin"
 import { AdminJobListFilters, CandidateEmailRecipientFilters, CandidateListFilters, Job, PaginatedResponse, StaffMember, TeamEmailRecipientFilters, User } from "@/types/types"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
@@ -85,15 +85,35 @@ export const useTeamEmailRecipients = (filters: TeamEmailRecipientFilters) => us
 export const useTeamEmailHistory = (page = 1) => useQuery({
     queryKey: ['teamEmailHistory', page],
     queryFn: () => fetchTeamEmailHistory(page),
-    refetchInterval: (query) => query.state.data?.data.some((dispatch) => (
-        dispatch.statusCounts.pending > 0 || dispatch.statusCounts.retry > 0
-    )) ? 10000 : false,
+    refetchInterval: (query) => {
+        const dispatches = query.state.data?.data || []
+        const delivering = dispatches.some((dispatch) => (
+            dispatch.statusCounts.retry > 0
+            || (dispatch.statusCounts.pending > 0
+                && (!dispatch.scheduledFor || new Date(dispatch.scheduledFor).getTime() <= Date.now()))
+        ))
+        if (delivering) return 10000
+        const futureTimes = dispatches
+            .filter((dispatch) => dispatch.statusCounts.pending > 0 && dispatch.scheduledFor)
+            .map((dispatch) => new Date(dispatch.scheduledFor as string).getTime())
+            .filter((time) => Number.isFinite(time) && time > Date.now())
+        if (!futureTimes.length) return false
+        return Math.min(Math.max(Math.min(...futureTimes) - Date.now(), 1000), 24 * 60 * 60 * 1000)
+    },
 })
 
 export const useQueueTeamEmail = () => {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: queueTeamEmail,
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['teamEmailHistory'] }),
+    })
+}
+
+export const useCancelScheduledTeamEmail = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: cancelScheduledTeamEmail,
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ['teamEmailHistory'] }),
     })
 }

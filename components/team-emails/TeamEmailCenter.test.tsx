@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import TeamEmailCenter from './TeamEmailCenter'
 
 const queueEmail = vi.hoisted(() => vi.fn())
+const cancelEmail = vi.hoisted(() => vi.fn())
 const recipientFilters = vi.hoisted(() => vi.fn())
 
 const recipient = {
@@ -18,6 +19,10 @@ const recipient = {
 }
 
 vi.mock('@/hooks/useAdmin', () => ({
+  useCancelScheduledTeamEmail: () => ({
+    isPending: false,
+    mutateAsync: cancelEmail,
+  }),
   useQueueTeamEmail: () => ({
     isPending: false,
     mutateAsync: queueEmail,
@@ -79,6 +84,10 @@ describe('TeamEmailCenter', () => {
       recipientCount: 1,
       idempotent: false,
     })
+    cancelEmail.mockResolvedValue({
+      dispatchId: 'scheduled-dispatch',
+      cancelledRecipientCount: 1,
+    })
     vi.stubGlobal('crypto', {
       randomUUID: () => '550e8400-e29b-41d4-a716-446655440000',
     })
@@ -87,10 +96,10 @@ describe('TeamEmailCenter', () => {
   it('offers the four reminders and a custom email workflow', () => {
     render(<TeamEmailCenter />)
 
-    expect(screen.getByRole('button', { name: /Activity reminder/ })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('button', { name: /Applications waiting/ })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Stale vacancy drafts/ })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Vacancies closing soon/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Activity check-in/ })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: /Application review update/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Vacancy draft check-in/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Upcoming vacancy deadlines/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Custom email/ })).toBeInTheDocument()
     expect(screen.getByText('Active')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /Recipient window/ }))
@@ -121,7 +130,7 @@ describe('TeamEmailCenter', () => {
     fireEvent.click(screen.getByRole('checkbox', { name: 'Select Ada Recruiter' }))
     fireEvent.click(screen.getByRole('button', { name: 'Review 1 email' }))
     const dialog = screen.getByRole('dialog', { name: 'Queue team emails?' })
-    expect(dialog).toHaveTextContent('Activity reminder')
+    expect(dialog).toHaveTextContent('Activity check-in')
     fireEvent.click(within(dialog).getByRole('button', { name: 'Queue 1 email' }))
 
     await waitFor(() => expect(queueEmail).toHaveBeenCalledWith(expect.objectContaining({
@@ -159,6 +168,29 @@ describe('TeamEmailCenter', () => {
       recipientIds: [],
       manualRecipients: ['test-one@example.com', 'test-two@example.com'],
       subject: 'Test update',
+    })))
+  })
+
+  it('queues a future delivery using an organization-time-zone schedule', async () => {
+    queueEmail.mockResolvedValueOnce({
+      dispatchId: 'scheduled-dispatch',
+      recipientCount: 1,
+      idempotent: false,
+      scheduledFor: '2026-09-12T09:30:00.000Z',
+    })
+    render(<TeamEmailCenter />)
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select Ada Recruiter' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Schedule' }))
+    const scheduleInput = screen.getByLabelText('Delivery date and time')
+    expect((scheduleInput as HTMLInputElement).value).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)
+    fireEvent.click(screen.getByRole('button', { name: 'Review 1 email' }))
+
+    const dialog = screen.getByRole('dialog', { name: 'Schedule team emails?' })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Schedule 1 email' }))
+
+    await waitFor(() => expect(queueEmail).toHaveBeenCalledWith(expect.objectContaining({
+      scheduledFor: expect.stringMatching(/Z$/),
     })))
   })
 })

@@ -20,6 +20,7 @@ import type {
     StaffMember,
     TeamEmailDispatchPayload,
     TeamEmailDispatchResult,
+    TeamEmailCancellationResult,
     TeamEmailHistoryItem,
     TeamEmailRecipient,
     TeamEmailRecipientFilters,
@@ -229,6 +230,24 @@ export const queueTeamEmail = async (
     const result = await readApiResponse<ApiSuccess<TeamEmailDispatchResult>>(
         res,
         'Unable to queue team emails',
+    )
+    return result.data
+}
+
+export const cancelScheduledTeamEmail = async (
+    dispatchId: string,
+): Promise<TeamEmailCancellationResult> => {
+    const res = await csrfFetch(
+        apiPath(`/admin/team-emails/${encodeURIComponent(dispatchId)}/cancel`),
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({}),
+        },
+    )
+    const result = await readApiResponse<ApiSuccess<TeamEmailCancellationResult>>(
+        res,
+        'Unable to cancel scheduled emails',
     )
     return result.data
 }
