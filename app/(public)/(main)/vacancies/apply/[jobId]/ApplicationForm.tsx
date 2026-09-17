@@ -1,6 +1,6 @@
 'use client'
 
-import { useApplyToJob } from '@/hooks/useApplications'
+import { useApplyToJob, useWeeklyApplicationLimit } from '@/hooks/useApplications'
 import { useUser } from '@/hooks/useUsers'
 import { useCheckApplicationStatus } from '@/hooks/useVacancies'
 import { useQueryClient } from '@tanstack/react-query'
@@ -11,6 +11,8 @@ import { FiCheckCircle } from 'react-icons/fi'
 import { toast } from 'sonner'
 import { DOCUMENT_URL_ERROR, isValidDocumentUrl } from '@/utils/documentUrl'
 import CvLinkGuidance from '@/components/CvLinkGuidance'
+import { ApiError } from '@/api/errors'
+import { formatDateInTimeZone } from '@/utils/dateTime'
 
 const fieldClass = 'mt-2 w-full rounded-md border border-slate-300 bg-white px-3.5 py-3 text-[15px] text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-[#184aa2] focus:ring-2 focus:ring-[#184aa2]/15'
 const prefilledFieldClass = 'border-slate-300 bg-slate-50 text-slate-800'
@@ -28,12 +30,14 @@ const ApplicationForm = ({ jobId, jobTitle }: { jobId: string; jobTitle: string 
     const queryClient = useQueryClient()
     const { data: user, isLoading: loadingUser } = useUser()
     const { data: hasApplied, isLoading: checkingStatus } = useCheckApplicationStatus(jobId, Boolean(user))
+    const weeklyLimit = useWeeklyApplicationLimit(user?.role === 'user')
     const apply = useApplyToJob()
     const [cvLink, setCvLink] = useState<string | null>(null)
     const [cvLinkError, setCvLinkError] = useState('')
     const [coverLetterLink, setCoverLetterLink] = useState<string | null>(null)
     const [note, setNote] = useState('')
     const [showProfilePrompt, setShowProfilePrompt] = useState(false)
+    const [submissionError, setSubmissionError] = useState('')
     const profilePromptHeadingRef = useRef<HTMLHeadingElement>(null)
     const profileIsComplete = user?.profileCompletion?.complete ?? user?.profileCompleted ?? false
 
@@ -49,6 +53,7 @@ const ApplicationForm = ({ jobId, jobTitle }: { jobId: string; jobTitle: string 
             return
         }
         setCvLinkError('')
+        setSubmissionError('')
         try {
             await apply.mutateAsync({
                 jobId,
@@ -60,7 +65,12 @@ const ApplicationForm = ({ jobId, jobTitle }: { jobId: string; jobTitle: string 
             toast.success('Application submitted successfully')
             router.replace(`/vacancies/${jobId}`)
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : 'Unable to submit application')
+            if (error instanceof ApiError && error.code === 'WEEKLY_APPLICATION_LIMIT_REACHED') {
+                setSubmissionError(error.message)
+                void queryClient.invalidateQueries({ queryKey: ['weeklyApplicationLimit'] })
+            } else {
+                toast.error(error instanceof Error ? error.message : 'Unable to submit application')
+            }
         }
     }
 
@@ -82,12 +92,36 @@ const ApplicationForm = ({ jobId, jobTitle }: { jobId: string; jobTitle: string 
         void submitApplication()
     }
 
-    if (loadingUser || checkingStatus) return <p role="status">Preparing your application…</p>
+    if (loadingUser || checkingStatus || (user?.role === 'user' && weeklyLimit.isLoading)) {
+        return <p role="status">Preparing your application…</p>
+    }
     if (!user) {
         return <p>Please <Link className="underline" href={`/auth?next=${encodeURIComponent(`/vacancies/apply/${jobId}`)}`}>log in</Link> to apply.</p>
     }
     if (hasApplied) {
         return <p role="status" className="rounded bg-green-50 p-4 text-green-900">You have already applied for this role.</p>
+    }
+    if (user.role !== 'user') {
+        return <p role="status">Only candidate accounts can apply for vacancies.</p>
+    }
+
+    const resetLabel = weeklyLimit.data
+        ? formatDateInTimeZone(weeklyLimit.data.resetsAt, weeklyLimit.data.timeZone, {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+        })
+        : null
+    if (weeklyLimit.data?.remaining === 0) {
+        return (
+            <section className="rounded-lg border border-slate-200 bg-white p-6 sm:p-8" aria-labelledby="weekly-limit-heading">
+                <h2 id="weekly-limit-heading" className="text-xl font-semibold text-slate-950">You have used your five applications this week</h2>
+                <p className="mt-3 text-base text-slate-700 [text-wrap:pretty]">
+                    You can apply again from {resetLabel} ({weeklyLimit.data.timeZone}). Withdrawing an application does not restore a slot.
+                </p>
+                <Link href="/vacancies" className="mt-6 inline-flex min-h-11 items-center rounded-md px-3 py-2 text-base font-semibold text-[#003B6D] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]">
+                    Browse vacancies for next week
+                </Link>
+            </section>
+        )
     }
 
     const cvLoadedFromProfile = cvLink === null && Boolean(user.cvLink?.trim())
@@ -100,6 +134,17 @@ const ApplicationForm = ({ jobId, jobTitle }: { jobId: string; jobTitle: string 
             className="rounded-lg border border-slate-200 bg-white px-5 py-6 sm:px-7 sm:py-7"
             aria-busy={apply.isPending}
         >
+            {weeklyLimit.data ? (
+                <p className="mb-6 text-sm text-slate-600 [text-wrap:pretty]">
+                    {weeklyLimit.data.remaining} of {weeklyLimit.data.limit} applications left this week. Resets {resetLabel} ({weeklyLimit.data.timeZone}).
+                </p>
+            ) : weeklyLimit.isError ? (
+                <div role="status" className="mb-6 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                    We could not check your remaining applications. You can still try to apply.
+                    <button type="button" onClick={() => void weeklyLimit.refetch()} className="ml-2 font-semibold text-[#003B6D] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]">Try again</button>
+                </div>
+            ) : null}
+            {submissionError ? <p role="alert" className="mb-6 rounded-md border border-slate-200 bg-slate-50 p-4 text-base text-slate-800">{submissionError}</p> : null}
             <div className="border-b border-slate-200 pb-7">
                 <label htmlFor="application-cv" className={labelClass}>CV link</label>
                 {cvLoadedFromProfile && (

@@ -76,12 +76,11 @@ Status: coach marks deferred
 
 ## Weekly candidate application limit
 
-Status: deferred
+Status: implemented
 
-- Limit each candidate to five successful job applications per week, enforced by the backend at submission time rather than only in the UI.
-- Decide whether “week” means a rolling seven-day window or a calendar week in the organization time zone before implementation.
-- Show the remaining allowance and reset time to candidates, with a clear explanation when the limit is reached.
-- Count only successfully submitted applications; define how withdrawn or deleted applications affect the allowance, and test concurrent submissions so the cap cannot be bypassed.
+- Candidates can submit up to five applications per Monday-through-Sunday calendar week in the organization time zone, enforced by an atomic private account counter and the application write transaction.
+- The application form shows the remaining allowance and reset date; the submission endpoint still rejects a stale or concurrent sixth attempt.
+- New successful submissions consume a slot even if later withdrawn or deleted. Existing active applications in the current week count when a candidate's counter is first initialized.
 
 ## Consent-based talent pool
 

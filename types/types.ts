@@ -176,6 +176,15 @@ export type ProfileCompletion = {
   steps: ProfileCompletionStep[]
 }
 
+export type WeeklyApplicationLimit = {
+  limit: number
+  used: number
+  remaining: number
+  periodStart: string
+  resetsAt: string
+  timeZone: string
+}
+
 export type AuthUser = Pick<User, '_id' | 'name' | 'email' | 'emailVerified' | 'role'>
 
 export type LoginPayload = {

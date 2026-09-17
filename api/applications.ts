@@ -5,6 +5,7 @@ import type {
     Job,
     JobApplication,
     PaginatedResponse,
+    WeeklyApplicationLimit,
 } from "@/types/types"
 import type { JobFormType } from "@/schemas/jobSchema"
 import { csrfFetch } from "./csrf"
@@ -39,6 +40,19 @@ export const applyToJob = async (data: ApplyPayload): Promise<ApplicationSubmiss
 
     const result = await readApiResponse<ApiSuccess<ApplicationSubmission>>(res, 'Unable to apply for job')
 
+    return result.data
+}
+
+export const getWeeklyApplicationLimit = async (): Promise<WeeklyApplicationLimit> => {
+    const res = await fetch(apiPath('/applications/me/weekly-limit'), {
+        method: 'GET',
+        credentials: 'include',
+        cache: 'no-store',
+    })
+    const result = await readApiResponse<ApiSuccess<WeeklyApplicationLimit>>(
+        res,
+        'Unable to check your application allowance',
+    )
     return result.data
 }
 

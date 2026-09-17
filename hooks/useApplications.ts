@@ -1,4 +1,4 @@
-import { applyToJob, cancelApplication, createJob, getMyApplications } from "@/api/applications";
+import { applyToJob, cancelApplication, createJob, getMyApplications, getWeeklyApplicationLimit } from "@/api/applications";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 
@@ -15,9 +15,18 @@ export const useApplyToJob = () => {
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: ['recommendations'] })
             void queryClient.invalidateQueries({ queryKey: ['me'] })
+            void queryClient.invalidateQueries({ queryKey: ['weeklyApplicationLimit'] })
         },
     })
 }
+
+export const useWeeklyApplicationLimit = (enabled = true) => useQuery({
+    queryKey: ['weeklyApplicationLimit'],
+    queryFn: getWeeklyApplicationLimit,
+    enabled,
+    staleTime: 15_000,
+    refetchInterval: (query) => query.state.data?.remaining === 0 ? 60_000 : false,
+})
 
 export const useGetMyApplications = (page = 1, limit = 20) => {
     return useQuery({
