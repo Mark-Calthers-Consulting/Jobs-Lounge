@@ -6,7 +6,7 @@ import { useCheckApplicationStatus } from '@/hooks/useVacancies'
 import { useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { FiCheckCircle } from 'react-icons/fi'
 import { toast } from 'sonner'
 import { DOCUMENT_URL_ERROR, isValidDocumentUrl } from '@/utils/documentUrl'
@@ -33,9 +33,15 @@ const ApplicationForm = ({ jobId, jobTitle }: { jobId: string; jobTitle: string 
     const [cvLinkError, setCvLinkError] = useState('')
     const [coverLetterLink, setCoverLetterLink] = useState<string | null>(null)
     const [note, setNote] = useState('')
+    const [showProfilePrompt, setShowProfilePrompt] = useState(false)
+    const profilePromptHeadingRef = useRef<HTMLHeadingElement>(null)
+    const profileIsComplete = user?.profileCompletion?.complete ?? user?.profileCompleted ?? false
 
-    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault()
+    useEffect(() => {
+        if (showProfilePrompt) profilePromptHeadingRef.current?.focus()
+    }, [showProfilePrompt])
+
+    const submitApplication = async () => {
         const submittedCvLink = (cvLink ?? user?.cvLink ?? '').trim()
         if (!isValidDocumentUrl(submittedCvLink)) {
             setCvLinkError(DOCUMENT_URL_ERROR)
@@ -56,6 +62,24 @@ const ApplicationForm = ({ jobId, jobTitle }: { jobId: string; jobTitle: string 
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Unable to submit application')
         }
+    }
+
+    const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault()
+        const submittedCvLink = (cvLink ?? user?.cvLink ?? '').trim()
+        if (!isValidDocumentUrl(submittedCvLink)) {
+            setCvLinkError(DOCUMENT_URL_ERROR)
+            document.getElementById('application-cv')?.focus()
+            return
+        }
+        setCvLinkError('')
+
+        if (user && !profileIsComplete) {
+            setShowProfilePrompt(true)
+            return
+        }
+
+        void submitApplication()
     }
 
     if (loadingUser || checkingStatus) return <p role="status">Preparing your application…</p>
@@ -138,9 +162,41 @@ const ApplicationForm = ({ jobId, jobTitle }: { jobId: string; jobTitle: string 
                 />
                 <p id="application-note-count" className="mt-1.5 text-right text-xs tabular-nums text-slate-500">{note.length}/2000</p>
             </div>
-            <button type="submit" disabled={apply.isPending} className="mt-7 inline-flex min-h-12 items-center justify-center rounded-md bg-[#003B6D] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#002f57] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70">
-                {apply.isPending ? 'Submitting…' : `Submit application for ${jobTitle}`}
-            </button>
+            {showProfilePrompt && !profileIsComplete ? (
+                <section aria-labelledby="application-profile-prompt-title" className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:p-6">
+                    <h2 id="application-profile-prompt-title" ref={profilePromptHeadingRef} tabIndex={-1} className="text-lg font-semibold text-slate-950 focus:outline-none">
+                        One thing before you apply
+                    </h2>
+                    <p className="mt-2 text-base text-slate-700 [text-wrap:pretty]">
+                        {typeof user.profileCompletion?.percentage === 'number'
+                            ? `Your profile is ${user.profileCompletion.percentage}% complete. `
+                            : 'Your profile is not complete yet. '}
+                        Missing details may make it harder for recruiters to assess your fit. You can still apply now.
+                    </p>
+                    <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
+                        <button
+                            type="button"
+                            disabled={apply.isPending}
+                            onClick={() => void submitApplication()}
+                            className="inline-flex min-h-11 items-center justify-center rounded-md bg-[#003B6D] px-4 py-2 text-base font-semibold text-white transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-[#002f57] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70"
+                        >
+                            {apply.isPending ? 'Submitting…' : 'Apply anyway'}
+                        </button>
+                        <Link
+                            href="/dashboard/profile"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex min-h-11 items-center justify-center rounded-md px-4 py-2 text-base font-semibold text-[#003B6D] underline-offset-4 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-slate-100 hover:underline active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]"
+                        >
+                            Complete profile <span className="sr-only">(opens in a new tab so this application stays here)</span>
+                        </Link>
+                    </div>
+                </section>
+            ) : (
+                <button type="submit" disabled={apply.isPending} className="mt-7 inline-flex min-h-12 items-center justify-center rounded-md bg-[#003B6D] px-5 py-3 text-base font-semibold text-white transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-[#002f57] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70">
+                    {apply.isPending ? 'Submitting…' : `Submit application for ${jobTitle}`}
+                </button>
+            )}
         </form>
     )
 }

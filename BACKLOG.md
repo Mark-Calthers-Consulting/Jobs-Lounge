@@ -74,6 +74,15 @@ Status: coach marks deferred
 - Add contextual coach marks only after the candidate dashboard, applications, profile, and vacancy interfaces are stable.
 - Keep tours short, dismissible, keyboard accessible, and tied to genuine first-use tasks rather than replaying a generic product walkthrough.
 
+## Weekly candidate application limit
+
+Status: deferred
+
+- Limit each candidate to five successful job applications per week, enforced by the backend at submission time rather than only in the UI.
+- Decide whether “week” means a rolling seven-day window or a calendar week in the organization time zone before implementation.
+- Show the remaining allowance and reset time to candidates, with a clear explanation when the limit is reached.
+- Count only successfully submitted applications; define how withdrawn or deleted applications affect the allowance, and test concurrent submissions so the cap cannot be bypassed.
+
 ## Consent-based talent pool
 
 Status: deferred
