@@ -9,6 +9,7 @@ export type StaffPermission =
   | 'blogs:manage'
   | 'team:manage'
   | 'team-emails:send'
+  | 'announcements:manage'
 
 const permissionsByRole: Partial<Record<UserRole, readonly StaffPermission[]>> = {
   admin: ['admin:access', 'jobs:manage'],
@@ -30,6 +31,7 @@ const permissionsByRole: Partial<Record<UserRole, readonly StaffPermission[]>> =
     'blogs:manage',
     'team:manage',
     'team-emails:send',
+    'announcements:manage',
   ],
 }
 
@@ -39,6 +41,12 @@ export const hasStaffPermission = (
 ) => Boolean(role && permissionsByRole[role]?.includes(permission))
 
 export const permissionForAdminPath = (pathname: string): StaffPermission => {
+  if (
+    pathname === '/admin-center/announcements'
+    || pathname.startsWith('/admin-center/announcements/')
+  ) {
+    return 'announcements:manage'
+  }
   if (pathname === '/admin-center/emails' || pathname.startsWith('/admin-center/emails/')) {
     return 'team-emails:send'
   }

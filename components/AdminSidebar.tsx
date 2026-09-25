@@ -18,6 +18,7 @@ import {
     LuBookOpen,
     LuLifeBuoy,
     LuMail,
+    LuMegaphone,
 } from "react-icons/lu"
 import { PiSuitcase, PiUsersThree } from "react-icons/pi"
 
@@ -85,6 +86,12 @@ const AdminSidebar = () => {
             permission: 'team-emails:send',
         },
         {
+            name: "Announcements",
+            href: "/admin-center/announcements",
+            icon: <LuMegaphone size={20} />,
+            permission: 'announcements:manage',
+        },
+        {
             name: "My Profile",
             href: "/admin-center/profile",
             icon: <LuUser size={20} />,
@@ -112,7 +119,7 @@ const AdminSidebar = () => {
             </div>
 
             {/* 2. Navigation */}
-            <nav aria-label="Administration navigation" className="flex flex-1 gap-2 overflow-x-auto px-4 py-3 md:flex-col md:space-y-2 md:overflow-visible md:py-6">
+            <nav aria-label="Administration navigation" className="flex flex-1 gap-2 overflow-x-auto px-4 py-3 md:flex-col md:space-y-2 md:overflow-y-auto md:py-6">
                 {menuItems.filter((item) => (
                     hasStaffPermission(user?.role, item.permission)
                     && (item.href !== '/admin-center/emails'

@@ -308,6 +308,51 @@ export type PaginatedResponse<T> = {
   pagination: PaginationMetadata
 }
 
+export type TeamAnnouncementType =
+  | 'General'
+  | 'Feature update'
+  | 'Maintenance'
+  | 'Action required'
+
+export type TeamAnnouncementPriority = 'Normal' | 'Important'
+export type TeamAnnouncementStatus = 'Draft' | 'Published' | 'Archived'
+
+export type TeamAnnouncement = {
+  _id: string
+  title: string
+  message: string
+  type: TeamAnnouncementType
+  priority: TeamAnnouncementPriority
+  status: TeamAnnouncementStatus
+  action?: { label?: string; href?: string }
+  publishedAt?: string | null
+  expiresAt?: string | null
+  createdAt: string
+  updatedAt: string
+  createdBy: { name: string }
+  isRead?: boolean
+}
+
+export type TeamNotificationResponse = PaginatedResponse<TeamAnnouncement> & {
+  unreadCount: number
+  popup: TeamAnnouncement | null
+}
+
+export type TeamAnnouncementPayload = {
+  title: string
+  message: string
+  type: TeamAnnouncementType
+  priority: TeamAnnouncementPriority
+  status: 'Draft' | 'Published'
+  actionLabel: string
+  actionHref: string
+  expiresAt: string | null
+}
+
+export type TeamAnnouncementUpdatePayload = TeamAnnouncementPayload & {
+  announcementId: string
+}
+
 export type PageOptions = {
   page?: number
   limit?: number

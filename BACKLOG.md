@@ -8,6 +8,14 @@ Status: deferred
 
 - Revisit the job lifecycle to introduce or refine **Archive** as a job status.
 
+## Job expiry notification system
+
+Status: deferred
+
+- Notify the relevant team members when an open vacancy is approaching its application deadline and when that deadline has passed.
+- Define reminder windows, recipient ownership, delivery channels, deduplication, and the expected close, extend, or archive actions before implementation.
+- Reuse the existing notification and durable email infrastructure where appropriate without requiring a notification to change the vacancy status automatically.
+
 ## Service monitoring and Super-admin operations
 
 Status: deferred
