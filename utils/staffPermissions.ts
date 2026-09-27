@@ -5,6 +5,7 @@ export type StaffPermission =
   | 'jobs:manage'
   | 'jobs:archive'
   | 'applications:review'
+  | 'applications:analytics'
   | 'candidates:view'
   | 'blogs:manage'
   | 'team:manage'
@@ -27,6 +28,7 @@ const permissionsByRole: Partial<Record<UserRole, readonly StaffPermission[]>> =
     'jobs:manage',
     'jobs:archive',
     'applications:review',
+    'applications:analytics',
     'candidates:view',
     'blogs:manage',
     'team:manage',
@@ -52,6 +54,12 @@ export const permissionForAdminPath = (pathname: string): StaffPermission => {
   }
   if (pathname === '/admin-center/team' || pathname.startsWith('/admin-center/team/')) {
     return 'team:manage'
+  }
+  if (
+    pathname === '/admin-center/applications/analytics'
+    || pathname.startsWith('/admin-center/applications/analytics/')
+  ) {
+    return 'applications:analytics'
   }
   if (
     pathname === '/admin-center/applications'

@@ -7,6 +7,7 @@ import {
   cancelApplicationExport,
   createApplicationExportRequest,
   fetchApplicationActivity,
+  fetchApplicationAnalyticsSummary,
   fetchApplicationDetail,
   fetchApplicationFilterOptions,
   fetchApplicationExportRequests,
@@ -33,6 +34,12 @@ export const useApplicationsOverview = (enabled = true) => useQuery({
   queryKey: ['applicationWorkspace', 'overview'],
   queryFn: fetchApplicationsOverview,
   enabled,
+})
+
+export const useApplicationAnalyticsSummary = () => useQuery({
+  queryKey: ['applicationWorkspace', 'analytics', 'summary'],
+  queryFn: fetchApplicationAnalyticsSummary,
+  staleTime: 60_000,
 })
 
 export const useApplicationJobs = (filters: ApplicationJobDirectoryFilters) => useQuery({

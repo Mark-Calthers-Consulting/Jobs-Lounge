@@ -2,8 +2,15 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useUser } from '@/hooks/useUsers'
+import { hasStaffPermission, type StaffPermission } from '@/utils/staffPermissions'
 
-const views = [
+const views: Array<{
+  href: string
+  label: string
+  active: (path: string) => boolean
+  permission?: StaffPermission
+}> = [
   { href: '/admin-center/applications', label: 'Overview', active: (path: string) => path === '/admin-center/applications' },
   { href: '/admin-center/applications/inbox', label: 'Application inbox', active: (path: string) => path.startsWith('/admin-center/applications/inbox') },
   {
@@ -11,10 +18,20 @@ const views = [
     label: 'Vacancy inbox',
     active: (path: string) => path.startsWith('/admin-center/applications/by-vacancy') || path.startsWith('/admin-center/applications/jobs/'),
   },
+  {
+    href: '/admin-center/applications/analytics',
+    label: 'Analytics',
+    active: (path: string) => path.startsWith('/admin-center/applications/analytics'),
+    permission: 'applications:analytics',
+  },
 ]
 
 export default function ApplicationWorkspaceNav() {
   const pathname = usePathname()
+  const { data: user } = useUser()
+  const visibleViews = views.filter((view) => (
+    !view.permission || hasStaffPermission(user?.role, view.permission)
+  ))
 
   return (
     <nav
@@ -22,7 +39,7 @@ export default function ApplicationWorkspaceNav() {
       className="overflow-x-auto overflow-y-hidden border-b border-slate-200 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       <div className="flex min-w-max gap-7">
-        {views.map((view) => {
+        {visibleViews.map((view) => {
           const current = view.active(pathname)
           return (
             <Link

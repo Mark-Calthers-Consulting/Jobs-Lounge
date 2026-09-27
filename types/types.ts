@@ -477,6 +477,24 @@ export type ApplicationOverview = {
   recentApplications: AdminApplication[]
 }
 
+export type ApplicationAnalyticsSummary = {
+  applications: {
+    today: number
+    week: number
+    month: number
+    allTime: number
+  }
+  confirmations: {
+    queued: number
+    sent: number
+    retrying: number
+    failed: number
+    retentionDays: number
+  }
+  timeZone: string
+  generatedAt: string
+}
+
 export type ApplicationJobDirectoryFilters = {
   page?: number
   limit?: number

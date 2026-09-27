@@ -16,4 +16,11 @@ describe('staff permissions', () => {
     expect(hasStaffPermission('admin', 'announcements:manage')).toBe(false)
     expect(permissionForAdminPath('/admin-center/announcements')).toBe('announcements:manage')
   })
+
+  it('keeps application analytics exclusive to super-admins', () => {
+    expect(hasStaffPermission('super-admin', 'applications:analytics')).toBe(true)
+    expect(hasStaffPermission('recruiter', 'applications:analytics')).toBe(false)
+    expect(hasStaffPermission('admin', 'applications:analytics')).toBe(false)
+    expect(permissionForAdminPath('/admin-center/applications/analytics')).toBe('applications:analytics')
+  })
 })

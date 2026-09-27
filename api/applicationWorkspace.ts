@@ -11,6 +11,7 @@ import type {
   ApplicationJobDirectoryResponse,
   ApplicationJobSummary,
   ApplicationListResponse,
+  ApplicationAnalyticsSummary,
   ApplicationOverview,
   ApplicationWorkspaceFilters,
 } from '@/types/types'
@@ -176,6 +177,14 @@ export const fetchApplicationsOverview = async () => {
   const result = await get<ApiSuccess<ApplicationOverview>>(
     '/admin/applications/overview',
     'Unable to load the applications overview',
+  )
+  return result.data
+}
+
+export const fetchApplicationAnalyticsSummary = async () => {
+  const result = await get<ApiSuccess<ApplicationAnalyticsSummary>>(
+    '/admin/applications/analytics/summary',
+    'Unable to load application analytics',
   )
   return result.data
 }
