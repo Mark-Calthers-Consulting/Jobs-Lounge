@@ -20,7 +20,7 @@ import {
     LuMail,
     LuMegaphone,
 } from "react-icons/lu"
-import { PiSuitcase, PiUsersThree } from "react-icons/pi"
+import { PiChartLineUp, PiSuitcase, PiUsersThree } from "react-icons/pi"
 
 const AdminSidebar = () => {
     const pathname = usePathname()
@@ -48,6 +48,12 @@ const AdminSidebar = () => {
             href: "/admin-center",
             icon: <LuLayoutDashboard size={20} />,
             permission: 'admin:access',
+        },
+        {
+            name: "Analytics",
+            href: "/admin-center/analytics",
+            icon: <PiChartLineUp size={20} />,
+            permission: 'applications:analytics',
         },
         {
             name: "Jobs",

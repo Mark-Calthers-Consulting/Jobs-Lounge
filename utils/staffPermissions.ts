@@ -56,6 +56,12 @@ export const permissionForAdminPath = (pathname: string): StaffPermission => {
     return 'team:manage'
   }
   if (
+    pathname === '/admin-center/analytics'
+    || pathname.startsWith('/admin-center/analytics/')
+  ) {
+    return 'applications:analytics'
+  }
+  if (
     pathname === '/admin-center/applications/analytics'
     || pathname.startsWith('/admin-center/applications/analytics/')
   ) {

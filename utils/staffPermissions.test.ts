@@ -21,6 +21,7 @@ describe('staff permissions', () => {
     expect(hasStaffPermission('super-admin', 'applications:analytics')).toBe(true)
     expect(hasStaffPermission('recruiter', 'applications:analytics')).toBe(false)
     expect(hasStaffPermission('admin', 'applications:analytics')).toBe(false)
+    expect(permissionForAdminPath('/admin-center/analytics')).toBe('applications:analytics')
     expect(permissionForAdminPath('/admin-center/applications/analytics')).toBe('applications:analytics')
   })
 })
