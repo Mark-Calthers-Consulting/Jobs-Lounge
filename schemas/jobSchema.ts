@@ -48,5 +48,20 @@ export const jobFormSchema = z.object({
   })
 })
 
+export const jobBatchFormSchema = z.object({
+  job: jobFormSchema.omit({ location: true }),
+  locations: z.array(z.string().trim().min(1).max(120)).min(2).max(4),
+}).superRefine(({ locations }, context) => {
+  const normalized = locations.map((location) => location.toLocaleLowerCase('en-NG'))
+  if (new Set(normalized).size !== normalized.length) {
+    context.addIssue({
+      code: 'custom',
+      path: ['locations'],
+      message: 'Each vacancy location must be different',
+    })
+  }
+})
+
 export type JobFormInput = z.input<typeof jobFormSchema>
 export type JobFormType = z.output<typeof jobFormSchema>
+export type JobBatchFormType = z.output<typeof jobBatchFormSchema>

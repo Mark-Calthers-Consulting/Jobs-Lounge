@@ -7,7 +7,7 @@ import type {
     PaginatedResponse,
     WeeklyApplicationLimit,
 } from "@/types/types"
-import type { JobFormType } from "@/schemas/jobSchema"
+import type { JobBatchFormType, JobFormType } from "@/schemas/jobSchema"
 import { csrfFetch } from "./csrf"
 import { apiPath } from "./base"
 import { readApiResponse } from './errors'
@@ -25,6 +25,26 @@ export const createJob = async (job: JobFormType): Promise<Job> => {
     const result = await readApiResponse<ApiSuccess<Job>>(res, 'Unable to create job')
 
     return result.data
+}
+
+export const createJobBatch = async (
+    batch: JobBatchFormType,
+): Promise<{ count: number; jobs: Job[] }> => {
+    const res = await csrfFetch(apiPath('/jobs/batch'), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(batch),
+    })
+
+    const result = await readApiResponse<ApiSuccess<Job[]> & { count: number }>(
+        res,
+        'Unable to create vacancies',
+    )
+
+    return { count: result.count, jobs: result.data }
 }
 
 export const applyToJob = async (data: ApplyPayload): Promise<ApplicationSubmission> => {

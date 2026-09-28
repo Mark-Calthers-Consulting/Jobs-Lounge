@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { jobFormSchema } from './jobSchema'
+import { jobBatchFormSchema, jobFormSchema } from './jobSchema'
 
 const validJob = {
     title: 'Frontend Developer',
@@ -62,5 +62,32 @@ describe('vacancy content requirements', () => {
             benefits: ['Pension'],
             skills: ['Excel'],
         }).success).toBe(true)
+    })
+})
+
+describe('multi-location vacancy contract', () => {
+    const sharedJob = { ...validJob }
+    Reflect.deleteProperty(sharedJob, 'location')
+
+    it('accepts two to four unique locations with shared vacancy data', () => {
+        expect(jobBatchFormSchema.safeParse({
+            job: sharedJob,
+            locations: ['Abuja', 'Ilorin', 'Kano', 'Lagos'],
+        }).success).toBe(true)
+    })
+
+    it('rejects duplicate locations without regard to casing or whitespace', () => {
+        expect(jobBatchFormSchema.safeParse({
+            job: sharedJob,
+            locations: ['Lagos', ' lagos '],
+        }).success).toBe(false)
+    })
+
+    it('rejects batches outside the two-to-four range', () => {
+        expect(jobBatchFormSchema.safeParse({ job: sharedJob, locations: ['Lagos'] }).success).toBe(false)
+        expect(jobBatchFormSchema.safeParse({
+            job: sharedJob,
+            locations: ['A', 'B', 'C', 'D', 'E'],
+        }).success).toBe(false)
     })
 })

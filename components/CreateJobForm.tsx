@@ -1,16 +1,21 @@
 'use client';
 
-import { useCreatejob } from '@/hooks/useApplications';
+import { useCreateJobBatch, useCreatejob } from '@/hooks/useApplications';
 import { useUpdateAdminJob } from '@/hooks/useAdmin'
 import { useUser } from '@/hooks/useUsers'
 import { JOB_ENUMS } from '@/constants/enums';
-import { jobFormSchema } from '@/schemas/jobSchema';
+import { jobBatchFormSchema, jobFormSchema } from '@/schemas/jobSchema';
 import type { Job } from '@/types/types'
 import Modal from '@/components/Modal';
 import JobUploadGuideModal from '@/components/JobUploadGuideModal'
 import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
 import { dateInputValueInTimeZone } from '@/utils/dateTime'
-import { buildJobLocation, locationToFormValue } from '@/utils/jobLocation'
+import {
+    buildJobLocation,
+    locationToFormValue,
+    MAX_JOB_LOCATIONS,
+    validateJobLocations,
+} from '@/utils/jobLocation'
 import {
     CUSTOM_JOB_LOCATION_OPTION,
     NIGERIAN_STATE_OPTIONS,
@@ -18,6 +23,7 @@ import {
 import { getJobDetailSuggestions } from '@/constants/jobDetailSuggestions'
 import { ChangeEvent, FormEvent, KeyboardEvent, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation'
+import { LuPlus, LuTrash2 } from 'react-icons/lu'
 import { toast } from 'sonner';
 
 type ListFieldKey = 'benefits' | 'responsibilities' | 'requirements' | 'skills';
@@ -46,6 +52,12 @@ type ListValues = Record<ListFieldKey, string[]>;
 type ImportFeedback = {
     type: 'error' | 'success';
     message: string;
+};
+
+type AdditionalJobLocation = {
+    id: number;
+    option: string;
+    custom: string;
 };
 
 const categoryOptions = JOB_ENUMS.category;
@@ -155,6 +167,11 @@ const CreateJobFormContent = ({
     const [jobJson, setJobJson] = useState('')
     const [importFeedback, setImportFeedback] = useState<ImportFeedback | null>(null)
     const [isUploadGuideOpen, setIsUploadGuideOpen] = useState(!initialJob)
+    const [additionalLocations, setAdditionalLocations] = useState<AdditionalJobLocation[]>([])
+    const [locationError, setLocationError] = useState('')
+    const [submissionError, setSubmissionError] = useState('')
+    const nextLocationId = useRef(1)
+    const locationSelectRefs = useRef<Record<number, HTMLSelectElement | null>>({})
 
     const [listInputs, setListInputs] = useState<ListInputs>({
         benefits: '',
@@ -165,8 +182,11 @@ const CreateJobFormContent = ({
     const listInputRefs = useRef<Partial<Record<ListFieldKey, HTMLInputElement | null>>>({})
 
     const createJobMutation = useCreatejob()
+    const createJobBatchMutation = useCreateJobBatch()
     const updateJobMutation = useUpdateAdminJob()
-    const activeMutation = initialJob ? updateJobMutation : createJobMutation
+    const isSaving = initialJob
+        ? updateJobMutation.isPending
+        : createJobMutation.isPending || createJobBatchMutation.isPending
 
     const [listValues, setListValues] = useState<ListValues>({
         benefits: initialJob?.benefits ?? [],
@@ -184,7 +204,70 @@ const CreateJobFormContent = ({
             ...prev,
             [name]: value,
         }));
+        if (name === 'customJobLocation') setLocationError('')
+        setSubmissionError('')
     };
+
+    const handlePrimaryLocationOptionChange = (value: string) => {
+        setFormData((previous) => ({
+            ...previous,
+            jobLocationOption: value,
+            customJobLocation: value === CUSTOM_JOB_LOCATION_OPTION
+                ? previous.jobLocationOption === CUSTOM_JOB_LOCATION_OPTION
+                    ? previous.customJobLocation
+                    : ''
+                : '',
+        }))
+        setLocationError('')
+        setSubmissionError('')
+    }
+
+    const updateAdditionalLocation = (
+        id: number,
+        update: Partial<Pick<AdditionalJobLocation, 'option' | 'custom'>>,
+    ) => {
+        setAdditionalLocations((locations) => locations.map((location) => (
+            location.id === id ? { ...location, ...update } : location
+        )))
+        setLocationError('')
+        setSubmissionError('')
+    }
+
+    const handleAdditionalLocationOptionChange = (id: number, value: string) => {
+        setAdditionalLocations((locations) => locations.map((location) => {
+            if (location.id !== id) return location
+            return {
+                ...location,
+                option: value,
+                custom: value === CUSTOM_JOB_LOCATION_OPTION
+                    ? location.option === CUSTOM_JOB_LOCATION_OPTION ? location.custom : ''
+                    : '',
+            }
+        }))
+        setLocationError('')
+        setSubmissionError('')
+    }
+
+    const addLocation = () => {
+        if (additionalLocations.length + 1 >= MAX_JOB_LOCATIONS) return
+        const id = nextLocationId.current
+        nextLocationId.current += 1
+        setAdditionalLocations((locations) => [
+            ...locations,
+            { id, option: '', custom: '' },
+        ])
+        setLocationError('')
+        requestAnimationFrame(() => locationSelectRefs.current[id]?.focus())
+    }
+
+    const removeLocation = (id: number) => {
+        const index = additionalLocations.findIndex((location) => location.id === id)
+        const previousLocationId = index > 0 ? additionalLocations[index - 1]?.id : 0
+        setAdditionalLocations((locations) => locations.filter((location) => location.id !== id))
+        setLocationError('')
+        setSubmissionError('')
+        requestAnimationFrame(() => locationSelectRefs.current[previousLocationId]?.focus())
+    }
 
     const handleListInputChange = (key: ListFieldKey, value: string) => {
         setListInputs((prev) => ({
@@ -322,9 +405,12 @@ const CreateJobFormContent = ({
                 skills: job.skills,
             })
             setListInputs({ benefits: '', responsibilities: '', requirements: '', skills: '' })
+            setAdditionalLocations([])
+            setLocationError('')
+            setSubmissionError('')
             setImportFeedback({
                 type: 'success',
-                message: 'The JSON was loaded. Review the populated form before creating the job.',
+                message: 'The JSON was loaded as one location. Review the populated form before creating the job.',
             })
             setIsJsonPanelExpanded(false)
         } catch {
@@ -366,6 +452,21 @@ const CreateJobFormContent = ({
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        setSubmissionError('')
+
+        const locationResult = validateJobLocations([
+            buildJobLocation(formData.jobLocationOption, formData.customJobLocation),
+            ...additionalLocations.map((location) => (
+                buildJobLocation(location.option, location.custom)
+            )),
+        ])
+
+        if (locationResult.error) {
+            setLocationError(locationResult.error)
+            locationSelectRefs.current[0]?.focus()
+            return
+        }
+        setLocationError('')
 
         try {
             // Transform the flat form state into the schema's nested structure
@@ -378,7 +479,7 @@ const CreateJobFormContent = ({
                     logo: companyLogo || undefined,
                 },
                 category: formData.category,
-                location: buildJobLocation(formData.jobLocationOption, formData.customJobLocation),
+                location: locationResult.locations[0],
                 workMode: formData.workMode,
                 jobType: formData.jobType,
                 level: formData.level,
@@ -407,19 +508,56 @@ const CreateJobFormContent = ({
             if (initialJob) {
                 await updateJobMutation.mutateAsync({ jobId: initialJob._id, data: validation.data })
                 toast.success('Job updated successfully')
+            } else if (locationResult.locations.length > 1) {
+                const batchValidation = jobBatchFormSchema.safeParse({
+                    job: validation.data,
+                    locations: locationResult.locations,
+                })
+                if (!batchValidation.success) {
+                    const message = batchValidation.error.issues[0]?.message || 'Vacancy locations are invalid'
+                    setLocationError(message)
+                    return
+                }
+                const result = await createJobBatchMutation.mutateAsync(batchValidation.data)
+                toast.success(
+                    validation.data.status === 'Draft'
+                        ? `${result.count} drafts saved successfully`
+                        : `${result.count} vacancies published successfully`,
+                )
             } else {
                 await createJobMutation.mutateAsync(validation.data)
                 toast.success(validation.data.status === 'Draft' ? 'Draft saved successfully' : 'Job published successfully')
             }
             router.push('/admin-center/jobs')
         } catch (error: unknown) {
+            const message = error instanceof Error
+                ? error.message || 'Could not save the vacancy'
+                : 'Could not save the vacancy'
+            setSubmissionError(message)
             if (error instanceof Error) {
-                toast.error(error.message || 'Could not save job');
+                toast.error(message);
                 return;
             }
-            toast.error('Could not save job');
+            toast.error(message);
         }
     };
+
+    const locationRows = [
+        {
+            id: 0,
+            option: formData.jobLocationOption,
+            custom: formData.customJobLocation,
+        },
+        ...additionalLocations,
+    ]
+    const locationValues = locationRows.map((location) => (
+        buildJobLocation(location.option, location.custom)
+    ))
+    const liveLocationValidation = validateJobLocations(locationValues)
+    const liveDuplicateError = locationValues.every(Boolean)
+        ? liveLocationValidation.error
+        : undefined
+    const displayedLocationError = locationError || liveDuplicateError
 
     const jsonStatus = importFeedback?.type === 'success'
         ? 'Loaded'
@@ -434,13 +572,18 @@ const CreateJobFormContent = ({
     const availablePublishingStatuses = initialJob
         ? publishingStatusOptions
         : publishingStatusOptions.filter((option) => option.value !== 'Closed')
-    const submitLabel = activeMutation.isPending
+    const vacancyCount = initialJob ? 1 : locationRows.length
+    const submitLabel = isSaving
         ? initialJob
             ? 'Saving…'
-            : formData.status === 'Draft' ? 'Saving draft…' : 'Publishing…'
+            : formData.status === 'Draft'
+                ? vacancyCount > 1 ? `Saving ${vacancyCount} drafts…` : 'Saving draft…'
+                : vacancyCount > 1 ? `Publishing ${vacancyCount} vacancies…` : 'Publishing…'
         : initialJob
             ? 'Save changes'
-            : formData.status === 'Draft' ? 'Save draft' : 'Publish job'
+            : formData.status === 'Draft'
+                ? vacancyCount > 1 ? `Save ${vacancyCount} drafts` : 'Save draft'
+                : vacancyCount > 1 ? `Publish ${vacancyCount} vacancies` : 'Publish job'
 
     return (
         <section className="w-full max-w-4xl mx-auto px-4 py-6">
@@ -579,7 +722,7 @@ const CreateJobFormContent = ({
                 />
             ) : null}
 
-            <form onSubmit={handleSubmit} className="space-y-8" aria-busy={activeMutation.isPending}>
+            <form onSubmit={handleSubmit} className="space-y-8" aria-busy={isSaving}>
                 <div className="rounded-xl border border-gray-200 p-4 md:p-6">
                     <h2 className="mb-4 text-lg font-semibold">Job Overview</h2>
 
@@ -677,65 +820,157 @@ const CreateJobFormContent = ({
                             </select>
                         </div>
 
-                        <div className="flex flex-col md:col-span-2">
-                            <RequiredLabel htmlFor="jobLocationOption">Location</RequiredLabel>
-                            <select
-                                id="jobLocationOption"
-                                name="jobLocationOption"
-                                value={formData.jobLocationOption}
-                                onChange={(event) => {
-                                    const value = event.target.value
-                                    setFormData((previous) => ({
-                                        ...previous,
-                                        jobLocationOption: value,
-                                        customJobLocation: value === CUSTOM_JOB_LOCATION_OPTION
-                                            ? previous.jobLocationOption === CUSTOM_JOB_LOCATION_OPTION
-                                                ? previous.customJobLocation
-                                                : ''
-                                            : '',
-                                    }))
-                                }}
-                                className={inputClassName}
-                                aria-describedby="job-location-help job-location-preview"
-                                required
-                            >
-                                <option value="">Choose a location</option>
-                                <option value={CUSTOM_JOB_LOCATION_OPTION}>Enter a custom location</option>
-                                <optgroup label="Nigeria">
-                                    {NIGERIAN_STATE_OPTIONS.map((option) => (
-                                        <option key={option.value} value={option.value}>{option.label}</option>
-                                    ))}
-                                </optgroup>
-                            </select>
+                        <fieldset className="md:col-span-2">
+                            <legend className="text-base font-semibold text-gray-950">
+                                {initialJob ? 'Location' : 'Vacancy locations'}
+                                <span aria-hidden="true" className="ml-1 text-red-600">*</span>
+                            </legend>
+                            <p id="job-location-help" className="mt-1 text-sm leading-6 text-gray-600">
+                                {initialJob
+                                    ? 'Choose a listed location or enter a more specific location.'
+                                    : 'A separate vacancy will be created for each location.'}
+                            </p>
 
-                            {formData.jobLocationOption === CUSTOM_JOB_LOCATION_OPTION ? (
-                                <div className="mt-3">
-                                    <label htmlFor="customJobLocation" className={labelClassName}>Enter location</label>
-                                    <input
-                                        className={inputClassName}
-                                        type="text"
-                                        id="customJobLocation"
-                                        name="customJobLocation"
-                                        value={formData.customJobLocation}
-                                        onChange={handleFieldChange}
-                                        placeholder="e.g. Gbagada, Lagos; Nationwide; or West Africa"
-                                        maxLength={120}
-                                        required
-                                        autoFocus
-                                        aria-describedby="job-location-help job-location-preview"
-                                    />
+                            <div className="mt-3 space-y-3">
+                                {locationRows.map((location, index) => {
+                                    const selectId = index === 0
+                                        ? 'jobLocationOption'
+                                        : `jobLocationOption-${location.id}`
+                                    const customId = index === 0
+                                        ? 'customJobLocation'
+                                        : `customJobLocation-${location.id}`
+                                    const locationValue = buildJobLocation(location.option, location.custom)
+
+                                    return (
+                                        <div
+                                            key={location.id}
+                                            className="rounded-lg border border-gray-200 bg-gray-50/60 p-4"
+                                        >
+                                            <div className="mb-2 flex items-center justify-between gap-4">
+                                                <label htmlFor={selectId} className="text-sm font-semibold text-gray-800">
+                                                    {initialJob ? 'Vacancy location' : `Location ${index + 1}`}
+                                                </label>
+                                                {!initialJob && index > 0 ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeLocation(location.id)}
+                                                        className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold text-red-700 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2"
+                                                        aria-label={`Remove location ${index + 1}`}
+                                                    >
+                                                        <LuTrash2 aria-hidden="true" className="size-4" />
+                                                        Remove
+                                                    </button>
+                                                ) : null}
+                                            </div>
+
+                                            <select
+                                                ref={(element) => {
+                                                    locationSelectRefs.current[location.id] = element
+                                                }}
+                                                id={selectId}
+                                                name={selectId}
+                                                value={location.option}
+                                                onChange={(event) => {
+                                                    if (index === 0) {
+                                                        handlePrimaryLocationOptionChange(event.target.value)
+                                                        return
+                                                    }
+                                                    handleAdditionalLocationOptionChange(location.id, event.target.value)
+                                                }}
+                                                className={inputClassName}
+                                                aria-describedby={`job-location-help${displayedLocationError ? ' job-location-error' : ''}`}
+                                                aria-invalid={Boolean(displayedLocationError)}
+                                                required
+                                            >
+                                                <option value="">Choose a location</option>
+                                                <option value={CUSTOM_JOB_LOCATION_OPTION}>Enter a custom location</option>
+                                                <optgroup label="Nigeria">
+                                                    {NIGERIAN_STATE_OPTIONS.map((option) => (
+                                                        <option key={option.value} value={option.value}>{option.label}</option>
+                                                    ))}
+                                                </optgroup>
+                                            </select>
+
+                                            {location.option === CUSTOM_JOB_LOCATION_OPTION ? (
+                                                <div className="mt-3">
+                                                    <label htmlFor={customId} className={labelClassName}>Enter location</label>
+                                                    <input
+                                                        className={inputClassName}
+                                                        type="text"
+                                                        id={customId}
+                                                        name={customId}
+                                                        value={location.custom}
+                                                        onChange={(event) => {
+                                                            if (index === 0) {
+                                                                setFormData((previous) => ({
+                                                                    ...previous,
+                                                                    customJobLocation: event.target.value,
+                                                                }))
+                                                                setLocationError('')
+                                                                setSubmissionError('')
+                                                                return
+                                                            }
+                                                            updateAdditionalLocation(location.id, { custom: event.target.value })
+                                                        }}
+                                                        placeholder="e.g. Gbagada, Lagos; Nationwide; or West Africa"
+                                                        maxLength={120}
+                                                        required
+                                                        aria-describedby={`job-location-help${displayedLocationError ? ' job-location-error' : ''}`}
+                                                        aria-invalid={Boolean(displayedLocationError)}
+                                                    />
+                                                </div>
+                                            ) : null}
+
+                                            {locationValue ? (
+                                                <p className="mt-2 text-xs text-gray-600">
+                                                    Candidates will see <span className="font-semibold text-gray-800">{locationValue}</span>
+                                                </p>
+                                            ) : null}
+                                        </div>
+                                    )
+                                })}
+                            </div>
+
+                            {displayedLocationError ? (
+                                <p id="job-location-error" role="alert" className="mt-3 text-sm font-medium text-red-700">
+                                    {displayedLocationError}
+                                </p>
+                            ) : null}
+
+                            {!initialJob ? (
+                                <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                    <button
+                                        type="button"
+                                        onClick={addLocation}
+                                        disabled={locationRows.length >= MAX_JOB_LOCATIONS}
+                                        className="inline-flex w-fit items-center gap-2 rounded-md border border-gray-300 bg-white px-3.5 py-2 text-sm font-semibold text-gray-800 transition hover:border-gray-500 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003B6D] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        <LuPlus aria-hidden="true" className="size-4" />
+                                        Add another location
+                                    </button>
+                                    <p className="text-xs text-gray-500">
+                                        {locationRows.length >= MAX_JOB_LOCATIONS
+                                            ? 'Maximum of four locations reached.'
+                                            : `Add up to ${MAX_JOB_LOCATIONS - locationRows.length} more ${MAX_JOB_LOCATIONS - locationRows.length === 1 ? 'location' : 'locations'}.`}
+                                    </p>
                                 </div>
                             ) : null}
 
-                            <p id="job-location-help" className="mt-2 text-xs leading-5 text-gray-500">
-                                Choose a listed location, or use a custom entry for a specific area, nationwide, or multi-location role.
-                            </p>
-                            {buildJobLocation(formData.jobLocationOption, formData.customJobLocation) ? (
-                                <p id="job-location-preview" aria-live="polite" className="mt-1 text-xs text-gray-700">
-                                    Candidates will see: <span className="font-semibold">{buildJobLocation(formData.jobLocationOption, formData.customJobLocation)}</span>
-                                </p>
+                            {!initialJob && locationRows.length > 1 ? (
+                                <div className="mt-4 rounded-lg border border-gray-200 bg-white px-4 py-3" aria-live="polite">
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Vacancies to create</p>
+                                    <ul className="mt-2 space-y-1.5 text-sm text-gray-800">
+                                        {locationRows.map((location, index) => (
+                                            <li key={location.id}>
+                                                <span className="font-semibold">{formData.jobTitle.trim() || 'Untitled vacancy'}</span>
+                                                <span className="mx-2 text-gray-400" aria-hidden="true">·</span>
+                                                <span>{locationValues[index] || 'Choose a location'}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
                             ) : null}
-                        </div>
+                        </fieldset>
 
                         <div className="flex flex-col">
                             <RequiredLabel htmlFor="workMode">
@@ -1025,10 +1260,17 @@ const CreateJobFormContent = ({
                     </div>
                 </fieldset>
 
+                {submissionError ? (
+                    <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                        <p className="font-semibold">The vacancy was not saved.</p>
+                        <p className="mt-1">{submissionError} Your form entries are still here so you can try again.</p>
+                    </div>
+                ) : null}
+
                 <div className="flex justify-end">
                     <button
                         type="submit"
-                        disabled={activeMutation.isPending}
+                        disabled={isSaving}
                         className="rounded-md bg-black px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 transition disabled:cursor-wait disabled:opacity-70"
                     >
                         {submitLabel}

@@ -1,4 +1,4 @@
-import { applyToJob, cancelApplication, createJob, getMyApplications, getWeeklyApplicationLimit } from "@/api/applications";
+import { applyToJob, cancelApplication, createJob, createJobBatch, getMyApplications, getWeeklyApplicationLimit } from "@/api/applications";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 
@@ -7,6 +7,10 @@ export const useCreatejob = () => {
         mutationFn: createJob
     })
 }
+
+export const useCreateJobBatch = () => useMutation({
+    mutationFn: createJobBatch,
+})
 
 export const useApplyToJob = () => {
     const queryClient = useQueryClient()

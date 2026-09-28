@@ -446,6 +446,34 @@ export const deleteAdminJob = async (jobId: string): Promise<{ jobId: string; de
     return result.data
 }
 
+export type PermanentJobDeletionResult = {
+    jobId: string
+    deletedApplications: number
+    deletedApplicationActivities: number
+    deletedSavedJobs: number
+    deletedEmailRecords: number
+    deletedExportRequests: number
+}
+
+export const permanentlyDeleteAdminJob = async ({
+    jobId,
+    confirmationTitle,
+}: {
+    jobId: string
+    confirmationTitle: string
+}): Promise<PermanentJobDeletionResult> => {
+    const res = await csrfFetch(apiPath(`/jobs/${encodeURIComponent(jobId)}/permanent`), {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirmationTitle }),
+    })
+    const result = await readApiResponse<ApiSuccess<PermanentJobDeletionResult>>(
+        res,
+        'Unable to permanently delete vacancy',
+    )
+    return result.data
+}
+
 export const restoreAdminJob = async (jobId: string): Promise<Job> => {
     const res = await csrfFetch(apiPath(`/jobs/${encodeURIComponent(jobId)}/restore`), {
         method: 'POST',

@@ -3,6 +3,7 @@
 import {
     useAdminVacancies,
     useDeleteAdminJob,
+    usePermanentlyDeleteAdminJob,
     useRestoreAdminJob,
     useUpdateAdminJobStatus,
 } from '@/hooks/useAdmin'
@@ -29,10 +30,12 @@ import {
     FiMoreHorizontal,
     FiRefreshCw,
     FiSearch,
+    FiTrash2,
 } from 'react-icons/fi'
 import { toast } from 'sonner'
 import Modal from './Modal'
 import PaginationControls from './PaginationControls'
+import PermanentDeleteJobModal from './PermanentDeleteJobModal'
 import { usePlatformSettings } from './PlatformSettingsProvider'
 import { formatDateInTimeZone } from '@/utils/dateTime'
 
@@ -75,7 +78,7 @@ const statusStyle: Record<Job['status'], string> = {
 }
 
 type Confirmation = {
-    type: 'publish' | 'close' | 'archive' | 'restore'
+    type: 'publish' | 'close' | 'archive' | 'restore' | 'permanent'
     job: Job
 } | null
 
@@ -104,10 +107,12 @@ const JobActions = ({
     job,
     onAction,
     canArchive,
+    canPermanentlyDelete,
 }: {
     job: Job
     onAction: (type: NonNullable<Confirmation>['type'], job: Job) => void
     canArchive: boolean
+    canPermanentlyDelete: boolean
 }) => {
     const menuRef = useRef<HTMLDetailsElement>(null)
     const choose = (type: NonNullable<Confirmation>['type']) => {
@@ -116,16 +121,30 @@ const JobActions = ({
     }
 
     if (job.archivedAt) {
-        if (!canArchive) return null
+        if (!canArchive && !canPermanentlyDelete) return null
         return (
-            <button
-                type="button"
-                onClick={() => choose('restore')}
-                className="inline-flex min-h-9 items-center gap-2 rounded-md border border-[#184aa2] px-3 py-1.5 text-xs font-semibold text-[#184aa2] hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]"
-            >
-                <FiRefreshCw aria-hidden="true" />
-                Restore
-            </button>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+                {canArchive ? (
+                    <button
+                        type="button"
+                        onClick={() => choose('restore')}
+                        className="inline-flex min-h-9 items-center gap-2 rounded-md border border-[#184aa2] px-3 py-1.5 text-xs font-semibold text-[#184aa2] hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]"
+                    >
+                        <FiRefreshCw aria-hidden="true" />
+                        Restore
+                    </button>
+                ) : null}
+                {canPermanentlyDelete ? (
+                    <button
+                        type="button"
+                        onClick={() => choose('permanent')}
+                        className="inline-flex min-h-9 items-center gap-2 rounded-md border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600"
+                    >
+                        <FiTrash2 aria-hidden="true" />
+                        Delete permanently
+                    </button>
+                ) : null}
+            </div>
         )
     }
 
@@ -185,6 +204,7 @@ const JobsPageTable = () => {
     const { data: user } = useUser()
     const canReviewApplications = hasStaffPermission(user?.role, 'applications:review')
     const canArchive = hasStaffPermission(user?.role, 'jobs:archive')
+    const canPermanentlyDelete = user?.role === 'super-admin'
     const router = useRouter()
     const pathname = usePathname()
     const searchParams = useSearchParams()
@@ -201,6 +221,7 @@ const JobsPageTable = () => {
     const urlSearch = searchParams.get('search') ?? ''
     const [searchValue, setSearchValue] = useState(urlSearch)
     const [confirmation, setConfirmation] = useState<Confirmation>(null)
+    const [permanentDeleteError, setPermanentDeleteError] = useState('')
 
     const updateParams = useCallback((
         updates: Record<string, string | undefined>,
@@ -241,11 +262,13 @@ const JobsPageTable = () => {
         sort,
     })
     const archiveJob = useDeleteAdminJob()
+    const permanentlyDeleteJob = usePermanentlyDeleteAdminJob()
     const restoreJob = useRestoreAdminJob()
     const updateStatus = useUpdateAdminJobStatus()
     const rows = jobsQuery.data?.data ?? []
     const summary = jobsQuery.data?.summary ?? emptySummary
     const mutationPending = archiveJob.isPending
+        || permanentlyDeleteJob.isPending
         || restoreJob.isPending
         || updateStatus.isPending
 
@@ -257,7 +280,7 @@ const JobsPageTable = () => {
     }, [jobsQuery.data?.pagination.totalPages, page, updateParams])
 
     const performConfirmedAction = async () => {
-        if (!confirmation) return
+        if (!confirmation || confirmation.type === 'permanent') return
         const { job, type } = confirmation
         try {
             if (type === 'archive') {
@@ -277,7 +300,24 @@ const JobsPageTable = () => {
         }
     }
 
-    const modalCopy = confirmation
+    const confirmPermanentDeletion = async (confirmationTitle: string) => {
+        if (!confirmation || confirmation.type !== 'permanent') return
+        setPermanentDeleteError('')
+        try {
+            await permanentlyDeleteJob.mutateAsync({
+                jobId: confirmation.job._id,
+                confirmationTitle,
+            })
+            toast.success('Vacancy permanently deleted')
+            setConfirmation(null)
+        } catch (error) {
+            setPermanentDeleteError(
+                error instanceof Error ? error.message : 'Unable to permanently delete vacancy',
+            )
+        }
+    }
+
+    const modalCopy = confirmation && confirmation.type !== 'permanent'
         ? {
             publish: {
                 title: 'Publish vacancy?',
@@ -506,7 +546,15 @@ const JobsPageTable = () => {
                                             </td>
                                             <td className="px-4 py-4 text-sm text-gray-600">{formatDate(job.createdAt)}</td>
                                             <td className="px-4 py-4">
-                                                <JobActions job={job} canArchive={canArchive} onAction={(type, selectedJob) => setConfirmation({ type, job: selectedJob })} />
+                                                <JobActions
+                                                    job={job}
+                                                    canArchive={canArchive}
+                                                    canPermanentlyDelete={canPermanentlyDelete}
+                                                    onAction={(type, selectedJob) => {
+                                                        setPermanentDeleteError('')
+                                                        setConfirmation({ type, job: selectedJob })
+                                                    }}
+                                                />
                                             </td>
                                         </tr>
                                     ))}
@@ -580,7 +628,15 @@ const JobsPageTable = () => {
                                     </div>
                                 </dl>
                                 <div className="mt-4 flex justify-end">
-                                    <JobActions job={job} canArchive={canArchive} onAction={(type, selectedJob) => setConfirmation({ type, job: selectedJob })} />
+                                    <JobActions
+                                        job={job}
+                                        canArchive={canArchive}
+                                        canPermanentlyDelete={canPermanentlyDelete}
+                                        onAction={(type, selectedJob) => {
+                                            setPermanentDeleteError('')
+                                            setConfirmation({ type, job: selectedJob })
+                                        }}
+                                    />
                                 </div>
                             </article>
                         ))}
@@ -595,7 +651,7 @@ const JobsPageTable = () => {
             ) : null}
 
             <Modal
-                isOpen={Boolean(confirmation)}
+                isOpen={Boolean(confirmation && confirmation.type !== 'permanent')}
                 title={modalCopy?.title}
                 body={modalCopy?.body}
                 actionLabel={modalCopy?.action || 'Continue'}
@@ -615,6 +671,19 @@ const JobsPageTable = () => {
                     </button>
                 )}
             />
+
+            {confirmation?.type === 'permanent' ? (
+                <PermanentDeleteJobModal
+                    job={confirmation.job}
+                    pending={permanentlyDeleteJob.isPending}
+                    error={permanentDeleteError}
+                    onClose={() => {
+                        setPermanentDeleteError('')
+                        setConfirmation(null)
+                    }}
+                    onConfirm={(confirmationTitle) => void confirmPermanentDeletion(confirmationTitle)}
+                />
+            ) : null}
         </div>
     )
 }

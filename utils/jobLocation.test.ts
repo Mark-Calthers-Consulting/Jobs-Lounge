@@ -4,7 +4,11 @@ import {
     CUSTOM_JOB_LOCATION_OPTION,
     NIGERIAN_STATE_OPTIONS,
 } from '@/constants/nigeria'
-import { buildJobLocation, locationToFormValue } from './jobLocation'
+import {
+    buildJobLocation,
+    locationToFormValue,
+    validateJobLocations,
+} from './jobLocation'
 
 describe('job location form helpers', () => {
     it('provides all 36 states and the Federal Capital Territory once', () => {
@@ -37,5 +41,14 @@ describe('job location form helpers', () => {
             option: CUSTOM_JOB_LOCATION_OPTION,
             custom: 'Nationwide',
         })
+    })
+
+    it('normalizes a location batch and rejects missing or repeated locations', () => {
+        expect(validateJobLocations([' Abuja ', 'Ilorin   Central'])).toEqual({
+            locations: ['Abuja', 'Ilorin Central'],
+        })
+        expect(validateJobLocations(['Lagos', ' lagos ']).error).toMatch(/different/i)
+        expect(validateJobLocations(['Lagos', '']).error).toMatch(/every vacancy location/i)
+        expect(validateJobLocations(['A', 'B', 'C', 'D', 'E']).error).toMatch(/one and 4/i)
     })
 })

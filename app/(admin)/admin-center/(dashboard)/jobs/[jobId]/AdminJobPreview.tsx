@@ -4,18 +4,21 @@ import { APPLICATION_STATUSES, type ApplicationStatus } from '@/constants/enums'
 import {
     useAdminJob,
     useDeleteAdminJob,
+    usePermanentlyDeleteAdminJob,
     useRestoreAdminJob,
     useUpdateAdminJobStatus,
 } from '@/hooks/useAdmin'
 import { useUser } from '@/hooks/useUsers'
 import JobDetailContent from '@/components/JobDetailContent'
 import Modal from '@/components/Modal'
+import PermanentDeleteJobModal from '@/components/PermanentDeleteJobModal'
 import type { Job } from '@/types/types'
 import { formatJobDeadline } from '@/utils/jobDeadline'
 import { hasStaffPermission } from '@/utils/staffPermissions'
 import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
 import { formatDateInTimeZone } from '@/utils/dateTime'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import {
     FiArchive,
@@ -24,10 +27,11 @@ import {
     FiExternalLink,
     FiMoreHorizontal,
     FiRefreshCw,
+    FiTrash2,
 } from 'react-icons/fi'
 import { toast } from 'sonner'
 
-type Confirmation = 'publish' | 'close' | 'archive' | 'restore' | null
+type Confirmation = 'publish' | 'close' | 'archive' | 'restore' | 'permanent' | null
 
 const statusStyle: Record<Job['status'], string> = {
     Draft: 'bg-amber-50 text-amber-800 ring-amber-200',
@@ -43,15 +47,19 @@ const statusLabels: Record<ApplicationStatus, string> = {
 }
 
 const AdminJobPreview = ({ jobId }: { jobId: string }) => {
+    const router = useRouter()
     const { timeZone } = usePlatformSettings()
     const { data: user } = useUser()
     const canReviewApplications = hasStaffPermission(user?.role, 'applications:review')
     const canArchive = hasStaffPermission(user?.role, 'jobs:archive')
+    const canPermanentlyDelete = user?.role === 'super-admin'
     const { data: job, isLoading, isError, error } = useAdminJob(jobId)
     const updateStatus = useUpdateAdminJobStatus()
     const archiveJob = useDeleteAdminJob()
+    const permanentlyDeleteJob = usePermanentlyDeleteAdminJob()
     const restoreJob = useRestoreAdminJob()
     const [confirmation, setConfirmation] = useState<Confirmation>(null)
+    const [permanentDeleteError, setPermanentDeleteError] = useState('')
 
     if (isLoading) return <p role="status">Loading job preview…</p>
     if (isError || !job) {
@@ -113,7 +121,26 @@ const AdminJobPreview = ({ jobId }: { jobId: string }) => {
         }
     }
 
-    const dialogPending = updateStatus.isPending || archiveJob.isPending || restoreJob.isPending
+    const confirmPermanentDeletion = async (confirmationTitle: string) => {
+        setPermanentDeleteError('')
+        try {
+            await permanentlyDeleteJob.mutateAsync({
+                jobId: job._id,
+                confirmationTitle,
+            })
+            toast.success('Vacancy permanently deleted')
+            router.push('/admin-center/jobs?view=archived')
+        } catch (caught) {
+            setPermanentDeleteError(
+                caught instanceof Error ? caught.message : 'Unable to permanently delete vacancy',
+            )
+        }
+    }
+
+    const dialogPending = updateStatus.isPending
+        || archiveJob.isPending
+        || permanentlyDeleteJob.isPending
+        || restoreJob.isPending
     const canViewPublicly = !archived && job.status === 'Open'
     const confirmedStatus: Job['status'] = confirmation === 'close' ? 'Closed' : 'Open'
 
@@ -206,7 +233,8 @@ const AdminJobPreview = ({ jobId }: { jobId: string }) => {
 
                     <div className="flex flex-wrap items-center gap-2">
                         {archived ? (
-                            canArchive ? (
+                            <>
+                            {canArchive ? (
                                 <button
                                     type="button"
                                     onClick={() => setConfirmation('restore')}
@@ -215,7 +243,21 @@ const AdminJobPreview = ({ jobId }: { jobId: string }) => {
                                     <FiRefreshCw aria-hidden="true" />
                                     Restore as closed
                                 </button>
-                            ) : null
+                            ) : null}
+                            {canPermanentlyDelete ? (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setPermanentDeleteError('')
+                                        setConfirmation('permanent')
+                                    }}
+                                    className="inline-flex min-h-10 items-center gap-2 rounded-md border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2"
+                                >
+                                    <FiTrash2 aria-hidden="true" />
+                                    Delete permanently
+                                </button>
+                            ) : null}
+                            </>
                         ) : (
                             <>
                                 <Link
@@ -363,6 +405,19 @@ const AdminJobPreview = ({ jobId }: { jobId: string }) => {
                 onClose={() => setConfirmation(null)}
                 onSubmit={() => void confirmRestore()}
             />
+
+            {confirmation === 'permanent' ? (
+                <PermanentDeleteJobModal
+                    job={job}
+                    pending={permanentlyDeleteJob.isPending}
+                    error={permanentDeleteError}
+                    onClose={() => {
+                        setPermanentDeleteError('')
+                        setConfirmation(null)
+                    }}
+                    onConfirm={(confirmationTitle) => void confirmPermanentDeletion(confirmationTitle)}
+                />
+            ) : null}
         </div>
     )
 }
