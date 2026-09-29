@@ -50,7 +50,7 @@ export const jobFormSchema = z.object({
 
 export const jobBatchFormSchema = z.object({
   job: jobFormSchema.omit({ location: true }),
-  locations: z.array(z.string().trim().min(1).max(120)).min(2).max(4),
+  locations: z.array(z.string().trim().min(1).max(120)).min(2).max(10),
 }).superRefine(({ locations }, context) => {
   const normalized = locations.map((location) => location.toLocaleLowerCase('en-NG'))
   if (new Set(normalized).size !== normalized.length) {

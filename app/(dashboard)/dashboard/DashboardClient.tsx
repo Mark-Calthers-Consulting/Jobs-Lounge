@@ -12,6 +12,7 @@ import { useCandidateOnboarding } from '@/hooks/useCandidateOnboarding'
 import { useGetSavedJobs, useUser } from '@/hooks/useUsers'
 import { useRecommendedJobs } from '@/hooks/useVacancies'
 import type { RecommendedJob } from '@/types/types'
+import { publicJobLocationSummary } from '@/utils/jobPresentation'
 
 const formatSalary = (job: RecommendedJob) => {
     const minimum = job.salary?.min
@@ -169,7 +170,7 @@ const DashboardClient: React.FC = () => {
                             <div className="mt-5 space-y-2.5 border-t border-slate-100 pt-4">
                                 <p className="flex items-start text-sm leading-5 text-slate-600">
                                     <IoLocationOutline aria-hidden="true" className="mr-2 mt-0.5 shrink-0" />
-                                    <span>{rec.location} · {rec.workMode}</span>
+                                    <span>{publicJobLocationSummary(rec, { compact: true })} · {rec.workMode}</span>
                                 </p>
                                 <p className="flex items-center text-sm font-medium text-slate-700">
                                     <CiMoneyBill aria-hidden="true" className="mr-2 shrink-0" />

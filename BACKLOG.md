@@ -29,6 +29,15 @@ Status: deferred
 - Add alerts for readiness failures, growing email retry queues, dead email records, stale worker heartbeats, elevated server-error rates, and certificate expiry; define alert channels, ownership, escalation, and acknowledgement expectations.
 - Account for Passenger process suspension and multi-process metrics when designing heartbeats and interpreting process-local counters.
 
+## Announcement read receipts
+
+Status: deferred
+
+- Add true per-recipient, per-announcement read receipts so Super-admins can see which active team members read an announcement and when.
+- Keep popup dismissal separate from reading an announcement, and preserve the current lightweight unread timestamp until the receipt system replaces it safely.
+- Define what action counts as read, recipient snapshots for staff who join or leave after publication, retention, pagination, privacy-safe auditing, and aggregate read-rate reporting before implementation.
+- Avoid creating receipt records for every recipient at publish time where an on-demand or sparse model can provide the same result more cheaply.
+
 ## Candidate email campaigns
 
 Status: deferred

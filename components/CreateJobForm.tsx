@@ -950,7 +950,7 @@ const CreateJobFormContent = ({
                                     </button>
                                     <p className="text-xs text-gray-500">
                                         {locationRows.length >= MAX_JOB_LOCATIONS
-                                            ? 'Maximum of four locations reached.'
+                                            ? `Maximum of ${MAX_JOB_LOCATIONS} locations reached.`
                                             : `Add up to ${MAX_JOB_LOCATIONS - locationRows.length} more ${MAX_JOB_LOCATIONS - locationRows.length === 1 ? 'location' : 'locations'}.`}
                                     </p>
                                 </div>

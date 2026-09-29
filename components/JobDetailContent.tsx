@@ -8,6 +8,7 @@ import { MdOutlineWorkOutline, MdWorkspacePremium } from 'react-icons/md'
 import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
 import type { Job } from '@/types/types'
 import { formatJobDeadline, isJobDeadlinePast } from '@/utils/jobDeadline'
+import { publicJobLocationSummary } from '@/utils/jobPresentation'
 
 type JobDetailContentProps = {
     job: Job
@@ -82,9 +83,10 @@ const JobDetailContent = ({ job, sidebarContent, backHref }: JobDetailContentPro
     const requirements = job.requirements ?? []
     const skills = job.skills ?? []
     const benefits = job.benefits ?? []
+    const locationSummary = publicJobLocationSummary(job)
 
     const overviewItems = [
-        { label: 'Location', value: job.location, icon: FiMapPin },
+        { label: job.locationOptions && job.locationOptions.length > 1 ? 'Available locations' : 'Location', value: locationSummary, icon: FiMapPin },
         { label: 'Work arrangement', value: job.workMode, icon: MdOutlineWorkOutline },
         { label: 'Employment type', value: job.jobType, icon: FiBriefcase },
         { label: 'Experience level', value: job.level, icon: MdWorkspacePremium },
@@ -137,7 +139,7 @@ const JobDetailContent = ({ job, sidebarContent, backHref }: JobDetailContentPro
                             <span aria-hidden="true" className="text-slate-300">•</span>
                             <span className="inline-flex items-center gap-1.5">
                                 <FiMapPin aria-hidden="true" />
-                                {job.location}
+                                {locationSummary}
                             </span>
                             <span aria-hidden="true" className="text-slate-300">•</span>
                             <span>{job.workMode}</span>

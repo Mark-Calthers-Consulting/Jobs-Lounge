@@ -37,7 +37,12 @@ const JobPage = async ({ params }: JobPageProps) => {
                 backHref="/vacancies"
                 sidebarContent={(
                     <>
-                        <JobActions jobId={jobId} jobTitle={job.title} />
+                        <JobActions
+                            jobId={jobId}
+                            jobTitle={job.title}
+                            location={job.location}
+                            locationOptions={job.locationOptions}
+                        />
 
                         <section aria-labelledby="share-vacancy-title" className="border-t border-slate-200 pt-5">
                             <h2 id="share-vacancy-title" className="text-sm font-semibold text-slate-700">

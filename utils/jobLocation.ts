@@ -13,7 +13,7 @@ export type JobLocationValidation = {
     error?: string
 }
 
-export const MAX_JOB_LOCATIONS = 4
+export const MAX_JOB_LOCATIONS = 10
 
 const cleanLocation = (value: string) => value.trim().replace(/\s+/g, ' ')
 const withoutNigeriaSuffix = (value: string) => value.replace(/,\s*Nigeria$/i, '').trim()

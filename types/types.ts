@@ -19,6 +19,11 @@ export type Job = {
   description: string
   category: Category
   location: string
+  locationOptions?: Array<{
+    jobId: string
+    location: string
+  }>
+  locationCount?: number
   workMode: WorkMode
   jobType: JobType
   level: Level

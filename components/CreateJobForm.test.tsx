@@ -57,7 +57,7 @@ describe('multi-location vacancy form', () => {
         expect(screen.getByRole('button', { name: 'Save draft' })).toBeInTheDocument()
     })
 
-    it('shows duplicate-location guidance and enforces the four-location cap', () => {
+    it('shows duplicate-location guidance and enforces the ten-location cap', () => {
         openForm()
 
         fireEvent.change(screen.getByLabelText('Location 1'), { target: { value: 'Lagos' } })
@@ -70,12 +70,13 @@ describe('multi-location vacancy form', () => {
         expect(screen.getByRole('alert')).toHaveTextContent('Each vacancy location must be different.')
 
         fireEvent.change(screen.getByLabelText('Location 2'), { target: { value: 'Ilorin' } })
-        fireEvent.click(screen.getByRole('button', { name: 'Add another location' }))
-        fireEvent.click(screen.getByRole('button', { name: 'Add another location' }))
+        for (let index = 0; index < 8; index += 1) {
+            fireEvent.click(screen.getByRole('button', { name: 'Add another location' }))
+        }
 
-        expect(screen.getByLabelText('Location 4')).toBeInTheDocument()
+        expect(screen.getByLabelText('Location 10')).toBeInTheDocument()
         expect(screen.getByRole('button', { name: 'Add another location' })).toBeDisabled()
-        expect(screen.getByText('Maximum of four locations reached.')).toBeInTheDocument()
+        expect(screen.getByText('Maximum of 10 locations reached.')).toBeInTheDocument()
     })
 
     it('loads JSON into one location and clears added location rows', () => {

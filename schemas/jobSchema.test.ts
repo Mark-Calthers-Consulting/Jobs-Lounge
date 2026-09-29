@@ -69,10 +69,10 @@ describe('multi-location vacancy contract', () => {
     const sharedJob = { ...validJob }
     Reflect.deleteProperty(sharedJob, 'location')
 
-    it('accepts two to four unique locations with shared vacancy data', () => {
+    it('accepts two to ten unique locations with shared vacancy data', () => {
         expect(jobBatchFormSchema.safeParse({
             job: sharedJob,
-            locations: ['Abuja', 'Ilorin', 'Kano', 'Lagos'],
+            locations: Array.from({ length: 10 }, (_, index) => `Location ${index + 1}`),
         }).success).toBe(true)
     })
 
@@ -83,11 +83,11 @@ describe('multi-location vacancy contract', () => {
         }).success).toBe(false)
     })
 
-    it('rejects batches outside the two-to-four range', () => {
+    it('rejects batches outside the two-to-ten range', () => {
         expect(jobBatchFormSchema.safeParse({ job: sharedJob, locations: ['Lagos'] }).success).toBe(false)
         expect(jobBatchFormSchema.safeParse({
             job: sharedJob,
-            locations: ['A', 'B', 'C', 'D', 'E'],
+            locations: Array.from({ length: 11 }, (_, index) => `Location ${index + 1}`),
         }).success).toBe(false)
     })
 })

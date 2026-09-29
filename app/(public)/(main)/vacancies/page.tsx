@@ -26,6 +26,7 @@ import type {
   VacancyFilters,
   VacancySort,
 } from '@/types/types'
+import { publicJobLocations, publicJobLocationSummary } from '@/utils/jobPresentation'
 
 const VACANCIES_PER_PAGE = 18
 
@@ -269,7 +270,9 @@ const VacanciesContent = () => {
                 </p>
               </div>
             </div>
-          ) : jobs.map((job: Job) => (
+          ) : jobs.map((job: Job) => {
+            const locations = publicJobLocations(job)
+            return (
             <article key={job._id} className="rounded p-5 ring-2 ring-gray-100">
               <p className="text-sm text-gray-600">{job.company.name}</p>
               <h2 className="font-semibold">{job.title}</h2>
@@ -280,7 +283,14 @@ const VacanciesContent = () => {
               </div>
               <hr className="my-3 text-[#d4d4d4]" />
               <div className="flex items-center justify-between">
-                <p className="max-w-1/2 text-sm text-gray-600">{job.location}</p>
+                <div className="max-w-1/2 text-sm text-gray-600">
+                  <p>{publicJobLocationSummary(job, { compact: true })}</p>
+                  {locations.length > 1 ? (
+                    <p className="mt-1 text-xs font-semibold text-[#184aa2]">
+                      {locations.length} locations available
+                    </p>
+                  ) : null}
+                </div>
                 <Link
                   className="rounded bg-[#003B6D] px-5 py-2 text-sm text-white"
                   href={`/vacancies/${job._id}`}
@@ -290,7 +300,8 @@ const VacanciesContent = () => {
                 </Link>
               </div>
             </article>
-          ))}
+            )
+          })}
         </section>
 
         <PaginationControls

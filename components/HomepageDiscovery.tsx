@@ -30,7 +30,7 @@ import { PiSuitcaseSimpleFill } from 'react-icons/pi'
 
 import { useFeaturedJobs, useJobFilterOptions } from '@/hooks/useVacancies'
 import type { Job, JobFilterOption } from '@/types/types'
-import { publicEmployerName } from '@/utils/jobPresentation'
+import { publicEmployerName, publicJobLocations, publicJobLocationSummary } from '@/utils/jobPresentation'
 
 const categoryIcons: Record<string, IconType> = {
   FMCG: FiShoppingBag,
@@ -206,6 +206,7 @@ const CategoryDirectory = () => {
 const FeaturedVacancy = ({ job }: { job: Job }) => {
   const employer = publicEmployerName(job.company.name)
   const salary = vacancySalary(job)
+  const locations = publicJobLocations(job)
 
   return (
     <article className="flex min-h-[340px] flex-col rounded-md bg-[#0d4fd7] p-7 text-white sm:p-9">
@@ -223,7 +224,11 @@ const FeaturedVacancy = ({ job }: { job: Job }) => {
       <div className="flex items-center gap-2">
         <FiMapPin aria-hidden="true" />
         <dt className="sr-only">Location and work arrangement</dt>
-        <dd>{job.location} <span aria-hidden="true">·</span> {job.workMode}</dd>
+        <dd>
+          {publicJobLocationSummary(job, { compact: true })}
+          {locations.length > 1 ? ` (${locations.length} locations)` : ''}
+          {' '}<span aria-hidden="true">·</span> {job.workMode}
+        </dd>
       </div>
       {salary !== 'Salary not specified' ? (
         <div className="flex items-center gap-2">
@@ -249,6 +254,7 @@ const FeaturedVacancy = ({ job }: { job: Job }) => {
 const VacancyRow = ({ job }: { job: Job }) => {
   const Icon = categoryIcons[job.category] || FiBriefcase
   const employer = publicEmployerName(job.company.name)
+  const locations = publicJobLocations(job)
 
   return (
     <article>
@@ -263,7 +269,9 @@ const VacancyRow = ({ job }: { job: Job }) => {
       <span className="min-w-0">
         <span className="block truncate text-sm font-semibold text-[#101A35]">{job.title}</span>
         <span className="mt-1 block truncate text-xs text-slate-500">
-          {employer} <span aria-hidden="true">·</span> {job.location} <span aria-hidden="true">·</span> {job.workMode}
+          {employer} <span aria-hidden="true">·</span>{' '}
+          {locations.length > 1 ? `${locations.length} locations` : job.location}
+          {' '}<span aria-hidden="true">·</span> {job.workMode}
         </span>
       </span>
       <FiArrowRight aria-hidden="true" className="text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-[#184aa2]" />

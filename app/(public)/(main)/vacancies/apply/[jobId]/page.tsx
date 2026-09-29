@@ -24,7 +24,8 @@ const ApplicationPage = async ({ params }: JobPageProps) => {
     return (
         <div className="mx-auto max-w-3xl px-6 py-12">
             <h1 className="mb-2 text-3xl font-bold">Application for {job.title}</h1>
-            <p className="mb-8 text-gray-600">Review your application details before submitting.</p>
+            <p className="text-base font-semibold text-slate-800">{job.location}</p>
+            <p className="mb-8 mt-2 text-gray-600">Review your application details before submitting.</p>
             <ApplicationForm jobId={jobId} jobTitle={job.title} />
         </div>
     )
