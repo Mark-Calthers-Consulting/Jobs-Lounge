@@ -40,41 +40,46 @@ describe('multi-location vacancy form', () => {
     it('adds and removes compact location rows while keeping focus predictable', async () => {
         openForm()
 
-        const firstLocation = screen.getByLabelText('Location 1')
+        const firstLocation = screen.getByLabelText('Vacancy location')
+        expect(screen.getByText('Choose where this vacancy is based.')).toBeInTheDocument()
+        expect(screen.queryByText('Additional locations')).not.toBeInTheDocument()
+        expect(screen.queryByText(/Each added location creates a separate vacancy/)).not.toBeInTheDocument()
         fireEvent.change(firstLocation, { target: { value: 'Abuja' } })
         fireEvent.click(screen.getByRole('button', { name: 'Add another location' }))
 
-        const secondLocation = screen.getByLabelText('Location 2')
+        const secondLocation = screen.getByLabelText('Additional location 1')
+        expect(screen.getByText('Additional locations')).toBeInTheDocument()
+        expect(screen.getByText(/Each added location creates a separate vacancy/)).toBeInTheDocument()
         await waitFor(() => expect(secondLocation).toHaveFocus())
         fireEvent.change(secondLocation, { target: { value: 'Ilorin' } })
 
         expect(screen.getByRole('button', { name: 'Save 2 drafts' })).toBeInTheDocument()
         expect(screen.getAllByText('Untitled vacancy')).toHaveLength(2)
 
-        fireEvent.click(screen.getByRole('button', { name: 'Remove location 2' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Remove additional location 1' }))
         await waitFor(() => expect(firstLocation).toHaveFocus())
-        expect(screen.queryByLabelText('Location 2')).not.toBeInTheDocument()
+        expect(screen.queryByLabelText('Additional location 1')).not.toBeInTheDocument()
         expect(screen.getByRole('button', { name: 'Save draft' })).toBeInTheDocument()
     })
 
     it('shows duplicate-location guidance and enforces the ten-location cap', () => {
         openForm()
 
-        fireEvent.change(screen.getByLabelText('Location 1'), { target: { value: 'Lagos' } })
+        fireEvent.change(screen.getByLabelText('Vacancy location'), { target: { value: 'Lagos' } })
         fireEvent.click(screen.getByRole('button', { name: 'Add another location' }))
-        fireEvent.change(screen.getByLabelText('Location 2'), {
+        fireEvent.change(screen.getByLabelText('Additional location 1'), {
             target: { value: CUSTOM_JOB_LOCATION_OPTION },
         })
         fireEvent.change(screen.getByLabelText('Enter location'), { target: { value: ' lagos ' } })
 
         expect(screen.getByRole('alert')).toHaveTextContent('Each vacancy location must be different.')
 
-        fireEvent.change(screen.getByLabelText('Location 2'), { target: { value: 'Ilorin' } })
+        fireEvent.change(screen.getByLabelText('Additional location 1'), { target: { value: 'Ilorin' } })
         for (let index = 0; index < 8; index += 1) {
             fireEvent.click(screen.getByRole('button', { name: 'Add another location' }))
         }
 
-        expect(screen.getByLabelText('Location 10')).toBeInTheDocument()
+        expect(screen.getByLabelText('Additional location 9')).toBeInTheDocument()
         expect(screen.getByRole('button', { name: 'Add another location' })).toBeDisabled()
         expect(screen.getByText('Maximum of 10 locations reached.')).toBeInTheDocument()
     })
@@ -82,7 +87,7 @@ describe('multi-location vacancy form', () => {
     it('loads JSON into one location and clears added location rows', () => {
         openForm()
         fireEvent.click(screen.getByRole('button', { name: 'Add another location' }))
-        expect(screen.getByLabelText('Location 2')).toBeInTheDocument()
+        expect(screen.getByLabelText('Additional location 1')).toBeInTheDocument()
 
         fireEvent.change(screen.getByLabelText('Job JSON'), {
             target: {
@@ -107,8 +112,8 @@ describe('multi-location vacancy form', () => {
         })
         fireEvent.click(screen.getByRole('button', { name: 'Load into form' }))
 
-        expect(screen.queryByLabelText('Location 2')).not.toBeInTheDocument()
-        expect(screen.getByLabelText('Location 1')).toHaveValue('Abuja')
+        expect(screen.queryByLabelText('Additional location 1')).not.toBeInTheDocument()
+        expect(screen.getByLabelText('Vacancy location')).toHaveValue('Abuja')
         expect(screen.getByRole('status')).toHaveTextContent('Loaded')
     })
 })

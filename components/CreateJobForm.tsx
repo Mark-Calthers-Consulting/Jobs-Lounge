@@ -21,7 +21,7 @@ import {
     NIGERIAN_STATE_OPTIONS,
 } from '@/constants/nigeria'
 import { getJobDetailSuggestions } from '@/constants/jobDetailSuggestions'
-import { ChangeEvent, FormEvent, KeyboardEvent, useRef, useState } from 'react';
+import { ChangeEvent, FormEvent, Fragment, KeyboardEvent, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation'
 import { LuPlus, LuTrash2 } from 'react-icons/lu'
 import { toast } from 'sonner';
@@ -822,13 +822,11 @@ const CreateJobFormContent = ({
 
                         <fieldset className="md:col-span-2">
                             <legend className="text-base font-semibold text-gray-950">
-                                {initialJob ? 'Location' : 'Vacancy locations'}
+                                Location
                                 <span aria-hidden="true" className="ml-1 text-red-600">*</span>
                             </legend>
                             <p id="job-location-help" className="mt-1 text-sm leading-6 text-gray-600">
-                                {initialJob
-                                    ? 'Choose a listed location or enter a more specific location.'
-                                    : 'A separate vacancy will be created for each location.'}
+                                Choose where this vacancy is based.
                             </p>
 
                             <div className="mt-3 space-y-3">
@@ -842,20 +840,30 @@ const CreateJobFormContent = ({
                                     const locationValue = buildJobLocation(location.option, location.custom)
 
                                     return (
-                                        <div
-                                            key={location.id}
-                                            className="rounded-lg border border-gray-200 bg-gray-50/60 p-4"
-                                        >
+                                        <Fragment key={location.id}>
+                                            {!initialJob && index === 1 ? (
+                                                <div className="pt-3">
+                                                    <p className="text-sm font-semibold text-gray-950">Additional locations</p>
+                                                    <p className="mt-1 text-sm leading-6 text-gray-600">
+                                                        Use this only when the same role and details apply elsewhere. Each added location creates a separate vacancy.
+                                                    </p>
+                                                </div>
+                                            ) : null}
+                                            <div
+                                                className={index === 0
+                                                    ? ''
+                                                    : 'rounded-lg border border-gray-200 bg-gray-50/60 p-4'}
+                                            >
                                             <div className="mb-2 flex items-center justify-between gap-4">
                                                 <label htmlFor={selectId} className="text-sm font-semibold text-gray-800">
-                                                    {initialJob ? 'Vacancy location' : `Location ${index + 1}`}
+                                                    {index === 0 ? 'Vacancy location' : `Additional location ${index}`}
                                                 </label>
                                                 {!initialJob && index > 0 ? (
                                                     <button
                                                         type="button"
                                                         onClick={() => removeLocation(location.id)}
-                                                        className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold text-red-700 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2"
-                                                        aria-label={`Remove location ${index + 1}`}
+                                                        className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold text-red-700 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-red-50 active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2"
+                                                        aria-label={`Remove additional location ${index}`}
                                                     >
                                                         <LuTrash2 aria-hidden="true" className="size-4" />
                                                         Remove
@@ -926,7 +934,8 @@ const CreateJobFormContent = ({
                                                     Candidates will see <span className="font-semibold text-gray-800">{locationValue}</span>
                                                 </p>
                                             ) : null}
-                                        </div>
+                                            </div>
+                                        </Fragment>
                                     )
                                 })}
                             </div>
@@ -938,12 +947,12 @@ const CreateJobFormContent = ({
                             ) : null}
 
                             {!initialJob ? (
-                                <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
                                     <button
                                         type="button"
                                         onClick={addLocation}
                                         disabled={locationRows.length >= MAX_JOB_LOCATIONS}
-                                        className="inline-flex w-fit items-center gap-2 rounded-md border border-gray-300 bg-white px-3.5 py-2 text-sm font-semibold text-gray-800 transition hover:border-gray-500 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003B6D] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                        className="inline-flex w-fit items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-800 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-gray-500 hover:bg-gray-50 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003B6D] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                     >
                                         <LuPlus aria-hidden="true" className="size-4" />
                                         Add another location
@@ -951,14 +960,16 @@ const CreateJobFormContent = ({
                                     <p className="text-xs text-gray-500">
                                         {locationRows.length >= MAX_JOB_LOCATIONS
                                             ? `Maximum of ${MAX_JOB_LOCATIONS} locations reached.`
-                                            : `Add up to ${MAX_JOB_LOCATIONS - locationRows.length} more ${MAX_JOB_LOCATIONS - locationRows.length === 1 ? 'location' : 'locations'}.`}
+                                            : locationRows.length === 1
+                                                ? 'Optional. Use this when the same vacancy is available elsewhere.'
+                                                : `${locationRows.length} of ${MAX_JOB_LOCATIONS} locations added.`}
                                     </p>
                                 </div>
                             ) : null}
 
                             {!initialJob && locationRows.length > 1 ? (
                                 <div className="mt-4 rounded-lg border border-gray-200 bg-white px-4 py-3" aria-live="polite">
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Vacancies to create</p>
+                                    <p className="text-xs font-semibold text-gray-600">Vacancies that will be created</p>
                                     <ul className="mt-2 space-y-1.5 text-sm text-gray-800">
                                         {locationRows.map((location, index) => (
                                             <li key={location.id}>
