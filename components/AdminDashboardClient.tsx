@@ -10,7 +10,6 @@ import { useUser } from '@/hooks/useUsers'
 import type { ApplicationStatus, JobStatus } from '@/constants/enums'
 import { formatDateInTimeZone } from '@/utils/dateTime'
 import { hasStaffPermission } from '@/utils/staffPermissions'
-import AdminNotificationBell from '@/components/team-notifications/AdminNotificationBell'
 
 const jobStatusTone: Record<JobStatus, string> = {
   Open: 'bg-emerald-500',
@@ -126,7 +125,6 @@ export default function AdminDashboardClient() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <AdminNotificationBell />
           {canReviewApplications ? (
             <Link href="/admin-center/applications/inbox" className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700">
               Review applications

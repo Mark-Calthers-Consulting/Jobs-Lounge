@@ -7,6 +7,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import SidebarAccount from "@/components/SidebarAccount"
+import AdminNotificationBell from "@/components/team-notifications/AdminNotificationBell"
 import { hasStaffPermission, type StaffPermission } from "@/utils/staffPermissions"
 import { FaWpforms } from "react-icons/fa"
 import {
@@ -120,8 +121,9 @@ const AdminSidebar = () => {
     return (
         <aside aria-label="Administration" className="z-30 flex w-full flex-col border-b border-gray-200 bg-white md:fixed md:left-0 md:top-0 md:h-screen md:w-64 md:border-b-0 md:border-r md:border-gray-100">
             {/* 1. Logo Area */}
-            <div className="flex h-20 items-center justify-center px-8 md:mt-4">
+            <div className="flex h-20 items-center justify-between gap-3 px-5 md:mt-4">
                 <Link href='/' aria-label="Jobs Lounge home"><Image width={70} height={70} src='/logo.svg' alt="" /></Link>
+                <AdminNotificationBell placement="sidebar" />
             </div>
 
             {/* 2. Navigation */}
@@ -149,7 +151,7 @@ const AdminSidebar = () => {
                             <span aria-hidden="true" className={isActive ? "text-gray-700" : "text-gray-400"}>
                                 {item.icon}
                             </span>
-                            {item.name}
+                            <span>{item.name}</span>
                         </Link>
                     )
                 })}

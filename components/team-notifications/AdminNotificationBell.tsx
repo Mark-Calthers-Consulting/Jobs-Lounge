@@ -11,7 +11,11 @@ import {
 import { formatDateInTimeZone } from '@/utils/dateTime'
 import { announcementTypeTone } from './announcementStyles'
 
-export default function AdminNotificationBell() {
+export default function AdminNotificationBell({
+  placement = 'page',
+}: {
+  placement?: 'page' | 'sidebar'
+}) {
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const query = useTeamNotifications(1, 5)
@@ -36,14 +40,14 @@ export default function AdminNotificationBell() {
   }, [open])
 
   return (
-    <div ref={rootRef} className="relative">
+    <div ref={rootRef} className="relative shrink-0">
       <button
         type="button"
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={unreadCount ? `Notifications, ${unreadCount} unread` : 'Notifications'}
         onClick={() => setOpen((current) => !current)}
-        className="relative inline-flex size-11 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700"
+        className="relative inline-flex size-11 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
       >
         <LuBell aria-hidden="true" size={20} />
         {unreadCount > 0 ? (
@@ -57,7 +61,9 @@ export default function AdminNotificationBell() {
         <section
           role="dialog"
           aria-label="Notifications"
-          className="fixed inset-x-3 top-20 z-50 max-h-[min(36rem,calc(100vh-6rem))] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-14 sm:w-[25rem]"
+          className={`fixed inset-x-3 top-20 z-50 max-h-[min(36rem,calc(100vh-6rem))] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl md:absolute md:inset-x-auto md:w-[25rem] ${placement === 'sidebar'
+            ? 'md:left-full md:top-0 md:ml-3'
+            : 'md:right-0 md:top-14'}`}
         >
           <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-4 py-3.5">
             <div>
