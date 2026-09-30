@@ -24,6 +24,7 @@ import { getJobDetailSuggestions } from '@/constants/jobDetailSuggestions'
 import { ChangeEvent, FormEvent, Fragment, KeyboardEvent, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation'
 import { LuPlus, LuTrash2 } from 'react-icons/lu'
+import { PiWarningCircle } from 'react-icons/pi'
 import { toast } from 'sonner';
 
 type ListFieldKey = 'benefits' | 'responsibilities' | 'requirements' | 'skills';
@@ -837,6 +838,9 @@ const CreateJobFormContent = ({
                                     const customId = index === 0
                                         ? 'customJobLocation'
                                         : `customJobLocation-${location.id}`
+                                    const customHelpId = `${customId}-help`
+                                    const customCommaWarningId = `${customId}-comma-warning`
+                                    const hasCustomComma = location.custom.includes(',')
                                     const locationValue = buildJobLocation(location.option, location.custom)
 
                                     return (
@@ -923,9 +927,28 @@ const CreateJobFormContent = ({
                                                         placeholder="e.g. Gbagada, Lagos; Nationwide; or West Africa"
                                                         maxLength={120}
                                                         required
-                                                        aria-describedby={`job-location-help${displayedLocationError ? ' job-location-error' : ''}`}
+                                                        aria-describedby={`${customHelpId}${hasCustomComma ? ` ${customCommaWarningId}` : ''} job-location-help${displayedLocationError ? ' job-location-error' : ''}`}
                                                         aria-invalid={Boolean(displayedLocationError)}
                                                     />
+                                                    <p id={customHelpId} className="mt-2 text-xs text-gray-600">
+                                                        {initialJob
+                                                            ? 'One location only.'
+                                                            : 'One location only. If this vacancy is available elsewhere, use Add another location below.'}
+                                                    </p>
+                                                    {hasCustomComma ? (
+                                                        <p
+                                                            id={customCommaWarningId}
+                                                            role="status"
+                                                            className="mt-2 flex items-start gap-2 text-xs text-amber-800"
+                                                        >
+                                                            <PiWarningCircle aria-hidden="true" className="mt-px size-4 shrink-0" />
+                                                            <span>
+                                                                {initialJob
+                                                                    ? 'This field is for one location. Make sure the comma describes one location, not several.'
+                                                                    : 'This field is for one location. If the comma separates different locations, add each location separately below.'}
+                                                            </span>
+                                                        </p>
+                                                    ) : null}
                                                 </div>
                                             ) : null}
 

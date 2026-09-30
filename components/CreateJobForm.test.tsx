@@ -70,8 +70,17 @@ describe('multi-location vacancy form', () => {
         fireEvent.change(screen.getByLabelText('Additional location 1'), {
             target: { value: CUSTOM_JOB_LOCATION_OPTION },
         })
-        fireEvent.change(screen.getByLabelText('Enter location'), { target: { value: ' lagos ' } })
+        const customLocation = screen.getByLabelText('Enter location')
+        fireEvent.change(customLocation, { target: { value: 'Lagos, Abuja' } })
 
+        expect(screen.getByRole('status')).toHaveTextContent(
+            'This field is for one location. If the comma separates different locations, add each location separately below.',
+        )
+
+        fireEvent.change(customLocation, { target: { value: ' lagos ' } })
+
+        expect(screen.getByText('One location only. If this vacancy is available elsewhere, use Add another location below.')).toBeInTheDocument()
+        expect(screen.queryByText(/If the comma separates different locations/)).not.toBeInTheDocument()
         expect(screen.getByRole('alert')).toHaveTextContent('Each vacancy location must be different.')
 
         fireEvent.change(screen.getByLabelText('Additional location 1'), { target: { value: 'Ilorin' } })
