@@ -1,6 +1,7 @@
 'use client'
 
 import {
+    useAdminJobUploaders,
     useAdminVacancies,
     useDeleteAdminJob,
     usePermanentlyDeleteAdminJob,
@@ -87,6 +88,10 @@ const numberParam = (value: string | null) => {
     const parsed = Number(value)
     return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : 1
 }
+
+const objectIdParam = (value: string | null) => (
+    value && /^[a-f\d]{24}$/i.test(value) ? value : ''
+)
 
 const JobStatus = ({ job }: { job: Job }) => (
     <div className="flex flex-wrap items-center gap-2">
@@ -219,6 +224,7 @@ const JobsPageTable = () => {
         : 'newest'
     const page = numberParam(searchParams.get('page'))
     const urlSearch = searchParams.get('search') ?? ''
+    const uploaderId = objectIdParam(searchParams.get('uploaderId'))
     const [searchValue, setSearchValue] = useState(urlSearch)
     const [confirmation, setConfirmation] = useState<Confirmation>(null)
     const [permanentDeleteError, setPermanentDeleteError] = useState('')
@@ -260,7 +266,9 @@ const JobsPageTable = () => {
         search: urlSearch || undefined,
         view,
         sort,
+        uploaderId: uploaderId || undefined,
     })
+    const uploadersQuery = useAdminJobUploaders()
     const archiveJob = useDeleteAdminJob()
     const permanentlyDeleteJob = usePermanentlyDeleteAdminJob()
     const restoreJob = useRestoreAdminJob()
@@ -358,24 +366,50 @@ const JobsPageTable = () => {
     return (
         <div className="space-y-4">
             <section aria-label="Job directory controls" className="rounded-xl border border-gray-200 bg-white p-4">
-                <div className="flex flex-col gap-3 lg:flex-row">
-                    <div className="relative flex-1">
-                        <FiSearch
-                            aria-hidden="true"
-                            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                        />
-                        <label htmlFor="admin-job-search" className="sr-only">Search jobs</label>
-                        <input
-                            id="admin-job-search"
-                            type="search"
-                            value={searchValue}
-                            onChange={(event) => setSearchValue(event.target.value)}
-                            placeholder="Search title, company or location…"
-                            className="min-h-11 w-full rounded-md border border-gray-300 bg-white py-2 pl-10 pr-3 text-sm text-gray-900 outline-none focus:border-[#184aa2] focus:ring-2 focus:ring-[#184aa2]/20"
-                        />
-                    </div>
-                    <label className="flex items-center gap-2 text-sm text-gray-600">
-                        <span>Sort by</span>
+                <div className="grid gap-3 lg:grid-cols-[minmax(18rem,1fr)_minmax(12rem,15rem)_minmax(10rem,13rem)] lg:items-end">
+                    <label className="flex flex-col gap-1.5 text-sm text-gray-700">
+                        <span className="font-medium">Search jobs</span>
+                        <span className="relative block">
+                            <FiSearch
+                                aria-hidden="true"
+                                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                            />
+                            <input
+                                id="admin-job-search"
+                                type="search"
+                                value={searchValue}
+                                onChange={(event) => setSearchValue(event.target.value)}
+                                placeholder="Title, company or location…"
+                                className="min-h-11 w-full rounded-md border border-gray-300 bg-white py-2 pl-10 pr-3 text-sm text-gray-900 outline-none focus:border-[#184aa2] focus:ring-2 focus:ring-[#184aa2]/20"
+                            />
+                        </span>
+                    </label>
+                    <label className="flex flex-col gap-1.5 text-sm text-gray-700">
+                        <span className="font-medium">Uploaded by</span>
+                        <select
+                            value={uploaderId}
+                            disabled={uploadersQuery.isLoading || uploadersQuery.isError}
+                            onChange={(event) => updateParams({
+                                uploaderId: event.target.value || undefined,
+                            })}
+                            className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:border-[#184aa2] focus:ring-2 focus:ring-[#184aa2]/20 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
+                        >
+                            <option value="">
+                                {uploadersQuery.isLoading
+                                    ? 'Loading uploaders…'
+                                    : uploadersQuery.isError
+                                        ? 'Uploaders unavailable'
+                                        : 'All uploaders'}
+                            </option>
+                            {(uploadersQuery.data ?? []).map((uploader) => (
+                                <option key={uploader.id} value={uploader.id}>
+                                    {uploader.name}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
+                    <label className="flex flex-col gap-1.5 text-sm text-gray-700">
+                        <span className="font-medium">Sort by</span>
                         <select
                             value={sort}
                             onChange={(event) => updateParams({
@@ -383,7 +417,7 @@ const JobsPageTable = () => {
                                     ? undefined
                                     : event.target.value,
                             })}
-                            className="min-h-11 rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:border-[#184aa2] focus:ring-2 focus:ring-[#184aa2]/20"
+                            className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:border-[#184aa2] focus:ring-2 focus:ring-[#184aa2]/20"
                         >
                             <option value="newest">Newest</option>
                             <option value="oldest">Oldest</option>
@@ -394,6 +428,18 @@ const JobsPageTable = () => {
                 </div>
                 {searchValue.trim().length > 0 && searchValue.trim().length < 3 ? (
                     <p className="mt-2 text-xs text-gray-500">Enter at least 3 characters to search.</p>
+                ) : null}
+                {uploadersQuery.isError ? (
+                    <p role="alert" className="mt-2 text-xs text-red-700">
+                        The uploader filter is temporarily unavailable.{' '}
+                        <button
+                            type="button"
+                            onClick={() => void uploadersQuery.refetch()}
+                            className="font-semibold underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600"
+                        >
+                            Try again
+                        </button>
+                    </p>
                 ) : null}
 
                 <nav aria-label="Job status views" className="mt-4 overflow-x-auto border-t border-gray-100 pt-4">
@@ -435,16 +481,16 @@ const JobsPageTable = () => {
                             jobsQuery.data?.pagination.total === 1 ? 'job' : 'jobs'
                         }`}
                 </p>
-                {urlSearch ? (
+                {urlSearch || uploaderId ? (
                     <button
                         type="button"
                         onClick={() => {
                             setSearchValue('')
-                            updateParams({ search: undefined })
+                            updateParams({ search: undefined, uploaderId: undefined })
                         }}
                         className="text-sm font-semibold text-[#184aa2] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]"
                     >
-                        Clear search
+                        Clear filters
                     </button>
                 ) : null}
             </div>
@@ -475,7 +521,9 @@ const JobsPageTable = () => {
                 <div className="rounded-xl border border-gray-200 bg-white p-10 text-center">
                     <p className="font-semibold text-gray-900">No jobs found</p>
                     <p className="mt-1 text-sm text-gray-500">
-                        {urlSearch ? 'Try another search or status view.' : 'There are no jobs in this view yet.'}
+                        {urlSearch || uploaderId
+                            ? 'Try another search, uploader or status view.'
+                            : 'There are no jobs in this view yet.'}
                     </p>
                 </div>
             ) : null}

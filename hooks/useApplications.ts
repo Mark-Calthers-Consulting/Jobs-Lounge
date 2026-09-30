@@ -3,14 +3,26 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 
 export const useCreatejob = () => {
+    const queryClient = useQueryClient()
     return useMutation({
-        mutationFn: createJob
+        mutationFn: createJob,
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ['adminVacancies'] })
+            void queryClient.invalidateQueries({ queryKey: ['adminJobUploaders'] })
+        },
     })
 }
 
-export const useCreateJobBatch = () => useMutation({
-    mutationFn: createJobBatch,
-})
+export const useCreateJobBatch = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: createJobBatch,
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ['adminVacancies'] })
+            void queryClient.invalidateQueries({ queryKey: ['adminJobUploaders'] })
+        },
+    })
+}
 
 export const useApplyToJob = () => {
     const queryClient = useQueryClient()

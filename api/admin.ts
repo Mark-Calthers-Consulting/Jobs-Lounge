@@ -2,6 +2,7 @@ import { apiPath } from './base'
 import type {
     AdminCandidateDetail,
     AdminJobListFilters,
+    AdminJobUploaderOption,
     AdminJobsResponse,
     ApiSuccess,
     CandidateApplication,
@@ -66,6 +67,19 @@ export const fetchAdminJobs = async (
         }
     )
     return readApiResponse<AdminJobsResponse>(res, 'Failed to fetch vacancies')
+}
+
+export const fetchAdminJobUploaders = async (): Promise<AdminJobUploaderOption[]> => {
+    const res = await fetch(apiPath('/admin/jobs/uploaders'), {
+        method: 'GET',
+        credentials: 'include',
+        cache: 'no-store',
+    })
+    const response = await readApiResponse<ApiSuccess<AdminJobUploaderOption[]>>(
+        res,
+        'Failed to fetch job uploaders',
+    )
+    return response.data
 }
 
 export const fetchAllUsers = async (page = 1, limit = 20): Promise<PaginatedResponse<User>> => {

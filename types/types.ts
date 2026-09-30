@@ -611,6 +611,13 @@ export type AdminJobListFilters = {
   search?: string
   view?: AdminJobView
   sort?: AdminJobSort
+  uploaderId?: string
+}
+
+export type AdminJobUploaderOption = {
+  id: string
+  name: string
+  jobCount: number
 }
 
 export type AdminJobSummary = {

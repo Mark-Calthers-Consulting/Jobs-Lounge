@@ -1,4 +1,4 @@
-import { cancelScheduledTeamEmail, cancelStaffInvitation, createStaffMember, deleteAdminJob, deleteCandidateAccount, fetchAdminCandidate, fetchAdminDashboard, fetchAdminJob, fetchAdminJobs, fetchAllUsers, fetchCandidateApplications, fetchCandidateEmailHistory, fetchCandidateEmailRecipients, fetchCandidateFilterOptions, fetchJobCandidates, fetchTeamEmailHistory, fetchTeamEmailRecipients, fetchTeamMembers, permanentlyDeleteAdminJob, queueCandidateEmail, queueTeamEmail, resendStaffInvitation, restoreAdminJob, signOutAllTeamMembers, type TeamFilters, updateAdminJob, updateAdminJobStatus, updateStaffRole, updateStaffSuspension } from "@/api/admin"
+import { cancelScheduledTeamEmail, cancelStaffInvitation, createStaffMember, deleteAdminJob, deleteCandidateAccount, fetchAdminCandidate, fetchAdminDashboard, fetchAdminJob, fetchAdminJobs, fetchAdminJobUploaders, fetchAllUsers, fetchCandidateApplications, fetchCandidateEmailHistory, fetchCandidateEmailRecipients, fetchCandidateFilterOptions, fetchJobCandidates, fetchTeamEmailHistory, fetchTeamEmailRecipients, fetchTeamMembers, permanentlyDeleteAdminJob, queueCandidateEmail, queueTeamEmail, resendStaffInvitation, restoreAdminJob, signOutAllTeamMembers, type TeamFilters, updateAdminJob, updateAdminJobStatus, updateStaffRole, updateStaffSuspension } from "@/api/admin"
 import { AdminJobListFilters, CandidateEmailRecipientFilters, CandidateListFilters, Job, PaginatedResponse, StaffMember, TeamEmailRecipientFilters, User } from "@/types/types"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
@@ -16,6 +16,12 @@ export const useAdminVacancies = (filters: AdminJobListFilters = {}) => {
         queryFn: () => fetchAdminJobs(filters)
     })
 }
+
+export const useAdminJobUploaders = () => useQuery({
+    queryKey: ['adminJobUploaders'],
+    queryFn: fetchAdminJobUploaders,
+    staleTime: 5 * 60 * 1000,
+})
 
 export const useAdminUsers = (page = 1, limit = 20) => {
     return useQuery<PaginatedResponse<User>>({
@@ -239,6 +245,7 @@ export const usePermanentlyDeleteAdminJob = () => {
         onSuccess: (result) => {
             queryClient.removeQueries({ queryKey: ['adminJob', result.jobId] })
             queryClient.invalidateQueries({ queryKey: ['adminVacancies'] })
+            queryClient.invalidateQueries({ queryKey: ['adminJobUploaders'] })
             queryClient.invalidateQueries({ queryKey: ['adminApplications'] })
             queryClient.invalidateQueries({ queryKey: ['applicationWorkspace'] })
             queryClient.invalidateQueries({ queryKey: ['adminDashboard'] })
