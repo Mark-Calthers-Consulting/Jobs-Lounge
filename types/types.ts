@@ -270,6 +270,7 @@ export type ApplyPayload = {
 }
 
 export type NotificationPreferences = {
+  generalUpdates?: boolean
   jobAlerts: boolean
   newsletter: boolean
 }

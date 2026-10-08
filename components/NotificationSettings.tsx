@@ -12,6 +12,7 @@ const preferenceDetails: Array<{
     description: string
     icon: typeof FiBell
 }> = [
+    { key: 'generalUpdates', label: 'General updates', description: 'Receive helpful account reminders and general Jobs Lounge updates. Security and application messages are always kept separate.', icon: FiBell },
     {
         key: 'jobAlerts',
         label: 'New vacancy alerts',
@@ -59,7 +60,7 @@ const NotificationSettings = ({ idPrefix }: { idPrefix: string }) => {
         <div className="divide-y divide-gray-100">
             {preferenceDetails.map(({ key, label, description, icon: Icon }) => {
                 const id = `${idPrefix}-${key}`
-                const enabled = preferences[key]
+                const enabled = key === 'generalUpdates' ? preferences.generalUpdates !== false : preferences[key]
                 const saving = pendingKey === key
                 return (
                     <div key={key} className="flex items-start justify-between gap-5 px-5 py-5 sm:px-6">

@@ -1,4 +1,4 @@
-import ApplicationAnalyticsSummary from '@/components/applications/ApplicationAnalyticsSummary'
+import AnalyticsPageClient from '@/components/applications/AnalyticsPageClient'
 
 export default function AnalyticsPage() {
   return (
@@ -8,7 +8,7 @@ export default function AnalyticsPage() {
         Monitor application activity and the health of candidate communications.
       </p>
       <div className="mt-8">
-        <ApplicationAnalyticsSummary />
+        <AnalyticsPageClient />
       </div>
     </div>
   )

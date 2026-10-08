@@ -40,13 +40,13 @@ Status: deferred
 
 ## Candidate email campaigns
 
-Status: deferred
+Status: manual candidate messages and newsletter delivery implemented; automatic campaigns deferred
 
-- Extend the Super-admin **Emails** centre with governed candidate-recipient selection and appropriate consent, targeting, rate-limit, preview, audit, and delivery controls.
+- The **Emails** centre now supports filtered candidate messages and opt-in newsletters, drafts, server previews, test emails, immediate/scheduled dispatches, opt-outs, controlled delivery and retained reporting. Recruiters remain restricted to their own vacancy applicants.
 - Implement actual job-alert delivery for candidates who enable `New vacancy alerts`; the current setting only persists their preference.
-- Implement the career newsletter campaign for candidates who enable `Career newsletter`; the current setting only persists their preference.
-- Consider scheduling and automatic staff reminders only after the manual team-email workflows have reliable delivery history and clear operational ownership.
-- Before launch, define targeting and scheduling, use the durable email outbox for retries, add delivery telemetry, and provide a reliable unsubscribe path.
+- Manual career newsletters honor `Career newsletter` and may include published articles and public opportunities. Optional active-team inclusion honors separate staff newsletter opt-outs.
+- Keep recurring campaigns, automatic vacancy-alert delivery, automatic staff reminders and engagement tracking deferred.
+- Before rollout, confirm actual SMTP quotas and DKIM coverage of unsubscribe headers, reconcile indexes and verify a small controlled audience. Delivery continues to reuse the durable outbox without a cron or external campaign service.
 
 ## Staff security centre
 
