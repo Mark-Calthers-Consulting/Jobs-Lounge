@@ -9,11 +9,13 @@ const replace = vi.fn()
 const invalidateQueries = vi.fn()
 let profileComplete = false
 let remaining = 5
+let profileCoverLetterLink: string | undefined
 
 vi.mock('@/hooks/useUsers', () => ({
     useUser: () => ({
         data: {
             cvLink: 'https://drive.google.com/file/d/example/view',
+            coverLetterLink: profileCoverLetterLink,
             role: 'user',
             profileCompleted: profileComplete,
             profileCompletion: { complete: profileComplete, percentage: profileComplete ? 100 : 75 },
@@ -61,6 +63,7 @@ describe('ApplicationForm profile completion prompt', () => {
     beforeEach(() => {
         profileComplete = false
         remaining = 5
+        profileCoverLetterLink = undefined
         mutateAsync.mockReset().mockResolvedValue({})
         replace.mockReset()
         invalidateQueries.mockReset().mockResolvedValue(undefined)
@@ -81,6 +84,7 @@ describe('ApplicationForm profile completion prompt', () => {
         await waitFor(() => expect(mutateAsync).toHaveBeenCalledWith({
             jobId: 'job-1',
             cvLink: 'https://drive.google.com/file/d/example/view',
+            coverLetterLink: '',
         }))
     })
 
@@ -91,7 +95,53 @@ describe('ApplicationForm profile completion prompt', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Submit application for Designer' }))
 
         await waitFor(() => expect(mutateAsync).toHaveBeenCalledOnce())
+        expect(mutateAsync).toHaveBeenCalledWith({
+            jobId: 'job-1',
+            cvLink: 'https://drive.google.com/file/d/example/view',
+            coverLetterLink: '',
+        })
         expect(screen.queryByText('One thing before you apply')).not.toBeInTheDocument()
+    })
+
+    it.each([
+        { savedLink: 'https://example.com/letter.pdf', complete: true },
+        { savedLink: 'not-a-valid-link', complete: true },
+        { savedLink: 'https://example.com/letter.pdf', complete: false },
+        { savedLink: 'not-a-valid-link', complete: false },
+    ])('can remove a saved cover letter ($savedLink, complete profile: $complete)', async ({ savedLink, complete }) => {
+        profileComplete = complete
+        profileCoverLetterLink = savedLink
+        render(<ApplicationForm jobId="job-1" jobTitle="Designer" />)
+
+        const input = screen.getByLabelText(/Cover letter link/)
+        expect(input).not.toBeRequired()
+        expect(input).toHaveValue(savedLink)
+        fireEvent.change(input, { target: { value: '' } })
+        fireEvent.click(screen.getByRole('button', { name: 'Submit application for Designer' }))
+        if (!complete) fireEvent.click(screen.getByRole('button', { name: 'Apply anyway' }))
+
+        await waitFor(() => expect(mutateAsync).toHaveBeenCalledWith({
+            jobId: 'job-1',
+            cvLink: 'https://drive.google.com/file/d/example/view',
+            coverLetterLink: '',
+        }))
+    })
+
+    it('keeps an unchanged profile cover letter and trims a replacement', async () => {
+        profileComplete = true
+        profileCoverLetterLink = 'https://example.com/letter.pdf'
+        render(<ApplicationForm jobId="job-1" jobTitle="Designer" />)
+
+        fireEvent.click(screen.getByRole('button', { name: 'Submit application for Designer' }))
+        await waitFor(() => expect(mutateAsync).toHaveBeenCalledWith(expect.objectContaining({
+            coverLetterLink: profileCoverLetterLink,
+        })))
+
+        fireEvent.change(screen.getByLabelText(/Cover letter link/), { target: { value: '  https://example.com/replacement.pdf  ' } })
+        fireEvent.click(screen.getByRole('button', { name: 'Submit application for Designer' }))
+        await waitFor(() => expect(mutateAsync).toHaveBeenLastCalledWith(expect.objectContaining({
+            coverLetterLink: 'https://example.com/replacement.pdf',
+        })))
     })
 
     it('prevents a sixth application and shows the reset date', () => {

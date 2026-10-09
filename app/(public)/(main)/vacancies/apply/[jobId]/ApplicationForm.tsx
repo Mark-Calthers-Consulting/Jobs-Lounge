@@ -58,7 +58,8 @@ const ApplicationForm = ({ jobId, jobTitle }: { jobId: string; jobTitle: string 
             await apply.mutateAsync({
                 jobId,
                 cvLink: submittedCvLink,
-                ...((coverLetterLink ?? user?.coverLetterLink) ? { coverLetterLink: coverLetterLink ?? user?.coverLetterLink } : {}),
+                // Explicitly send blank values so clearing the field does not restore the profile link.
+                coverLetterLink: (coverLetterLink ?? user?.coverLetterLink ?? '').trim(),
                 ...(note.trim() ? { note: note.trim() } : {}),
             })
             await queryClient.invalidateQueries({ queryKey: ['application-status', jobId] })
