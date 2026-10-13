@@ -189,7 +189,7 @@ export default function VacancyApplicationWorkspace({ jobId }: { jobId: string }
                 void queue.fetchNextPage()
               }} disabled={queue.isFetchingNextPage} className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold disabled:opacity-50">{queue.isFetchingNextPage ? 'Loading…' : 'Load more'}</button> : null}
             </div>
-            <div className={selectedId ? 'max-lg:fixed max-lg:inset-0 max-lg:z-40 max-lg:overflow-y-auto max-lg:bg-slate-50 max-lg:p-3' : ''}>
+            <div className={`lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto ${selectedId ? 'max-lg:fixed max-lg:inset-0 max-lg:z-40 max-lg:overflow-y-auto max-lg:bg-slate-50 max-lg:p-3' : ''}`}>
               <ApplicationDetailPanel applicationId={selectedId} onClose={selectedId ? () => setParam('applicationId') : undefined} />
             </div>
           </div>
