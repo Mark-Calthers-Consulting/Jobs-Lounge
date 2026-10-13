@@ -13,6 +13,7 @@ import {
 } from '@/hooks/useApplicationWorkspace'
 import ApplicationBoard from './ApplicationBoard'
 import ApplicationDetailPanel from './ApplicationDetailPanel'
+import ApplicationReviewDrawer from './ApplicationReviewDrawer'
 import ApplicationFilters from './ApplicationFilters'
 import ExportRecordsDialog from './ExportRecordsDialog'
 import ApplicationWorkspaceNav from './ApplicationWorkspaceNav'
@@ -153,9 +154,10 @@ export default function VacancyApplicationWorkspace({ jobId }: { jobId: string }
         <>
           <ApplicationBoard jobId={jobId} filters={filters} selectedId={selectedId} onSelect={(id) => setParam('applicationId', id)} />
           {selectedId ? (
-            <div className="max-w-4xl">
-              <ApplicationDetailPanel applicationId={selectedId} onClose={() => setParam('applicationId')} />
-            </div>
+            <ApplicationReviewDrawer
+              applicationId={selectedId}
+              onClose={() => setParam('applicationId')}
+            />
           ) : null}
         </>
       ) : queue.isLoading ? <LoadingState /> : queue.isError ? <ErrorState retry={() => void queue.refetch()} /> : applications.length === 0 ? <EmptyState filtered /> : (
