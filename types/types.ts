@@ -603,7 +603,7 @@ export type ApplicationExportRequestFilters = {
 
 export type ApplicationExportRequestResponse = PaginatedResponse<ApplicationExportRequest>
 
-export type AdminJobView = 'all' | 'open' | 'draft' | 'closed' | 'deadline-passed' | 'archived'
+export type AdminJobView = 'all' | 'my' | 'open' | 'draft' | 'closed' | 'deadline-passed' | 'archived'
 export type AdminJobSort = 'newest' | 'oldest' | 'deadline' | 'applicants'
 
 export type AdminJobListFilters = {
@@ -623,6 +623,7 @@ export type AdminJobUploaderOption = {
 
 export type AdminJobSummary = {
   all: number
+  my: number
   open: number
   draft: number
   closed: number

@@ -42,6 +42,7 @@ import { formatDateInTimeZone } from '@/utils/dateTime'
 
 const ADMIN_JOB_VIEWS: AdminJobView[] = [
     'all',
+    'my',
     'open',
     'draft',
     'closed',
@@ -56,6 +57,7 @@ const viewTabs: Array<{
     count: keyof AdminJobSummary
 }> = [
     { value: 'all', label: 'All', count: 'all' },
+    { value: 'my', label: 'My jobs', count: 'my' },
     { value: 'open', label: 'Open', count: 'open' },
     { value: 'draft', label: 'Drafts', count: 'draft' },
     { value: 'closed', label: 'Closed', count: 'closed' },
@@ -65,6 +67,7 @@ const viewTabs: Array<{
 
 const emptySummary: AdminJobSummary = {
     all: 0,
+    my: 0,
     open: 0,
     draft: 0,
     closed: 0,
@@ -218,7 +221,7 @@ const JobsPageTable = () => {
     const rawSort = searchParams.get('sort')
     const view: AdminJobView = rawView && ADMIN_JOB_VIEWS.includes(rawView as AdminJobView)
         ? rawView as AdminJobView
-        : 'all'
+        : 'my'
     const sort: AdminJobSort = rawSort && ADMIN_JOB_SORTS.includes(rawSort as AdminJobSort)
         ? rawSort as AdminJobSort
         : 'newest'
@@ -387,21 +390,24 @@ const JobsPageTable = () => {
                     <label className="flex flex-col gap-1.5 text-sm text-gray-700">
                         <span className="font-medium">Uploaded by</span>
                         <select
-                            value={uploaderId}
-                            disabled={uploadersQuery.isLoading || uploadersQuery.isError}
-                            onChange={(event) => updateParams({
-                                uploaderId: event.target.value || undefined,
-                            })}
+                            value={view === 'my' ? user?._id ?? '' : uploaderId}
+                            disabled={uploadersQuery.isLoading}
+                            onChange={(event) => {
+                                const nextUploader = event.target.value
+                                updateParams({
+                                    view: view === 'my' ? 'all' : view,
+                                    uploaderId: nextUploader || undefined,
+                                })
+                            }}
                             className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:border-[#184aa2] focus:ring-2 focus:ring-[#184aa2]/20 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
                         >
-                            <option value="">
-                                {uploadersQuery.isLoading
-                                    ? 'Loading uploaders…'
-                                    : uploadersQuery.isError
-                                        ? 'Uploaders unavailable'
-                                        : 'All uploaders'}
-                            </option>
-                            {(uploadersQuery.data ?? []).map((uploader) => (
+                            <option value="">All uploaders</option>
+                            {user?._id ? (
+                                <option value={user._id}>{user.name || user.email} (you)</option>
+                            ) : null}
+                            {(uploadersQuery.data ?? []).filter((uploader) => (
+                                uploader.id !== user?._id
+                            )).map((uploader) => (
                                 <option key={uploader.id} value={uploader.id}>
                                     {uploader.name}
                                 </option>
@@ -442,7 +448,7 @@ const JobsPageTable = () => {
                     </p>
                 ) : null}
 
-                <nav aria-label="Job status views" className="mt-4 overflow-x-auto border-t border-gray-100 pt-4">
+                <nav aria-label="Job views" className="mt-4 overflow-x-auto border-t border-gray-100 pt-4">
                     <div className="flex min-w-max gap-2">
                         {viewTabs.map((tab) => {
                             const selected = view === tab.value
@@ -452,7 +458,8 @@ const JobsPageTable = () => {
                                     type="button"
                                     aria-pressed={selected}
                                     onClick={() => updateParams({
-                                        view: tab.value === 'all' ? undefined : tab.value,
+                                        view: tab.value === 'my' ? undefined : tab.value,
+                                        uploaderId: tab.value === 'my' ? undefined : uploaderId || undefined,
                                     })}
                                     className={`rounded-md px-3 py-2 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2] ${
                                         selected
