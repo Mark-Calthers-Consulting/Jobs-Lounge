@@ -10,6 +10,9 @@ const invalidateQueries = vi.fn()
 let profileComplete = false
 let remaining = 5
 let profileCoverLetterLink: string | undefined
+let highestEducation = "Bachelor's degree"
+let academicEnforcementEnabled = false
+const refetchUser = vi.fn()
 
 vi.mock('@/hooks/useUsers', () => ({
     useUser: () => ({
@@ -19,8 +22,17 @@ vi.mock('@/hooks/useUsers', () => ({
             role: 'user',
             profileCompleted: profileComplete,
             profileCompletion: { complete: profileComplete, percentage: profileComplete ? 100 : 75 },
+            highestEducation,
         },
         isLoading: false,
+        isFetching: false,
+        refetch: refetchUser,
+    }),
+}))
+
+vi.mock('@/components/PlatformSettingsProvider', () => ({
+    usePlatformSettings: () => ({
+        academicQualificationEnforcementEnabled: academicEnforcementEnabled,
     }),
 }))
 
@@ -64,6 +76,9 @@ describe('ApplicationForm profile completion prompt', () => {
         profileComplete = false
         remaining = 5
         profileCoverLetterLink = undefined
+        highestEducation = "Bachelor's degree"
+        academicEnforcementEnabled = false
+        refetchUser.mockReset().mockResolvedValue({})
         mutateAsync.mockReset().mockResolvedValue({})
         replace.mockReset()
         invalidateQueries.mockReset().mockResolvedValue(undefined)
@@ -72,10 +87,10 @@ describe('ApplicationForm profile completion prompt', () => {
     it('appears only after an incomplete candidate tries to apply and does not block submission', async () => {
         render(<ApplicationForm jobId="job-1" jobTitle="Designer" />)
 
-        expect(screen.queryByText('One thing before you apply')).not.toBeInTheDocument()
+        expect(screen.queryByText('Review before you apply')).not.toBeInTheDocument()
         fireEvent.click(screen.getByRole('button', { name: 'Submit application for Designer' }))
 
-        expect(screen.getByRole('heading', { name: 'One thing before you apply' })).toBeInTheDocument()
+        expect(screen.getByRole('heading', { name: 'Review before you apply' })).toBeInTheDocument()
         expect(screen.getByText(/Your profile is 75% complete/)).toBeInTheDocument()
         expect(screen.getByRole('link', { name: /Complete profile/ })).toHaveAttribute('href', '/dashboard/profile')
         expect(mutateAsync).not.toHaveBeenCalled()
@@ -100,7 +115,7 @@ describe('ApplicationForm profile completion prompt', () => {
             cvLink: 'https://drive.google.com/file/d/example/view',
             coverLetterLink: '',
         })
-        expect(screen.queryByText('One thing before you apply')).not.toBeInTheDocument()
+        expect(screen.queryByText('Review before you apply')).not.toBeInTheDocument()
     })
 
     it.each([
@@ -166,5 +181,78 @@ describe('ApplicationForm profile completion prompt', () => {
 
         expect(await screen.findByRole('alert')).toHaveTextContent('You have used all five applications for this week.')
         expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['weeklyApplicationLimit'] })
+    })
+
+    it('warns a below-minimum candidate only after submit and allows an advisory application', async () => {
+        profileComplete = true
+        highestEducation = 'Higher National Diploma (HND)'
+        render(
+            <ApplicationForm
+                jobId="job-1"
+                jobTitle="Designer"
+                minimumAcademicQualification="Bachelor's degree"
+            />,
+        )
+
+        expect(screen.queryByText(/one level below/)).not.toBeInTheDocument()
+        fireEvent.click(screen.getByRole('button', { name: 'Submit application for Designer' }))
+
+        expect(screen.getByText(/one level below the requirement/)).toBeInTheDocument()
+        expect(mutateAsync).not.toHaveBeenCalled()
+        fireEvent.click(screen.getByRole('button', { name: 'Apply anyway' }))
+        await waitFor(() => expect(mutateAsync).toHaveBeenCalledOnce())
+    })
+
+    it('blocks a below-minimum candidate when enforcement is enabled', () => {
+        profileComplete = true
+        highestEducation = 'National Diploma (ND)'
+        academicEnforcementEnabled = true
+        render(
+            <ApplicationForm
+                jobId="job-1"
+                jobTitle="Designer"
+                minimumAcademicQualification="Bachelor's degree"
+            />,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Submit application for Designer' }))
+
+        expect(screen.getByText(/two or more levels below the requirement/)).toBeInTheDocument()
+        expect(screen.getByRole('link', { name: /Update profile/ })).toHaveAttribute('href', '/dashboard/profile')
+        expect(screen.getByRole('button', { name: 'Recheck qualification' })).toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Apply anyway' })).not.toBeInTheDocument()
+        expect(mutateAsync).not.toHaveBeenCalled()
+    })
+
+    it('uses the server assessment when the browser profile is stale', async () => {
+        profileComplete = true
+        highestEducation = "Master's degree"
+        mutateAsync.mockRejectedValue(new ApiError({
+            status: 'error',
+            code: 'ACADEMIC_QUALIFICATION_BELOW_MINIMUM',
+            message: 'Your saved academic qualification is below this vacancy’s minimum.',
+            details: {
+                academicAssessment: {
+                    result: 'two-or-more-levels-below',
+                    candidateQualification: 'National Diploma (ND)',
+                    minimumQualification: "Bachelor's degree",
+                    levelDifference: -3,
+                },
+            },
+        }, 409))
+        render(
+            <ApplicationForm
+                jobId="job-1"
+                jobTitle="Designer"
+                minimumAcademicQualification="Bachelor's degree"
+            />,
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Submit application for Designer' }))
+
+        expect(await screen.findByText(/Your profile lists National Diploma \(ND\)/)).toBeInTheDocument()
+        expect(screen.getByText(/two or more levels below the requirement/)).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Recheck qualification' })).toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Apply anyway' })).not.toBeInTheDocument()
     })
 })

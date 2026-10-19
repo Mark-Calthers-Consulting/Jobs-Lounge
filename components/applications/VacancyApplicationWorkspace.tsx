@@ -36,6 +36,7 @@ export default function VacancyApplicationWorkspace({ jobId }: { jobId: string }
     applicantId: filters.applicantId,
     priority: filters.priority,
     education: filters.education,
+    academicAssessment: filters.academicAssessment,
     nyscStatus: filters.nyscStatus,
     experienceMin: filters.experienceMin,
     experienceMax: filters.experienceMax,

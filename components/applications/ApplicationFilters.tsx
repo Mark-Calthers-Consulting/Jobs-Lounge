@@ -39,7 +39,7 @@ export default function ApplicationFilters({
   }
 
   const filterKeys = [
-    'applicantId', 'jobId', 'status', 'priority', 'education', 'nyscStatus',
+    'applicantId', 'jobId', 'status', 'priority', 'education', 'academicAssessment', 'nyscStatus',
     'experienceMin', 'experienceMax', 'profileCompleted', 'appliedFrom',
     'appliedTo', 'hasCv', 'hasCoverLetter',
   ]
@@ -108,6 +108,16 @@ export default function ApplicationFilters({
             <select value={searchParams.get('education') || ''} onChange={(event) => update('education', event.target.value)} className="mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2">
               <option value="">Any education</option>
               {options.data?.educationLevels.map((level) => <option key={level} value={level}>{level}</option>)}
+            </select>
+          </label>
+          <label className="text-sm font-medium text-slate-700">
+            Academic assessment
+            <select value={searchParams.get('academicAssessment') || ''} onChange={(event) => update('academicAssessment', event.target.value)} className="mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2">
+              <option value="">Any assessment</option>
+              <option value="meets">Academic criteria met</option>
+              <option value="one-level-below">One level below</option>
+              <option value="two-or-more-levels-below">Two or more levels below</option>
+              <option value="not-assessed">Not assessed</option>
             </select>
           </label>
           <label className="text-sm font-medium text-slate-700">

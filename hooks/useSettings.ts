@@ -12,6 +12,7 @@ export const DEFAULT_PUBLIC_SETTINGS: PublicPlatformSettings = {
     supportEmail: 'support@jobslounge.markcalthers.com',
     timeZone: 'Africa/Lagos',
     candidateRegistrationEnabled: true,
+    academicQualificationEnforcementEnabled: false,
 }
 
 export const usePublicPlatformSettings = () => useQuery({
@@ -47,6 +48,8 @@ export const useUpdateOrganizationSettings = () => {
                     supportEmail: settings.supportEmail,
                     timeZone: settings.timeZone,
                     candidateRegistrationEnabled: settings.candidateRegistrationEnabled,
+                    academicQualificationEnforcementEnabled:
+                        settings.academicQualificationEnforcementEnabled,
                 },
             )
             queryClient.setQueryData(

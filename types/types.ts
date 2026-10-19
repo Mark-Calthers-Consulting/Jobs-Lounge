@@ -1,5 +1,7 @@
 import type {
   ApplicationStatus,
+  AcademicAssessmentResult,
+  AcademicQualification,
   BlogCategory,
   BlogStatus,
   Category,
@@ -27,7 +29,7 @@ export type Job = {
   workMode: WorkMode
   jobType: JobType
   level: Level
-  minimumAcademicQualification?: string
+  minimumAcademicQualification?: AcademicQualification
   company: {
     name: string
     logo?: string
@@ -421,6 +423,19 @@ export type AdminApplication = {
   cvLink?: string
   coverLetterLink?: string
   note?: string
+  academicAssessment?: AcademicAssessment
+}
+
+export type AcademicAssessment = {
+  result: AcademicAssessmentResult
+  reason?: 'missing-candidate-qualification' | 'unrecognized-candidate-qualification'
+  candidateQualification?: string
+  minimumQualification?: AcademicQualification
+  levelDifference?: number
+  mode: 'advisory' | 'enforced'
+  source: 'submission' | 'backfill'
+  comparisonVersion: number
+  assessedAt: string
 }
 
 export type ApplicationWorkspaceSort =
@@ -440,6 +455,7 @@ export type ApplicationWorkspaceFilters = {
   status?: ApplicationStatus[]
   priority?: boolean
   education?: string
+  academicAssessment?: Exclude<AcademicAssessmentResult, 'not-required'>
   nyscStatus?: UserNyscStatus
   experienceMin?: number
   experienceMax?: number
@@ -537,6 +553,7 @@ export type ApplicationDetail = {
     coverLetterLink?: string
     note?: string
     candidateSnapshot?: Partial<User>
+    academicAssessment?: AcademicAssessment
     createdAt: string
     updatedAt: string
   }
@@ -877,6 +894,7 @@ export type PublicPlatformSettings = {
     supportEmail: string
     timeZone: string
     candidateRegistrationEnabled: boolean
+    academicQualificationEnforcementEnabled: boolean
 }
 
 export type StaffSessionDurationHours = 8 | 24 | 72 | 168 | 720
@@ -900,7 +918,7 @@ export type OrganizationSettings = PublicPlatformSettings & {
 
 export type OrganizationSettingsUpdate = Partial<Pick<
   OrganizationSettings,
-  'supportEmail' | 'timeZone' | 'candidateRegistrationEnabled' | 'recruiterCandidateEmailsEnabled' | 'staffSessionDurationHours'
+  'supportEmail' | 'timeZone' | 'candidateRegistrationEnabled' | 'recruiterCandidateEmailsEnabled' | 'academicQualificationEnforcementEnabled' | 'staffSessionDurationHours'
 >> & {
   revision: number
 }

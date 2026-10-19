@@ -26,7 +26,11 @@ const ApplicationPage = async ({ params }: JobPageProps) => {
             <h1 className="mb-2 text-3xl font-bold">Application for {job.title}</h1>
             <p className="text-base font-semibold text-slate-800">{job.location}</p>
             <p className="mb-8 mt-2 text-gray-600">Review your application details before submitting.</p>
-            <ApplicationForm jobId={jobId} jobTitle={job.title} />
+            <ApplicationForm
+                jobId={jobId}
+                jobTitle={job.title}
+                minimumAcademicQualification={job.minimumAcademicQualification}
+            />
         </div>
     )
 }

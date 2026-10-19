@@ -273,18 +273,22 @@ const VacanciesContent = () => {
           ) : jobs.map((job: Job) => {
             const locations = publicJobLocations(job)
             return (
-            <article key={job._id} className="rounded p-5 ring-2 ring-gray-100">
-              <p className="text-sm text-gray-600">{job.company.name}</p>
-              <h2 className="font-semibold">{job.title}</h2>
-              <p className="my-2 leading-5 text-gray-600">{job.description.slice(0, 90)}...</p>
-              <div className="flex gap-2">
+            <article key={job._id} className="min-w-0 overflow-hidden rounded p-5 ring-2 ring-gray-100">
+              <p className="break-words text-sm text-gray-600 [overflow-wrap:anywhere]">{job.company.name}</p>
+              <h2 className="break-words font-semibold [overflow-wrap:anywhere]">{job.title}</h2>
+              <p className="my-2 break-words leading-5 text-gray-600 [overflow-wrap:anywhere]">
+                {job.description.slice(0, 90)}...
+              </p>
+              <div className="flex flex-wrap gap-2">
                 <p className="rounded bg-[#e3e3e3] px-2 py-1 text-sm text-[#222]">{job.jobType}</p>
                 <p className="rounded bg-[#e3e3e3] px-2 py-1 text-sm text-[#222]">{job.level} level</p>
               </div>
               <hr className="my-3 text-[#d4d4d4]" />
-              <div className="flex items-center justify-between">
-                <div className="max-w-1/2 text-sm text-gray-600">
-                  <p>{publicJobLocationSummary(job, { compact: true })}</p>
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1 text-sm text-gray-600">
+                  <p className="break-words [overflow-wrap:anywhere]">
+                    {publicJobLocationSummary(job, { compact: true })}
+                  </p>
                   {locations.length > 1 ? (
                     <p className="mt-1 text-xs font-semibold text-[#184aa2]">
                       {locations.length} locations available
@@ -292,7 +296,7 @@ const VacanciesContent = () => {
                   ) : null}
                 </div>
                 <Link
-                  className="rounded bg-[#003B6D] px-5 py-2 text-sm text-white"
+                  className="shrink-0 rounded bg-[#003B6D] px-5 py-2 text-sm text-white"
                   href={`/vacancies/${job._id}`}
                   aria-label={`View ${job.title} at ${job.company.name}`}
                 >

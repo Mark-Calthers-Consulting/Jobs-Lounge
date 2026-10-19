@@ -35,6 +35,13 @@ export const ACADEMIC_QUALIFICATIONS = [
   "Master's degree",
   "Doctorate",
 ] as const;
+export const ACADEMIC_ASSESSMENT_RESULTS = [
+  "meets",
+  "one-level-below",
+  "two-or-more-levels-below",
+  "not-assessed",
+  "not-required",
+] as const;
 export const APPLICATION_STATUSES = ["pending", "reviewed", "shortlisted", "rejected"] as const;
 export const BLOG_STATUSES = ["Draft", "Published"] as const;
 export const BLOG_CATEGORIES = [
@@ -56,6 +63,8 @@ export type WorkMode = typeof JOB_ENUMS.workMode[number];
 export type JobType = typeof JOB_ENUMS.jobType[number];
 export type Level = typeof JOB_ENUMS.level[number];
 export type JobStatus = typeof JOB_STATUSES[number];
+export type AcademicQualification = typeof ACADEMIC_QUALIFICATIONS[number];
+export type AcademicAssessmentResult = typeof ACADEMIC_ASSESSMENT_RESULTS[number];
 export type ApplicationStatus = typeof APPLICATION_STATUSES[number];
 export type BlogStatus = typeof BLOG_STATUSES[number];
 export type BlogCategory = typeof BLOG_CATEGORIES[number];

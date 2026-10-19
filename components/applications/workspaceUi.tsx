@@ -4,6 +4,7 @@ import type { ApplicationStatus } from '@/constants/enums'
 import type { AdminApplication, ApplicationStageTotals } from '@/types/types'
 import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
 import { formatDateInTimeZone } from '@/utils/dateTime'
+import AcademicAssessmentBadge from './AcademicAssessmentBadge'
 
 export const STAGES: Array<{ value: ApplicationStatus; label: string }> = [
   { value: 'pending', label: 'New' },
@@ -89,7 +90,10 @@ export const ApplicationCard = ({
           {application.priority ? <span aria-label="Priority application" title="Priority" className="text-amber-600">★</span> : null}
         </span>
         <span className="mt-3 flex flex-wrap items-center justify-between gap-2">
-          <StatusBadge status={application.status} />
+          <span className="flex flex-wrap items-center gap-2">
+            <StatusBadge status={application.status} />
+            <AcademicAssessmentBadge result={application.academicAssessment?.result} />
+          </span>
           <span className="text-xs text-slate-500">{formatDate(application.createdAt, timeZone)}</span>
         </span>
       </button>

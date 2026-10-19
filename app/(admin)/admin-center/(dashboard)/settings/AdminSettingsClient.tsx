@@ -175,11 +175,13 @@ const OrganizationSettingsPanel = () => {
     const [timeZone, setTimeZone] = useState<string | null>(null)
     const [sectionError, setSectionError] = useState<string | null>(null)
     const [registrationError, setRegistrationError] = useState<string | null>(null)
+    const [academicEnforcementError, setAcademicEnforcementError] = useState<string | null>(null)
     const [sessionPolicy, setSessionPolicy] = useState<StaffSessionDurationPolicy | null>(null)
     const [sessionPolicyError, setSessionPolicyError] = useState<string | null>(null)
     const [emailFeatureError, setEmailFeatureError] = useState<string | null>(null)
     const [confirmTeamSignOut, setConfirmTeamSignOut] = useState(false)
     const [confirmRegistrationPause, setConfirmRegistrationPause] = useState(false)
+    const [confirmAcademicEnforcement, setConfirmAcademicEnforcement] = useState(false)
 
     if (query.isLoading) return <p role="status">Loading organization settings…</p>
     if (query.isError || !query.data) {
@@ -194,6 +196,8 @@ const OrganizationSettingsPanel = () => {
     const timeZoneValue = timeZone ?? query.data.timeZone
     const candidateRegistrationEnabled = query.data.candidateRegistrationEnabled !== false
     const recruiterCandidateEmailsEnabled = query.data.recruiterCandidateEmailsEnabled === true
+    const academicQualificationEnforcementEnabled =
+        query.data.academicQualificationEnforcementEnabled === true
     const savedSessionPolicy = query.data.staffSessionDurationHours || DEFAULT_STAFF_SESSION_POLICY
     const sessionPolicyValue = sessionPolicy || savedSessionPolicy
 
@@ -249,6 +253,24 @@ const OrganizationSettingsPanel = () => {
         }
     }
 
+    const updateAcademicEnforcement = async (enabled: boolean) => {
+        setAcademicEnforcementError(null)
+        try {
+            await update.mutateAsync({
+                academicQualificationEnforcementEnabled: enabled,
+                revision: query.data.revision,
+            })
+            setConfirmAcademicEnforcement(false)
+            toast.success(enabled
+                ? 'Academic qualification enforcement enabled.'
+                : 'Academic qualification enforcement disabled.')
+        } catch (error) {
+            setAcademicEnforcementError(error instanceof Error
+                ? error.message
+                : 'Unable to update academic qualification enforcement.')
+        }
+    }
+
     const updateRecruiterEmailAccess = async () => {
         setEmailFeatureError(null)
         try {
@@ -296,31 +318,62 @@ const OrganizationSettingsPanel = () => {
                         <span aria-hidden="true" className="grid size-10 place-items-center rounded-lg bg-slate-100 text-slate-700"><FiUserPlus /></span>
                         <div>
                             <h2 id="candidate-access-heading" className="text-lg font-semibold text-gray-950">Candidate access</h2>
-                            <p className="mt-1 text-sm text-gray-600">Control whether new candidates can create accounts.</p>
+                            <p className="mt-1 text-sm text-gray-600">Control candidate registration and application requirements.</p>
                         </div>
                     </div>
                 </div>
-                <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                    <div>
-                        <p className={`text-sm font-semibold ${candidateRegistrationEnabled ? 'text-emerald-700' : 'text-amber-700'}`}>
-                            {candidateRegistrationEnabled ? 'Registration is open' : 'Registration is paused'}
-                        </p>
-                        <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-600">
-                            {candidateRegistrationEnabled
-                                ? 'New candidates can create accounts normally.'
-                                : 'New candidate accounts are blocked. Existing users and staff can still sign in.'}
-                        </p>
-                        {registrationError ? <p role="alert" className="mt-2 text-sm text-red-700">{registrationError}</p> : null}
+                <div className="divide-y divide-gray-100">
+                    <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                        <div>
+                            <p className={`text-sm font-semibold ${candidateRegistrationEnabled ? 'text-emerald-700' : 'text-amber-700'}`}>
+                                {candidateRegistrationEnabled ? 'Registration is open' : 'Registration is paused'}
+                            </p>
+                            <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-600">
+                                {candidateRegistrationEnabled
+                                    ? 'New candidates can create accounts normally.'
+                                    : 'New candidate accounts are blocked. Existing users and staff can still sign in.'}
+                            </p>
+                            {registrationError ? <p role="alert" className="mt-2 text-sm text-red-700">{registrationError}</p> : null}
+                        </div>
+                        {candidateRegistrationEnabled ? (
+                            <button type="button" onClick={() => setConfirmRegistrationPause(true)} disabled={update.isPending} className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-md border border-amber-300 px-4 text-sm font-semibold text-amber-800 hover:bg-amber-50 disabled:opacity-60">
+                                Pause registration
+                            </button>
+                        ) : (
+                            <button type="button" onClick={() => void updateCandidateRegistration(true)} disabled={update.isPending} className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-md bg-[#003B6D] px-4 text-sm font-semibold text-white disabled:opacity-60">
+                                {update.isPending ? 'Resuming…' : 'Resume registration'}
+                            </button>
+                        )}
                     </div>
-                    {candidateRegistrationEnabled ? (
-                        <button type="button" onClick={() => setConfirmRegistrationPause(true)} disabled={update.isPending} className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-md border border-amber-300 px-4 text-sm font-semibold text-amber-800 hover:bg-amber-50 disabled:opacity-60">
-                            Pause registration
+                    <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                        <div>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <h3 className="font-semibold text-gray-950">Academic qualification enforcement</h3>
+                                <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${academicQualificationEnforcementEnabled ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>
+                                    {academicQualificationEnforcementEnabled ? 'Enforced' : 'Advisory'}
+                                </span>
+                            </div>
+                            <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-600">
+                                {academicQualificationEnforcementEnabled
+                                    ? 'Candidates below a vacancy’s minimum, or without a recognised qualification, cannot submit an application.'
+                                    : 'Candidates receive guidance but may still apply when they do not meet a vacancy’s minimum.'}
+                            </p>
+                            {academicEnforcementError ? <p role="alert" className="mt-2 text-sm text-red-700">{academicEnforcementError}</p> : null}
+                        </div>
+                        <button
+                            type="button"
+                            role="switch"
+                            aria-checked={academicQualificationEnforcementEnabled}
+                            aria-label="Academic qualification enforcement"
+                            onClick={() => academicQualificationEnforcementEnabled
+                                ? void updateAcademicEnforcement(false)
+                                : setConfirmAcademicEnforcement(true)}
+                            disabled={update.isPending}
+                            className={`relative h-7 w-12 shrink-0 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2] focus-visible:ring-offset-2 disabled:opacity-60 ${academicQualificationEnforcementEnabled ? 'bg-[#184aa2]' : 'bg-gray-300'}`}
+                        >
+                            <span className={`absolute top-1 size-5 rounded-full bg-white shadow-sm transition-transform ${academicQualificationEnforcementEnabled ? 'left-6' : 'left-1'}`} />
                         </button>
-                    ) : (
-                        <button type="button" onClick={() => void updateCandidateRegistration(true)} disabled={update.isPending} className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-md bg-[#003B6D] px-4 text-sm font-semibold text-white disabled:opacity-60">
-                            {update.isPending ? 'Resuming…' : 'Resume registration'}
-                        </button>
-                    )}
+                    </div>
                 </div>
             </section>
 
@@ -447,6 +500,22 @@ const OrganizationSettingsPanel = () => {
                     </div>
                 </form>
             </section>
+
+            <Modal
+                isOpen={confirmAcademicEnforcement}
+                onClose={() => setConfirmAcademicEnforcement(false)}
+                onSubmit={() => void updateAcademicEnforcement(true)}
+                title="Enforce academic qualifications?"
+                actionLabel={update.isPending ? 'Enabling…' : 'Enable enforcement'}
+                disabled={update.isPending}
+                size="compact"
+                body={(
+                    <div className="space-y-3 text-sm leading-6 text-gray-200">
+                        <p>New applications to every vacancy with a minimum academic qualification will be checked immediately.</p>
+                        <p>Candidates below the minimum, or without a recognised qualification, will need to update their profile before they can apply. Existing applications will not be changed.</p>
+                    </div>
+                )}
+            />
 
             <Modal
                 isOpen={confirmRegistrationPause}

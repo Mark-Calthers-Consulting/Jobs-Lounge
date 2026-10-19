@@ -13,6 +13,7 @@ import {
 import Modal from '@/components/Modal'
 import { ErrorState, formatDate, LoadingState, STAGES, StatusBadge } from './workspaceUi'
 import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
+import AcademicAssessmentBadge from './AcademicAssessmentBadge'
 
 const safeDocumentLink = (value?: string) => {
   if (!value) return undefined
@@ -54,6 +55,7 @@ export default function ApplicationDetailPanel({
   const coverLetter = safeDocumentLink(application.coverLetterLink)
   const liveCv = safeDocumentLink(candidate?.cvLink)
   const liveCoverLetter = safeDocumentLink(candidate?.coverLetterLink)
+  const academicAssessment = application.academicAssessment
 
   const changeStatus = async (status: ApplicationStatus, undo = false) => {
     const previous = application.status
@@ -140,6 +142,30 @@ export default function ApplicationDetailPanel({
           <div role="note" className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
             Possible duplicate candidate account detected using {duplicateSignal.matchFields.join(' and ')}.
           </div>
+        ) : null}
+
+        {academicAssessment && academicAssessment.result !== 'not-required' ? (
+          <section aria-labelledby="academic-assessment-heading" className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h3 id="academic-assessment-heading" className="font-semibold text-slate-950">Academic assessment</h3>
+              <AcademicAssessmentBadge result={academicAssessment.result} />
+            </div>
+            <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+              <div>
+                <dt className="text-slate-500">Qualification assessed</dt>
+                <dd className="mt-1 font-medium text-slate-900">{academicAssessment.candidateQualification || 'Not provided'}</dd>
+              </div>
+              <div>
+                <dt className="text-slate-500">Vacancy minimum</dt>
+                <dd className="mt-1 font-medium text-slate-900">{academicAssessment.minimumQualification}</dd>
+              </div>
+            </dl>
+            <p className="mt-4 text-xs leading-5 text-slate-600">
+              {academicAssessment.source === 'backfill'
+                ? 'Reconstructed from the available candidate and vacancy data, then frozen.'
+                : 'Assessed and frozen when this application was submitted.'}
+            </p>
+          </section>
         ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2">

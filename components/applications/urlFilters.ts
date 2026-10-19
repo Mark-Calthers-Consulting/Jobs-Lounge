@@ -20,6 +20,7 @@ export const applicationFiltersFromUrl = (
   status: params.getAll('status') as ApplicationStatus[],
   priority: booleanValue(params.get('priority')),
   education: params.get('education') || undefined,
+  academicAssessment: (params.get('academicAssessment') as ApplicationWorkspaceFilters['academicAssessment']) || undefined,
   nyscStatus: (params.get('nyscStatus') as ApplicationWorkspaceFilters['nyscStatus']) || undefined,
   experienceMin: numberValue(params.get('experienceMin')),
   experienceMax: numberValue(params.get('experienceMax')),

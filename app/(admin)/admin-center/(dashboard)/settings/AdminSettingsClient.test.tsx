@@ -39,6 +39,7 @@ vi.mock('@/hooks/useSettings', () => ({
             timeZone: 'Africa/Lagos',
             candidateRegistrationEnabled: true,
             recruiterCandidateEmailsEnabled: false,
+            academicQualificationEnforcementEnabled: false,
             staffSessionDurationHours: {
                 admin: 720,
                 recruiter: 720,
@@ -154,6 +155,27 @@ describe('role-aware admin settings', () => {
 
         await waitFor(() => expect(updateOrganization).toHaveBeenCalledWith({
             recruiterCandidateEmailsEnabled: true,
+            revision: 1,
+        }))
+    })
+
+    it('requires confirmation before enabling academic qualification enforcement', async () => {
+        currentRole = 'super-admin'
+        currentSection = 'section=organization'
+        updateOrganization.mockResolvedValue({})
+        render(<AdminSettingsClient />)
+
+        const enforcementSwitch = screen.getByRole('switch', {
+            name: 'Academic qualification enforcement',
+        })
+        expect(enforcementSwitch).toHaveAttribute('aria-checked', 'false')
+        fireEvent.click(enforcementSwitch)
+        expect(updateOrganization).not.toHaveBeenCalled()
+
+        const dialog = screen.getByRole('dialog', { name: 'Enforce academic qualifications?' })
+        fireEvent.click(within(dialog).getByRole('button', { name: 'Enable enforcement' }))
+        await waitFor(() => expect(updateOrganization).toHaveBeenCalledWith({
+            academicQualificationEnforcementEnabled: true,
             revision: 1,
         }))
     })

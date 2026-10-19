@@ -28,6 +28,7 @@ const addListFilters = (params: URLSearchParams, filters: ApplicationWorkspaceFi
   filters.status?.forEach((status) => params.append('status', status))
   if (filters.priority !== undefined) params.set('priority', String(filters.priority))
   if (filters.education) params.set('education', filters.education)
+  if (filters.academicAssessment) params.set('academicAssessment', filters.academicAssessment)
   if (filters.nyscStatus) params.set('nyscStatus', filters.nyscStatus)
   if (filters.experienceMin !== undefined) params.set('experienceMin', String(filters.experienceMin))
   if (filters.experienceMax !== undefined) params.set('experienceMax', String(filters.experienceMax))

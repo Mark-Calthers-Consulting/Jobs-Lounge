@@ -13,10 +13,54 @@ import { DOCUMENT_URL_ERROR, isValidDocumentUrl } from '@/utils/documentUrl'
 import CvLinkGuidance from '@/components/CvLinkGuidance'
 import { ApiError } from '@/api/errors'
 import { formatDateInTimeZone } from '@/utils/dateTime'
+import {
+    ACADEMIC_ASSESSMENT_RESULTS,
+    ACADEMIC_QUALIFICATIONS,
+    type AcademicQualification,
+} from '@/constants/enums'
+import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
+import {
+    academicAssessmentNeedsReview,
+    assessAcademicQualification,
+    type AcademicAssessmentPreview,
+} from '@/utils/academicQualification'
 
 const fieldClass = 'mt-2 w-full rounded-md border border-slate-300 bg-white px-3.5 py-3 text-[15px] text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-[#184aa2] focus:ring-2 focus:ring-[#184aa2]/15'
 const prefilledFieldClass = 'border-slate-300 bg-slate-50 text-slate-800'
 const labelClass = 'block text-[15px] font-semibold leading-5 text-slate-950'
+
+const isRecord = (value: unknown): value is Record<string, unknown> => (
+    typeof value === 'object' && value !== null && !Array.isArray(value)
+)
+
+const assessmentFromError = (details: unknown): AcademicAssessmentPreview | null => {
+    if (!isRecord(details) || !isRecord(details.academicAssessment)) return null
+    const value = details.academicAssessment
+    if (
+        typeof value.result !== 'string'
+        || !ACADEMIC_ASSESSMENT_RESULTS.includes(
+            value.result as typeof ACADEMIC_ASSESSMENT_RESULTS[number],
+        )
+    ) return null
+    const minimumQualification = typeof value.minimumQualification === 'string'
+        && ACADEMIC_QUALIFICATIONS.includes(value.minimumQualification as AcademicQualification)
+        ? value.minimumQualification as AcademicQualification
+        : undefined
+    return {
+        result: value.result as AcademicAssessmentPreview['result'],
+        ...(value.reason === 'missing-candidate-qualification'
+            || value.reason === 'unrecognized-candidate-qualification'
+            ? { reason: value.reason }
+            : {}),
+        ...(typeof value.candidateQualification === 'string'
+            ? { candidateQualification: value.candidateQualification }
+            : {}),
+        ...(minimumQualification ? { minimumQualification } : {}),
+        ...(typeof value.levelDifference === 'number' && Number.isFinite(value.levelDifference)
+            ? { levelDifference: value.levelDifference }
+            : {}),
+    }
+}
 
 const ProfileValueNotice = ({ children }: { children: ReactNode }) => (
     <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-slate-600">
@@ -25,10 +69,20 @@ const ProfileValueNotice = ({ children }: { children: ReactNode }) => (
     </p>
 )
 
-const ApplicationForm = ({ jobId, jobTitle }: { jobId: string; jobTitle: string }) => {
+const ApplicationForm = ({
+    jobId,
+    jobTitle,
+    minimumAcademicQualification,
+}: {
+    jobId: string
+    jobTitle: string
+    minimumAcademicQualification?: AcademicQualification
+}) => {
     const router = useRouter()
     const queryClient = useQueryClient()
-    const { data: user, isLoading: loadingUser } = useUser()
+    const userQuery = useUser()
+    const { data: user, isLoading: loadingUser } = userQuery
+    const { academicQualificationEnforcementEnabled } = usePlatformSettings()
     const { data: hasApplied, isLoading: checkingStatus } = useCheckApplicationStatus(jobId, Boolean(user))
     const weeklyLimit = useWeeklyApplicationLimit(user?.role === 'user')
     const apply = useApplyToJob()
@@ -36,14 +90,25 @@ const ApplicationForm = ({ jobId, jobTitle }: { jobId: string; jobTitle: string 
     const [cvLinkError, setCvLinkError] = useState('')
     const [coverLetterLink, setCoverLetterLink] = useState<string | null>(null)
     const [note, setNote] = useState('')
-    const [showProfilePrompt, setShowProfilePrompt] = useState(false)
+    const [showApplicationReview, setShowApplicationReview] = useState(false)
+    const [serverAcademicAssessment, setServerAcademicAssessment] = useState<AcademicAssessmentPreview | null>(null)
     const [submissionError, setSubmissionError] = useState('')
     const profilePromptHeadingRef = useRef<HTMLHeadingElement>(null)
     const profileIsComplete = user?.profileCompletion?.complete ?? user?.profileCompleted ?? false
 
     useEffect(() => {
-        if (showProfilePrompt) profilePromptHeadingRef.current?.focus()
-    }, [showProfilePrompt])
+        if (showApplicationReview) profilePromptHeadingRef.current?.focus()
+    }, [showApplicationReview])
+
+    const clientAcademicAssessment = assessAcademicQualification({
+        candidateQualification: user?.highestEducation,
+        minimumQualification: minimumAcademicQualification,
+    })
+    const academicAssessment = serverAcademicAssessment || clientAcademicAssessment
+    const needsAcademicReview = academicAssessmentNeedsReview(academicAssessment.result)
+    const academicEnforcementActive = academicQualificationEnforcementEnabled
+        || Boolean(serverAcademicAssessment)
+    const academicSubmissionBlocked = academicEnforcementActive && needsAcademicReview
 
     const submitApplication = async () => {
         const submittedCvLink = (cvLink ?? user?.cvLink ?? '').trim()
@@ -69,6 +134,23 @@ const ApplicationForm = ({ jobId, jobTitle }: { jobId: string; jobTitle: string 
             if (error instanceof ApiError && error.code === 'WEEKLY_APPLICATION_LIMIT_REACHED') {
                 setSubmissionError(error.message)
                 void queryClient.invalidateQueries({ queryKey: ['weeklyApplicationLimit'] })
+            } else if (error instanceof ApiError && [
+                'ACADEMIC_QUALIFICATION_BELOW_MINIMUM',
+                'ACADEMIC_QUALIFICATION_REQUIRED',
+            ].includes(error.code)) {
+                setServerAcademicAssessment(assessmentFromError(error.details) || {
+                    result: error.code === 'ACADEMIC_QUALIFICATION_REQUIRED'
+                        ? 'not-assessed'
+                        : 'two-or-more-levels-below',
+                    ...(user?.highestEducation
+                        ? { candidateQualification: user.highestEducation }
+                        : { reason: 'missing-candidate-qualification' }),
+                    ...(minimumAcademicQualification ? { minimumQualification: minimumAcademicQualification } : {}),
+                })
+                setShowApplicationReview(true)
+                void queryClient.invalidateQueries({ queryKey: ['platformSettings', 'public'] })
+            } else if (error instanceof ApiError && error.code === 'ACADEMIC_QUALIFICATION_POLICY_UNAVAILABLE') {
+                setSubmissionError(error.message)
             } else {
                 toast.error(error instanceof Error ? error.message : 'Unable to submit application')
             }
@@ -85,8 +167,8 @@ const ApplicationForm = ({ jobId, jobTitle }: { jobId: string; jobTitle: string 
         }
         setCvLinkError('')
 
-        if (user && !profileIsComplete) {
-            setShowProfilePrompt(true)
+        if (user && (!profileIsComplete || needsAcademicReview)) {
+            setShowApplicationReview(true)
             return
         }
 
@@ -208,33 +290,67 @@ const ApplicationForm = ({ jobId, jobTitle }: { jobId: string; jobTitle: string 
                 />
                 <p id="application-note-count" className="mt-1.5 text-right text-xs tabular-nums text-slate-500">{note.length}/2000</p>
             </div>
-            {showProfilePrompt && !profileIsComplete ? (
+            {showApplicationReview && (!profileIsComplete || needsAcademicReview) ? (
                 <section aria-labelledby="application-profile-prompt-title" className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:p-6">
                     <h2 id="application-profile-prompt-title" ref={profilePromptHeadingRef} tabIndex={-1} className="text-lg font-semibold text-slate-950 focus:outline-none">
-                        One thing before you apply
+                        Review before you apply
                     </h2>
-                    <p className="mt-2 text-base text-slate-700 [text-wrap:pretty]">
-                        {typeof user.profileCompletion?.percentage === 'number'
-                            ? `Your profile is ${user.profileCompletion.percentage}% complete. `
-                            : 'Your profile is not complete yet. '}
-                        Missing details may make it harder for recruiters to assess your fit. You can still apply now.
-                    </p>
+                    {!profileIsComplete ? (
+                        <p className="mt-2 text-base text-slate-700 [text-wrap:pretty]">
+                            {typeof user.profileCompletion?.percentage === 'number'
+                                ? `Your profile is ${user.profileCompletion.percentage}% complete. `
+                                : 'Your profile is not complete yet. '}
+                            Missing details may make it harder for recruiters to assess your fit.
+                        </p>
+                    ) : null}
+                    {needsAcademicReview ? (
+                        <div className={`${!profileIsComplete ? 'mt-4 border-t border-slate-200 pt-4' : 'mt-2'} text-base text-slate-700`}>
+                            {academicAssessment.result === 'not-assessed' ? (
+                                <p className="[text-wrap:pretty]">
+                                    This vacancy requires {academicAssessment.minimumQualification || minimumAcademicQualification}. Your profile does not contain a recognised academic qualification, so we cannot compare it with the requirement.
+                                </p>
+                            ) : (
+                                <p className="[text-wrap:pretty]">
+                                    This vacancy requires {academicAssessment.minimumQualification || minimumAcademicQualification}. Your profile lists {academicAssessment.candidateQualification || user.highestEducation}, which is {academicAssessment.result === 'one-level-below' ? 'one level' : 'two or more levels'} below the requirement.
+                                </p>
+                            )}
+                            <p className="mt-2 text-sm text-slate-600 [text-wrap:pretty]">
+                                {academicSubmissionBlocked
+                                    ? 'Update your profile with a recognised qualification that meets the minimum before submitting this application.'
+                                    : 'You can still apply, but the hiring team may consider this when reviewing your application.'}
+                            </p>
+                        </div>
+                    ) : null}
                     <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
-                        <button
-                            type="button"
-                            disabled={apply.isPending}
-                            onClick={() => void submitApplication()}
-                            className="inline-flex min-h-11 items-center justify-center rounded-md bg-[#003B6D] px-4 py-2 text-base font-semibold text-white transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-[#002f57] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70"
-                        >
-                            {apply.isPending ? 'Submitting…' : 'Apply anyway'}
-                        </button>
+                        {academicSubmissionBlocked ? (
+                            <button
+                                type="button"
+                                disabled={userQuery.isFetching}
+                                onClick={() => void Promise.all([
+                                    userQuery.refetch(),
+                                    queryClient.invalidateQueries({ queryKey: ['platformSettings', 'public'] }),
+                                ]).then(() => setServerAcademicAssessment(null))}
+                                className="inline-flex min-h-11 items-center justify-center rounded-md bg-[#003B6D] px-4 py-2 text-base font-semibold text-white transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-[#002f57] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70"
+                            >
+                                {userQuery.isFetching ? 'Checking…' : 'Recheck qualification'}
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                disabled={apply.isPending}
+                                onClick={() => void submitApplication()}
+                                className="inline-flex min-h-11 items-center justify-center rounded-md bg-[#003B6D] px-4 py-2 text-base font-semibold text-white transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-[#002f57] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70"
+                            >
+                                {apply.isPending ? 'Submitting…' : 'Apply anyway'}
+                            </button>
+                        )}
                         <Link
                             href="/dashboard/profile"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex min-h-11 items-center justify-center rounded-md px-4 py-2 text-base font-semibold text-[#003B6D] underline-offset-4 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-slate-100 hover:underline active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]"
                         >
-                            Complete profile <span className="sr-only">(opens in a new tab so this application stays here)</span>
+                            {academicSubmissionBlocked ? 'Update profile' : 'Complete profile'} <span className="sr-only">(opens in a new tab so this application stays here)</span>
                         </Link>
                     </div>
                 </section>
