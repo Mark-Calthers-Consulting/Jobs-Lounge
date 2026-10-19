@@ -6,6 +6,7 @@ import { FiArrowRight } from 'react-icons/fi'
 import HomepageDiscovery from '@/components/HomepageDiscovery'
 import HomepageHeroVacancy from '@/components/HomepageHeroVacancy'
 import HomepageCareerInsights from '@/components/HomepageCareerInsights'
+import HomepageAccountCta from '@/components/HomepageAccountCta'
 import PartnerLogoMarquee from '@/components/PartnerLogoMarquee'
 
 const origin = 'https://jobslounge.markcalthers.com'
@@ -111,9 +112,7 @@ export default function Home() {
               <Link href="/vacancies" className="inline-flex min-h-12 items-center justify-center gap-2 bg-[#071a3d] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#102957]">
                 Browse vacancies <FiArrowRight aria-hidden="true" />
               </Link>
-              <Link href="/auth?mode=register" className="inline-flex min-h-12 items-center justify-center border border-[#071a3d] px-6 text-sm font-semibold text-[#071a3d] transition-colors hover:bg-slate-100">
-                Create your profile
-              </Link>
+              <HomepageAccountCta />
             </div>
           </div>
 

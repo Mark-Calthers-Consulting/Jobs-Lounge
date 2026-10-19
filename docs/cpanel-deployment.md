@@ -21,6 +21,26 @@ If Analytics is enabled, also provide `NEXT_PUBLIC_GA_ID`. Values beginning with
 
 The command creates `cpanel-deploy`. It includes the traced production dependencies, public assets, Next.js static chunks, and a Passenger-compatible `app.js`. It intentionally contains no `.env` files.
 
+### Automated deployment
+
+After the cPanel application and SSH alias have been configured, deploy from the repository root with:
+
+```sh
+bash scripts/deploy-frontend.sh
+```
+
+The script builds the production frontend, creates the self-contained cPanel bundle, uploads it through the existing `jobsapi-cpanel` SSH alias, synchronizes it to `/home/cricle/jobslounge`, preserves remote environment files and Passenger state, and restarts the application. Its temporary archive is removed locally and remotely after deployment.
+
+The remote alias and application directory can be overridden without editing the script:
+
+```sh
+FRONTEND_DEPLOY_REMOTE=my-cpanel \
+FRONTEND_DEPLOY_DIR=/home/account/frontend-app \
+bash scripts/deploy-frontend.sh
+```
+
+The build still uses `frontend/.env.production` and any environment variables supplied to the command. Remember that `NEXT_PUBLIC_*` values are compiled into the bundle; cPanel runtime variables cannot change those values without rebuilding.
+
 ## 2. Upload the application
 
 1. Create an empty frontend application directory under the cPanel account home, for example `jobslounge-frontend`.

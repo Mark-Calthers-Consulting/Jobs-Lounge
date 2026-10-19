@@ -13,6 +13,9 @@ vi.mock('@/components/HomepageHeroVacancy', () => ({
 vi.mock('@/components/HomepageCareerInsights', () => ({
   default: () => <div data-testid="homepage-career-insights">Career insights</div>,
 }))
+vi.mock('@/components/HomepageAccountCta', () => ({
+  default: () => <a href="/auth?mode=register">Create your profile</a>,
+}))
 vi.mock('@/components/PartnerLogoMarquee', () => ({
   default: () => <div data-testid="partner-logo-marquee">Partner logos</div>,
 }))
