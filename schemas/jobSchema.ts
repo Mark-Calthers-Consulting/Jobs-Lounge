@@ -1,6 +1,6 @@
 // schemas/jobSchema.ts
 import { z } from "zod"
-import { JOB_ENUMS, JOB_STATUSES } from "@/constants/enums"
+import { ACADEMIC_QUALIFICATIONS, JOB_ENUMS, JOB_STATUSES } from "@/constants/enums"
 
 const optionalUrl = z.preprocess(
   (value) => value === '' ? undefined : value,
@@ -17,6 +17,11 @@ const optionalDeadline = z.preprocess(
   ).optional(),
 )
 
+const optionalAcademicQualification = z.preprocess(
+  (value) => value === '' ? undefined : value,
+  z.enum(ACADEMIC_QUALIFICATIONS).optional(),
+)
+
 export const jobFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().trim().min(50, "Description must be at least 50 characters"),
@@ -25,6 +30,7 @@ export const jobFormSchema = z.object({
   workMode: z.enum(JOB_ENUMS.workMode),
   jobType: z.enum(JOB_ENUMS.jobType),
   level: z.enum(JOB_ENUMS.level),
+  minimumAcademicQualification: optionalAcademicQualification,
   salary: z.object({
     min: z.number().nonnegative().optional(),
     max: z.number().nonnegative().optional(),

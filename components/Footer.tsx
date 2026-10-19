@@ -163,7 +163,19 @@ export default function Footer(): React.JSX.Element {
 
                     <div className="mt-10 flex flex-col gap-3 border-t border-white/10 pt-5 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
                         <p>&copy; {currentYear} Jobs Lounge. All rights reserved.</p>
-                        <div className="flex items-center gap-4">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                            <Link
+                                href="/privacy"
+                                className="text-slate-400 transition-colors hover:text-white"
+                            >
+                                Privacy policy
+                            </Link>
+                            <Link
+                                href="/terms"
+                                className="text-slate-400 transition-colors hover:text-white"
+                            >
+                                Terms of service
+                            </Link>
                             <span>Powered by Mark Calthers Consulting</span>
                             <Link
                                 href="/admin-center/login"

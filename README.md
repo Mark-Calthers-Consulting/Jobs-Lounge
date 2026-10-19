@@ -1,6 +1,6 @@
 # Jobs Lounge frontend
 
-Next.js application for public vacancies, candidate accounts, applications, and the administration centre. Browser API requests use a same-origin gateway at `/api/backend/*`; Next.js forwards those requests to the separately deployed Express API.
+Next.js application for public vacancies, candidate accounts, applications, and the administration centre. Production browser requests use the separately deployed Express API directly; the same-origin `/api/backend/*` gateway remains available as a local-development fallback.
 
 ## Requirements
 
@@ -23,6 +23,7 @@ Set `API_ORIGIN=http://localhost:5000` in `.env.development`, then open `http://
 | Variable | Required | Purpose |
 | --- | --- | --- |
 | `API_ORIGIN` | Yes | Server-only backend origin without `/api`. Used by rewrites and Server Components. |
+| `NEXT_PUBLIC_API_ORIGIN` | Yes in production | Public Express API origin without `/api`. Used by browser requests. |
 | `NEXT_PUBLIC_ORIGIN` | Yes in production | Canonical frontend origin used for share links. |
 | `NEXT_PUBLIC_GA_ID` | No | Google Analytics measurement ID. |
 
@@ -35,6 +36,7 @@ npm run dev      # local development server
 npm run lint     # ESLint and accessibility rules
 npm run test:unit # Vitest component and utility tests
 npm run build    # production compile, type-check, and route generation
+npm run build:cpanel # build and prepare the upload-ready cPanel bundle
 npm run start    # run the compiled Next.js server
 ```
 
@@ -60,7 +62,7 @@ Route protection is enforced in the dashboard/admin layouts and again by the bac
 - TanStack Query owns remote server state and invalidation.
 - React Hook Form/Zod provide form handling and shared client validation where applicable.
 - Authentication uses the backend’s secure, HTTP-only cookie. Unsafe browser requests obtain and send a signed CSRF token through `csrfFetch`.
-- `next.config.ts` defines the backend gateway, security headers, CSP, and private-page cache controls.
+- Browser requests use `NEXT_PUBLIC_API_ORIGIN`; the `/api/backend/*` route is a same-origin fallback for compatible environments. `next.config.ts` defines security headers, CSP, and private-page cache controls.
 - Public Career Insights uses managed Cloudinary cover images with local category artwork as its legacy fallback.
 
 Backend architecture, API contracts, deployment steps, and incident procedures live in the backend repository documentation.
@@ -69,10 +71,15 @@ Deferred frontend product and design work is tracked in [BACKLOG.md](./BACKLOG.m
 
 ## Production deployment
 
+The frontend is deployed as its own cPanel Application Manager app. It is not part of the Express backend app.
+
 1. Set `API_ORIGIN` to the cPanel API origin, for example `https://jobsapi.example.com`.
 2. Set `NEXT_PUBLIC_ORIGIN` to the public frontend origin.
-3. Run `npm ci`, `npm run lint`, and `npm run build`.
-4. Deploy the build and start it with `npm run start` using the hosting platform’s Node process manager.
-5. Confirm `/api/backend/health/ready` returns HTTP 200 through the frontend origin.
+3. Run `npm ci`, `npm run lint`, and `npm run build:cpanel`.
+4. Upload the contents of `cpanel-deploy` to the frontend application directory.
+5. Register `app.js` as the application startup file and use Production mode.
+6. Confirm `/api/backend/health/ready` returns HTTP 200 through the frontend origin.
+
+See [the cPanel deployment guide](./docs/cpanel-deployment.md) for the complete setup and cutover checklist.
 
 Do not point production at Render or another legacy API origin.

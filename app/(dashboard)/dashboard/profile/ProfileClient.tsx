@@ -17,17 +17,7 @@ import { useForm, useWatch } from 'react-hook-form'
 import { FiCheck, FiExternalLink } from 'react-icons/fi'
 import { toast } from 'sonner'
 import CvLinkGuidance from '@/components/CvLinkGuidance'
-
-const EDUCATION_SUGGESTIONS = [
-    'Secondary school',
-    'National Diploma (ND)',
-    'Nigeria Certificate in Education (NCE)',
-    'Higher National Diploma (HND)',
-    "Bachelor's degree",
-    'Postgraduate diploma',
-    "Master's degree",
-    'Doctorate',
-]
+import { ACADEMIC_QUALIFICATIONS } from '@/constants/enums'
 
 const inputClass = 'mt-1.5 w-full rounded-md border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-[#184aa2] focus:ring-2 focus:ring-[#184aa2]/15'
 const savedInputClass = 'border-slate-300 bg-slate-50 text-slate-800'
@@ -301,10 +291,13 @@ const ProfileClient = () => {
                     <div className="grid gap-4 sm:grid-cols-2">
                         <Field id="profile-education" label="Highest education" saved={isSavedProfileValue(user.highestEducation, professionalDirty.highestEducation)} error={professionalForm.formState.errors.highestEducation?.message}>
                             <>
-                                <input id="profile-education" list="education-suggestions" className={profileInputClass(isSavedProfileValue(user.highestEducation, professionalDirty.highestEducation))} {...professionalForm.register('highestEducation')} />
-                                <datalist id="education-suggestions">
-                                    {EDUCATION_SUGGESTIONS.map((option) => <option key={option} value={option} />)}
-                                </datalist>
+                                <select id="profile-education" className={profileInputClass(isSavedProfileValue(user.highestEducation, professionalDirty.highestEducation))} {...professionalForm.register('highestEducation')}>
+                                    <option value="">Select your highest education</option>
+                                    {user.highestEducation && !ACADEMIC_QUALIFICATIONS.includes(user.highestEducation as typeof ACADEMIC_QUALIFICATIONS[number]) ? (
+                                        <option value={user.highestEducation}>{user.highestEducation}</option>
+                                    ) : null}
+                                    {ACADEMIC_QUALIFICATIONS.map((option) => <option key={option} value={option}>{option}</option>)}
+                                </select>
                             </>
                         </Field>
                         <Field id="profile-nysc-status" label="NYSC status" saved={isSavedProfileValue(user.nyscStatus, professionalDirty.nyscStatus)} error={professionalForm.formState.errors.nyscStatus?.message}>

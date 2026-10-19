@@ -27,6 +27,7 @@ export type Job = {
   workMode: WorkMode
   jobType: JobType
   level: Level
+  minimumAcademicQualification?: string
   company: {
     name: string
     logo?: string

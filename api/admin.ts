@@ -427,6 +427,7 @@ export const updateAdminJob = async ({
             ...data,
             applyLink: data.applyLink ?? null,
             deadline: data.deadline ?? null,
+            minimumAcademicQualification: data.minimumAcademicQualification ?? null,
         }),
     })
     const result = await readApiResponse<ApiSuccess<Job>>(res, 'Unable to update job')

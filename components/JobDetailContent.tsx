@@ -4,6 +4,7 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { FiArrowLeft, FiBriefcase, FiCalendar, FiClock, FiExternalLink, FiMapPin } from 'react-icons/fi'
 import { MdOutlineWorkOutline, MdWorkspacePremium } from 'react-icons/md'
+import { PiGraduationCap } from 'react-icons/pi'
 
 import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
 import type { Job } from '@/types/types'
@@ -90,6 +91,11 @@ const JobDetailContent = ({ job, sidebarContent, backHref }: JobDetailContentPro
         { label: 'Work arrangement', value: job.workMode, icon: MdOutlineWorkOutline },
         { label: 'Employment type', value: job.jobType, icon: FiBriefcase },
         { label: 'Experience level', value: job.level, icon: MdWorkspacePremium },
+        ...(job.minimumAcademicQualification ? [{
+            label: 'Minimum qualification',
+            value: job.minimumAcademicQualification,
+            icon: PiGraduationCap,
+        }] : []),
         {
             label: 'Experience',
             value: Number.isFinite(job.experience) ? experienceLabel(job.experience) : 'Not specified',

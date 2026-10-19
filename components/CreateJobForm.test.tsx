@@ -73,9 +73,9 @@ describe('multi-location vacancy form', () => {
         const customLocation = screen.getByLabelText('Enter location')
         fireEvent.change(customLocation, { target: { value: 'Lagos, Abuja' } })
 
-        expect(screen.getByRole('status')).toHaveTextContent(
+        expect(screen.getByText(
             'This field is for one location. If the comma separates different locations, add each location separately below.',
-        )
+        )).toBeInTheDocument()
 
         fireEvent.change(customLocation, { target: { value: ' lagos ' } })
 
@@ -109,6 +109,7 @@ describe('multi-location vacancy form', () => {
                     workMode: 'On-site',
                     jobType: 'Full-time',
                     level: 'Manager',
+                    minimumAcademicQualification: 'Higher National Diploma (HND)',
                     salary: { currency: 'NGN' },
                     responsibilities: ['Lead the sales team'],
                     requirements: ['Relevant sales experience'],
@@ -123,6 +124,7 @@ describe('multi-location vacancy form', () => {
 
         expect(screen.queryByLabelText('Additional location 1')).not.toBeInTheDocument()
         expect(screen.getByLabelText('Vacancy location')).toHaveValue('Abuja')
+        expect(screen.getByLabelText(/Minimum academic qualification/)).toHaveValue('Higher National Diploma (HND)')
         expect(screen.getByRole('status')).toHaveTextContent('Loaded')
     })
 })

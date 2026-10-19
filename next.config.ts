@@ -1,13 +1,22 @@
 import type { NextConfig } from 'next'
 
-const apiOrigin = process.env.API_ORIGIN?.replace(/\/+$/, '')
-
-if (!apiOrigin) {
-  throw new Error('API_ORIGIN is required to configure the backend gateway')
+if (!process.env.API_ORIGIN?.trim()) {
+  throw new Error('API_ORIGIN is required for server-side backend access')
 }
 
 const isDevelopment = process.env.NODE_ENV === 'development'
 const isProduction = process.env.NODE_ENV === 'production'
+const publicApiOrigin = (() => {
+  const configuredOrigin = process.env.NEXT_PUBLIC_API_ORIGIN?.trim()
+  if (!configuredOrigin) return null
+
+  const origin = new URL(configuredOrigin)
+  if (origin.protocol !== 'http:' && origin.protocol !== 'https:') {
+    throw new Error('NEXT_PUBLIC_API_ORIGIN must use HTTP or HTTPS')
+  }
+
+  return origin.origin
+})()
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -15,7 +24,7 @@ const contentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://res.cloudinary.com https://www.google-analytics.com https://www.googletagmanager.com https://upload.wikimedia.org https://global.ariseplay.com https://arikair.com https://www.businesslist.com.ng https://www.nbplc.com",
   "font-src 'self' data:",
-  "connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com",
+  `connect-src 'self'${publicApiOrigin ? ` ${publicApiOrigin}` : ''} https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com`,
   "frame-src https://www.openstreetmap.org",
   "media-src 'self'",
   "worker-src 'self' blob:",
@@ -68,6 +77,7 @@ const privateResponseHeaders = [
 ]
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   poweredByHeader: false,
   images: {
     remotePatterns: [
@@ -140,14 +150,6 @@ const nextConfig: NextConfig = {
       {
         source: '/api/backend/:path*',
         headers: privateResponseHeaders,
-      },
-    ]
-  },
-  async rewrites() {
-    return [
-      {
-        source: '/api/backend/:path*',
-        destination: `${apiOrigin}/api/:path*`,
       },
     ]
   },

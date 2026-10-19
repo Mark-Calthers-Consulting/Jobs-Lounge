@@ -38,6 +38,18 @@ describe('vacancy deadline contract', () => {
 })
 
 describe('vacancy content requirements', () => {
+    it('accepts an optional minimum academic qualification and rejects oversized values', () => {
+        expect(jobFormSchema.safeParse(validJob).success).toBe(true)
+        expect(jobFormSchema.safeParse({
+            ...validJob,
+            minimumAcademicQualification: "Bachelor's degree",
+        }).success).toBe(true)
+        expect(jobFormSchema.safeParse({
+            ...validJob,
+            minimumAcademicQualification: 'Bachelor degree',
+        }).success).toBe(false)
+    })
+
     it('requires a meaningful main description', () => {
         const result = jobFormSchema.safeParse({ ...validJob, description: 'Too short' })
 

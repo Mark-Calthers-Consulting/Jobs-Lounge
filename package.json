@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:cpanel": "next build && node scripts/prepare-cpanel-deploy.mjs",
+    "package:cpanel": "node scripts/prepare-cpanel-deploy.mjs",
     "start": "next start",
     "lint": "eslint",
     "test:unit": "vitest run"

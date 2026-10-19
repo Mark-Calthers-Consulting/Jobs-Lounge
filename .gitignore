@@ -16,6 +16,8 @@
 # next.js
 /.next/
 /out/
+/cpanel-deploy/
+/cpanel-deploy.tar.gz
 
 # production
 /build

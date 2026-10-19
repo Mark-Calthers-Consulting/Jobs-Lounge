@@ -3,7 +3,7 @@
 import { useCreateJobBatch, useCreatejob } from '@/hooks/useApplications';
 import { useUpdateAdminJob } from '@/hooks/useAdmin'
 import { useUser } from '@/hooks/useUsers'
-import { JOB_ENUMS } from '@/constants/enums';
+import { ACADEMIC_QUALIFICATIONS, JOB_ENUMS } from '@/constants/enums';
 import { jobBatchFormSchema, jobFormSchema } from '@/schemas/jobSchema';
 import type { Job } from '@/types/types'
 import Modal from '@/components/Modal';
@@ -40,6 +40,7 @@ type JobFormData = {
     workMode: string;
     jobType: string;
     level: string;
+    minimumAcademicQualification: string;
     minSalary: string;
     maxSalary: string;
     yearsOfExperience: string;
@@ -147,6 +148,7 @@ const CreateJobFormContent = ({
         workMode: initialJob?.workMode ?? '',
         jobType: initialJob?.jobType ?? '',
         level: initialJob?.level ?? '',
+        minimumAcademicQualification: initialJob?.minimumAcademicQualification ?? '',
         minSalary: initialJob?.salary?.min?.toString() ?? '',
         maxSalary: initialJob?.salary?.max?.toString() ?? '',
         yearsOfExperience: initialJob?.experience?.toString() ?? '',
@@ -385,6 +387,7 @@ const CreateJobFormContent = ({
                 workMode: job.workMode,
                 jobType: job.jobType,
                 level: job.level,
+                minimumAcademicQualification: job.minimumAcademicQualification ?? '',
                 minSalary: job.salary.min?.toString() ?? '',
                 maxSalary: job.salary.max?.toString() ?? '',
                 yearsOfExperience: job.experience.toString(),
@@ -484,6 +487,7 @@ const CreateJobFormContent = ({
                 workMode: formData.workMode,
                 jobType: formData.jobType,
                 level: formData.level,
+                minimumAcademicQualification: formData.minimumAcademicQualification || undefined,
                 salary: {
                     min: formData.minSalary ? Number(formData.minSalary) : undefined,
                     max: formData.maxSalary ? Number(formData.maxSalary) : undefined,
@@ -1067,6 +1071,29 @@ const CreateJobFormContent = ({
                                     </option>
                                 ))}
                             </select>
+                        </div>
+
+                        <div className="flex flex-col">
+                            <label htmlFor="minimumAcademicQualification" className={labelClassName}>
+                                Minimum academic qualification
+                                <span className="ml-2 text-xs font-normal text-gray-500">Optional</span>
+                            </label>
+                            <select
+                                className={inputClassName}
+                                id="minimumAcademicQualification"
+                                name="minimumAcademicQualification"
+                                value={formData.minimumAcademicQualification}
+                                onChange={handleFieldChange}
+                                aria-describedby="minimum-academic-qualification-help"
+                            >
+                                <option value="">No minimum specified</option>
+                                {ACADEMIC_QUALIFICATIONS.map((qualification) => (
+                                    <option key={qualification} value={qualification}>{qualification}</option>
+                                ))}
+                            </select>
+                            <p id="minimum-academic-qualification-help" className="mt-1 text-xs leading-5 text-gray-500">
+                                State the lowest qualification the employer will accept.
+                            </p>
                         </div>
 
                         <div className="flex flex-col">

@@ -25,6 +25,16 @@ export const JOB_ENUMS = {
 } as const;
 
 export const JOB_STATUSES = ["Draft", "Open", "Closed"] as const;
+export const ACADEMIC_QUALIFICATIONS = [
+  "Secondary school",
+  "National Diploma (ND)",
+  "Nigeria Certificate in Education (NCE)",
+  "Higher National Diploma (HND)",
+  "Bachelor's degree",
+  "Postgraduate diploma",
+  "Master's degree",
+  "Doctorate",
+] as const;
 export const APPLICATION_STATUSES = ["pending", "reviewed", "shortlisted", "rejected"] as const;
 export const BLOG_STATUSES = ["Draft", "Published"] as const;
 export const BLOG_CATEGORIES = [
