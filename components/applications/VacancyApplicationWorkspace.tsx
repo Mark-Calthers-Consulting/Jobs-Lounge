@@ -104,6 +104,10 @@ export default function VacancyApplicationWorkspace({ jobId }: { jobId: string }
   if (summary.isLoading) return <LoadingState label="Preparing vacancy workspace…" />
   if (summary.isError || !summary.data) return <ErrorState retry={() => void summary.refetch()} />
 
+  const academicAssessmentAvailable = summary.data.job.minimumAcademicQualification !== null
+  const unavailableAcademicFilterSelected = Boolean(filters.academicAssessment)
+    && !academicAssessmentAvailable
+
   return (
     <div className="space-y-5">
       <ApplicationWorkspaceNav />
@@ -140,7 +144,7 @@ export default function VacancyApplicationWorkspace({ jobId }: { jobId: string }
       </header>
 
       <StageCounts totals={summary.data.byStatus} compact />
-      <ApplicationFilters />
+      <ApplicationFilters academicAssessmentAvailable={academicAssessmentAvailable} />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-slate-600">Hiring stages and recruiter notes are private.</p>
@@ -161,7 +165,24 @@ export default function VacancyApplicationWorkspace({ jobId }: { jobId: string }
             />
           ) : null}
         </>
-      ) : queue.isLoading ? <LoadingState /> : queue.isError ? <ErrorState retry={() => void queue.refetch()} /> : applications.length === 0 ? <EmptyState filtered /> : (
+      ) : queue.isLoading ? <LoadingState /> : queue.isError ? <ErrorState retry={() => void queue.refetch()} /> : applications.length === 0 ? (
+        <EmptyState
+          filtered
+          title={unavailableAcademicFilterSelected ? 'Academic assessment is unavailable for this vacancy' : undefined}
+          description={unavailableAcademicFilterSelected
+            ? 'This vacancy does not have a minimum academic qualification, so this filter cannot be used here.'
+            : undefined}
+          action={unavailableAcademicFilterSelected ? (
+            <button
+              type="button"
+              onClick={() => setParam('academicAssessment')}
+              className="rounded-lg bg-blue-800 px-3 py-2 text-sm font-semibold text-white transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-blue-900 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+            >
+              Clear academic filter
+            </button>
+          ) : undefined}
+        />
+      ) : (
         <>
           {selected.size ? (
             <div className="flex flex-wrap items-center gap-3 rounded-xl border border-blue-200 bg-blue-50 p-3">

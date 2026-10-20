@@ -7,8 +7,10 @@ import { STAGES } from './workspaceUi'
 
 export default function ApplicationFilters({
   includeVacancy = false,
+  academicAssessmentAvailable = true,
 }: {
   includeVacancy?: boolean
+  academicAssessmentAvailable?: boolean
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -17,6 +19,7 @@ export default function ApplicationFilters({
   const [jobSearch, setJobSearch] = useState('')
   const selectedCandidateId = searchParams.get('applicantId') || undefined
   const selectedJobId = searchParams.get('jobId') || undefined
+  const selectedAcademicAssessment = searchParams.get('academicAssessment') || ''
   const options = useApplicationFilterOptions(
     candidateSearch || undefined,
     includeVacancy ? jobSearch || undefined : undefined,
@@ -61,6 +64,23 @@ export default function ApplicationFilters({
         <span aria-hidden="true" className="text-slate-500">⌄</span>
       </summary>
       <div className="border-t border-slate-100 p-4">
+        {!academicAssessmentAvailable ? (
+          <div role="note" className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4 text-blue-950">
+            <p className="text-sm font-semibold">Academic assessment is unavailable for this vacancy</p>
+            <p className="mt-1 text-sm text-blue-900">
+              This vacancy does not have a minimum academic qualification. Academic assessment filters only apply to vacancies with a minimum.
+            </p>
+            {selectedAcademicAssessment ? (
+              <button
+                type="button"
+                onClick={() => update('academicAssessment')}
+                className="mt-3 rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm font-semibold text-blue-900 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-blue-100 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+              >
+                Clear academic filter
+              </button>
+            ) : null}
+          </div>
+        ) : null}
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <label className="text-sm font-medium text-slate-700">
             Find applicant
@@ -112,13 +132,24 @@ export default function ApplicationFilters({
           </label>
           <label className="text-sm font-medium text-slate-700">
             Academic assessment
-            <select value={searchParams.get('academicAssessment') || ''} onChange={(event) => update('academicAssessment', event.target.value)} className="mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2">
+            <select
+              value={selectedAcademicAssessment}
+              onChange={(event) => update('academicAssessment', event.target.value)}
+              disabled={!academicAssessmentAvailable}
+              aria-describedby={!academicAssessmentAvailable ? 'academic-assessment-unavailable' : undefined}
+              className="mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
+            >
               <option value="">Any assessment</option>
               <option value="meets">Academic criteria met</option>
               <option value="one-level-below">One level below</option>
               <option value="two-or-more-levels-below">Two or more levels below</option>
               <option value="not-assessed">Not assessed</option>
             </select>
+            {!academicAssessmentAvailable ? (
+              <span id="academic-assessment-unavailable" className="mt-1.5 block text-xs font-normal text-slate-500">
+                No minimum qualification is set for this vacancy.
+              </span>
+            ) : null}
           </label>
           <label className="text-sm font-medium text-slate-700">
             NYSC status

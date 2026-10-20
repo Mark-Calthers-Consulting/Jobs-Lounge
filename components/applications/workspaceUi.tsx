@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import type { ApplicationStatus } from '@/constants/enums'
 import type { AdminApplication, ApplicationStageTotals } from '@/types/types'
 import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
@@ -114,9 +115,20 @@ export const ErrorState = ({ retry }: { retry?: () => void }) => (
   </div>
 )
 
-export const EmptyState = ({ filtered = false }: { filtered?: boolean }) => (
+export const EmptyState = ({
+  filtered = false,
+  title,
+  description,
+  action,
+}: {
+  filtered?: boolean
+  title?: string
+  description?: string
+  action?: ReactNode
+}) => (
   <div className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center">
-    <p className="font-semibold text-slate-950">{filtered ? 'No applications match these filters' : 'No applications yet'}</p>
-    <p className="mt-1 text-sm text-slate-500">{filtered ? 'Clear or adjust the filters to widen the queue.' : 'New submissions will appear here.'}</p>
+    <p className="font-semibold text-slate-950">{title || (filtered ? 'No applications match these filters' : 'No applications yet')}</p>
+    <p className="mt-1 text-sm text-slate-500">{description || (filtered ? 'Clear or adjust the filters to widen the queue.' : 'New submissions will appear here.')}</p>
+    {action ? <div className="mt-4 flex justify-center">{action}</div> : null}
   </div>
 )

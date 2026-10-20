@@ -535,6 +535,7 @@ export type ApplicationJobSummary = {
     company?: string
     status: JobStatus
     archivedAt?: string
+    minimumAcademicQualification?: AcademicQualification | null
   }
   total: number
   byStatus: ApplicationStageTotals
