@@ -446,7 +446,7 @@ const CandidatesGrid = () => {
                 </h2>
                 <p className="mt-1 text-sm text-gray-600">
                     {isRegisteredView
-                        ? 'Accounts that have registered but have not submitted an application.'
+                        ? 'Every candidate account, including people who have not submitted an application.'
                         : 'People who have submitted at least one job application.'}
                 </p>
             </div>

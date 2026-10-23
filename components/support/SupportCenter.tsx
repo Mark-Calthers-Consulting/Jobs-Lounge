@@ -120,7 +120,7 @@ const staffTopics: readonly HelpTopic[] = [
   {
     category: 'Recruitment',
     title: 'Find candidates or registered users',
-    summary: 'Candidates have submitted at least one application. People without applications remain under Registered users on the same directory page.',
+    summary: 'Candidates have submitted at least one application. The Registered users view includes every candidate account, including people without applications.',
     href: '/admin-center/candidates',
     action: 'Open directory',
     permission: 'candidates:view',
