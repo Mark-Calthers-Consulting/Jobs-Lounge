@@ -11,6 +11,8 @@ import { FiCheckCircle } from 'react-icons/fi'
 import { toast } from 'sonner'
 import { DOCUMENT_URL_ERROR, isValidDocumentUrl } from '@/utils/documentUrl'
 import CvLinkGuidance from '@/components/CvLinkGuidance'
+import { useCandidateCvs } from '@/hooks/useCandidateCvs'
+import { myCvUrl } from '@/api/cvs'
 import { ApiError } from '@/api/errors'
 import { formatDateInTimeZone } from '@/utils/dateTime'
 import {
@@ -86,6 +88,9 @@ const ApplicationForm = ({
     const { data: hasApplied, isLoading: checkingStatus } = useCheckApplicationStatus(jobId, Boolean(user))
     const weeklyLimit = useWeeklyApplicationLimit(user?.role === 'user')
     const apply = useApplyToJob()
+    const cvQuery = useCandidateCvs(user?.role === 'user')
+    const [cvSource, setCvSource] = useState<'upload' | 'link' | null>(null)
+    const [cvDocumentId, setCvDocumentId] = useState<string | null>(null)
     const [cvLink, setCvLink] = useState<string | null>(null)
     const [cvLinkError, setCvLinkError] = useState('')
     const [coverLetterLink, setCoverLetterLink] = useState<string | null>(null)
@@ -109,10 +114,20 @@ const ApplicationForm = ({
     const academicEnforcementActive = academicQualificationEnforcementEnabled
         || Boolean(serverAcademicAssessment)
     const academicSubmissionBlocked = academicEnforcementActive && needsAcademicReview
+    const uploadedCvs = cvQuery.data?.items || []
+    const selectedCv = cvDocumentId === null
+        ? uploadedCvs[0]
+        : uploadedCvs.find((cv) => cv.id === cvDocumentId)
+    const useUploadedCv = (cvSource ?? (uploadedCvs.length ? 'upload' : 'link')) === 'upload'
 
     const submitApplication = async () => {
         const submittedCvLink = (cvLink ?? user?.cvLink ?? '').trim()
-        if (!isValidDocumentUrl(submittedCvLink)) {
+        if (useUploadedCv && !selectedCv) {
+            setCvLinkError('Choose a CV from your profile.')
+            document.getElementById('application-cv-upload')?.focus()
+            return
+        }
+        if (!useUploadedCv && !isValidDocumentUrl(submittedCvLink)) {
             setCvLinkError(DOCUMENT_URL_ERROR)
             document.getElementById('application-cv')?.focus()
             return
@@ -122,7 +137,7 @@ const ApplicationForm = ({
         try {
             await apply.mutateAsync({
                 jobId,
-                cvLink: submittedCvLink,
+                ...(useUploadedCv ? { cvDocumentId: selectedCv!.id } : { cvLink: submittedCvLink }),
                 // Explicitly send blank values so clearing the field does not restore the profile link.
                 coverLetterLink: (coverLetterLink ?? user?.coverLetterLink ?? '').trim(),
                 ...(note.trim() ? { note: note.trim() } : {}),
@@ -134,6 +149,9 @@ const ApplicationForm = ({
             if (error instanceof ApiError && error.code === 'WEEKLY_APPLICATION_LIMIT_REACHED') {
                 setSubmissionError(error.message)
                 void queryClient.invalidateQueries({ queryKey: ['weeklyApplicationLimit'] })
+            } else if (error instanceof ApiError && error.code === 'CV_NO_LONGER_AVAILABLE') {
+                setSubmissionError('That CV is no longer on your profile. Choose another CV and try again.')
+                void cvQuery.refetch()
             } else if (error instanceof ApiError && [
                 'ACADEMIC_QUALIFICATION_BELOW_MINIMUM',
                 'ACADEMIC_QUALIFICATION_REQUIRED',
@@ -160,7 +178,12 @@ const ApplicationForm = ({
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault()
         const submittedCvLink = (cvLink ?? user?.cvLink ?? '').trim()
-        if (!isValidDocumentUrl(submittedCvLink)) {
+        if (useUploadedCv && !selectedCv) {
+            setCvLinkError('Choose a CV from your profile.')
+            document.getElementById('application-cv-upload')?.focus()
+            return
+        }
+        if (!useUploadedCv && !isValidDocumentUrl(submittedCvLink)) {
             setCvLinkError(DOCUMENT_URL_ERROR)
             document.getElementById('application-cv')?.focus()
             return
@@ -175,7 +198,7 @@ const ApplicationForm = ({
         void submitApplication()
     }
 
-    if (loadingUser || checkingStatus || (user?.role === 'user' && weeklyLimit.isLoading)) {
+    if (loadingUser || checkingStatus || (user?.role === 'user' && (weeklyLimit.isLoading || cvQuery.isLoading))) {
         return <p role="status">Preparing your application…</p>
     }
     if (!user) {
@@ -229,26 +252,44 @@ const ApplicationForm = ({
             ) : null}
             {submissionError ? <p role="alert" className="mb-6 rounded-md border border-slate-200 bg-slate-50 p-4 text-base text-slate-800">{submissionError}</p> : null}
             <div className="border-b border-slate-200 pb-7">
-                <label htmlFor="application-cv" className={labelClass}>CV link</label>
-                {cvLoadedFromProfile && (
-                    <ProfileValueNotice>Loaded from your profile. You can replace it for this application.</ProfileValueNotice>
+                <h2 className={labelClass}>Choose your CV</h2>
+                {cvQuery.isError && <p role="alert" className="mt-2 text-sm text-red-700">Could not load your uploaded CVs. <button type="button" className="font-semibold underline" onClick={() => void cvQuery.refetch()}>Try again</button></p>}
+                {uploadedCvs.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-4 text-sm">
+                        <label className="flex items-center gap-2"><input type="radio" name="cv-source" checked={useUploadedCv} onChange={() => { setCvSource('upload'); setCvLinkError('') }} /> Uploaded CV</label>
+                        <label className="flex items-center gap-2"><input type="radio" name="cv-source" checked={!useUploadedCv} onChange={() => { setCvSource('link'); setCvLinkError('') }} /> CV link</label>
+                    </div>
                 )}
-                <CvLinkGuidance id="application-cv-help" />
-                <input
-                    id="application-cv"
-                    type="url"
-                    inputMode="url"
-                    required
-                    value={cvLink ?? user.cvLink ?? ''}
-                    onChange={(event) => {
-                        setCvLink(event.target.value)
-                        if (cvLinkError) setCvLinkError('')
-                    }}
-                    placeholder="https://drive.google.com/file/d/your-cv-file-id/view"
-                    aria-invalid={Boolean(cvLinkError)}
-                    aria-describedby={`application-cv-help${cvLinkError ? ' application-cv-error' : ''}`}
-                    className={`${fieldClass} ${cvLoadedFromProfile ? prefilledFieldClass : ''}`}
-                />
+                {useUploadedCv ? (
+                    <div className="mt-3">
+                        <label htmlFor="application-cv-upload" className="text-sm font-medium text-slate-800">CV from your profile</label>
+                        <select id="application-cv-upload" value={selectedCv?.id || ''} onChange={(event) => { setCvDocumentId(event.target.value); setCvLinkError('') }} className={fieldClass} aria-invalid={Boolean(cvLinkError)}>
+                            {!selectedCv && <option value="">Choose a CV</option>}
+                            {uploadedCvs.map((cv) => <option key={cv.id} value={cv.id}>{cv.name} ({cv.originalName})</option>)}
+                        </select>
+                        {selectedCv && <a href={myCvUrl(selectedCv.id)} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-sm font-semibold text-[#184aa2] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]">Open selected CV</a>}
+                        <p className="mt-2 text-sm text-slate-600">The selected CV will stay with this application, even if you change your profile later.</p>
+                    </div>
+                ) : (
+                    <div className="mt-3">
+                        <label htmlFor="application-cv" className="text-sm font-medium text-slate-800">CV link</label>
+                        {cvLoadedFromProfile && <ProfileValueNotice>Loaded from your profile. You can replace it for this application.</ProfileValueNotice>}
+                        <CvLinkGuidance id="application-cv-help" />
+                        <input
+                            id="application-cv"
+                            type="url"
+                            inputMode="url"
+                            required
+                            value={cvLink ?? user.cvLink ?? ''}
+                            onChange={(event) => { setCvLink(event.target.value); setCvLinkError('') }}
+                            placeholder="https://drive.google.com/file/d/your-cv-file-id/view"
+                            aria-invalid={Boolean(cvLinkError)}
+                            aria-describedby={`application-cv-help${cvLinkError ? ' application-cv-error' : ''}`}
+                            className={`${fieldClass} ${cvLoadedFromProfile ? prefilledFieldClass : ''}`}
+                        />
+                        {!uploadedCvs.length && cvQuery.data?.uploadEnabled && <Link href="/dashboard/profile" className="mt-2 inline-block text-sm font-semibold text-[#184aa2] underline">Upload a CV on your profile</Link>}
+                    </div>
+                )}
                 {cvLinkError ? (
                     <p id="application-cv-error" role="alert" className="mt-1 text-sm text-red-700">
                         {cvLinkError}

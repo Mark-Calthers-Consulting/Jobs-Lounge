@@ -12,6 +12,8 @@ import { FiAlertTriangle, FiArrowLeft, FiExternalLink, FiMail, FiPhone, FiTrash2
 import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
 import { formatDateInTimeZone } from '@/utils/dateTime'
 import { toast } from 'sonner'
+import { useQuery } from '@tanstack/react-query'
+import { applicationCvUrl, candidateCvUrl, getCandidateCvs } from '@/api/cvs'
 
 const formatDate = (value: string | undefined, timeZone: string, options?: Intl.DateTimeFormatOptions) => value
     ? formatDateInTimeZone(value, timeZone, options)
@@ -75,6 +77,10 @@ const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
     const [confirmationEmail, setConfirmationEmail] = useState('')
     const [deleteError, setDeleteError] = useState('')
     const candidateQuery = useAdminCandidate(candidateId)
+    const uploadedCvs = useQuery({
+        queryKey: ['candidateCvs', candidateId],
+        queryFn: () => getCandidateCvs(candidateId),
+    })
     const deleteCandidate = useDeleteCandidateAccount()
     const applicationsQuery = useCandidateApplications(
         candidateId,
@@ -117,9 +123,13 @@ const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
                 candidateId,
                 confirmationEmail,
             })
-            toast.success(
-                `${isRegisteredUser ? 'Registered user' : 'Candidate'} deleted with ${result.deletedApplications} ${result.deletedApplications === 1 ? 'application' : 'applications'}.`,
-            )
+            if (result.cvCleanupPending) {
+                toast.warning('Account deleted, but stored CV cleanup is pending. Run the orphan-CV cleanup on the backend.')
+            } else {
+                toast.success(
+                    `${isRegisteredUser ? 'Registered user' : 'Candidate'} deleted with ${result.deletedApplications} ${result.deletedApplications === 1 ? 'application' : 'applications'}.`,
+                )
+            }
             router.replace(directoryHref)
         } catch (error) {
             const message = error instanceof Error
@@ -241,7 +251,7 @@ const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
                                             </div>
                                             {application.note && <div className="mt-4 rounded-md bg-gray-50 p-3"><p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Candidate note</p><p className="mt-1 whitespace-pre-wrap text-sm text-gray-700">{application.note}</p></div>}
                                             <div className="mt-4 flex flex-wrap gap-4">
-                                                <DocumentLink href={application.cvLink}>Submitted CV</DocumentLink>
+                                                <DocumentLink href={application.cvDocumentId ? applicationCvUrl(application._id) : application.cvLink}>Submitted CV</DocumentLink>
                                                 {application.coverLetterLink && <DocumentLink href={application.coverLetterLink}>Submitted cover letter</DocumentLink>}
                                             </div>
                                         </article>
@@ -266,16 +276,20 @@ const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
                     <section className="rounded-xl border border-gray-200 bg-white p-5">
                         <h2 className="font-semibold text-gray-950">Documents</h2>
                         <div className="mt-4 flex flex-col items-start gap-3">
-                            <DocumentLink href={candidate.cvLink}>Profile CV</DocumentLink>
+                            {uploadedCvs.isLoading && <p role="status" className="text-sm text-gray-500">Loading CVs…</p>}
+                            {uploadedCvs.isError && <p role="alert" className="text-sm text-red-700">Could not load uploaded CVs. <button type="button" onClick={() => void uploadedCvs.refetch()} className="font-semibold underline">Try again</button></p>}
+                            {uploadedCvs.data?.map((cv) => <DocumentLink key={cv.id} href={candidateCvUrl(candidateId, cv.id)}>{cv.name}</DocumentLink>)}
+                            {candidate.cvLink && <DocumentLink href={candidate.cvLink}>Legacy CV link</DocumentLink>}
+                            {uploadedCvs.data?.length === 0 && !candidate.cvLink && <p className="text-sm text-gray-500">No CV on profile</p>}
                             <DocumentLink href={candidate.coverLetterLink}>Profile cover letter</DocumentLink>
                         </div>
                     </section>
                     <details className="group rounded-xl border border-gray-200 bg-white p-5">
                         <summary className="cursor-pointer font-semibold text-gray-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]">Personal details</summary>
-                        <p className="mt-2 text-xs text-gray-500">Candidate-submitted optional information.</p>
+                        <p className="mt-2 text-xs text-gray-500">Details provided by the candidate.</p>
                         <dl className="mt-5 space-y-4">
                             <Detail label="Other name" value={candidate.otherName} />
-                            <Detail label="Gender" value={candidate.gender} />
+                            <Detail label="Gender" value={candidate.gender === 'prefer-not-to-say' ? 'Prefer not to say' : candidate.gender} />
                             <Detail label="Date of birth" value={candidate.dob ? formatCalendarDate(candidate.dob) : undefined} />
                             <Detail label="Marital status" value={candidate.maritalStatus} />
                             <Detail label="Residential address" value={candidate.residentialAddress} />

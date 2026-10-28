@@ -12,6 +12,7 @@ import { useGetSavedJobs } from '@/hooks/useUsers'
 import { useUnsaveJob } from '@/hooks/useVacancies'
 import type { Job, JobApplication } from '@/types/types'
 import { formatDateInTimeZone } from '@/utils/dateTime'
+import { myCvUrl } from '@/api/cvs'
 
 type CandidateJobActivityProps = {
   view: 'saved' | 'applications'
@@ -85,7 +86,7 @@ const SavedVacancyCard = ({ job }: { job: Job }) => {
 const ApplicationCard = ({ application }: { application: JobApplication }) => {
   const { timeZone } = usePlatformSettings()
   const job = application.job
-  const cv = safeDocumentLink(application.cvLink)
+  const cv = application.cvDocumentId ? myCvUrl(application.cvDocumentId) : safeDocumentLink(application.cvLink)
   const coverLetter = safeDocumentLink(application.coverLetterLink)
   const vacancyAvailable = job?.status === 'Open'
 

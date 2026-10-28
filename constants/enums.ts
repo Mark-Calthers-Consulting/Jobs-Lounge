@@ -54,7 +54,7 @@ export const BLOG_CATEGORIES = [
   "General",
 ] as const;
 export const USER_ROLES = ["user", "admin", "recruiter", "super-admin"] as const;
-export const USER_GENDERS = ["male", "female", "other"] as const;
+export const USER_GENDERS = ["male", "female", "other", "prefer-not-to-say"] as const;
 export const USER_MARITAL_STATUSES = ["single", "married", "divorced", "widowed"] as const;
 export const USER_NYSC_STATUSES = ["completed", "exempted", "not-started"] as const;
 

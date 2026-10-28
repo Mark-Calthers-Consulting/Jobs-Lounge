@@ -12,6 +12,7 @@ let remaining = 5
 let profileCoverLetterLink: string | undefined
 let highestEducation = "Bachelor's degree"
 let academicEnforcementEnabled = false
+let uploadedCvs: Array<{ id: string; name: string; originalName: string }> = []
 const refetchUser = vi.fn()
 
 vi.mock('@/hooks/useUsers', () => ({
@@ -38,6 +39,10 @@ vi.mock('@/components/PlatformSettingsProvider', () => ({
 
 vi.mock('@/hooks/useVacancies', () => ({
     useCheckApplicationStatus: () => ({ data: false, isLoading: false }),
+}))
+
+vi.mock('@/hooks/useCandidateCvs', () => ({
+    useCandidateCvs: () => ({ data: { items: uploadedCvs, uploadEnabled: true }, isLoading: false, isError: false }),
 }))
 
 vi.mock('@/hooks/useApplications', () => ({
@@ -78,6 +83,7 @@ describe('ApplicationForm profile completion prompt', () => {
         profileCoverLetterLink = undefined
         highestEducation = "Bachelor's degree"
         academicEnforcementEnabled = false
+        uploadedCvs = []
         refetchUser.mockReset().mockResolvedValue({})
         mutateAsync.mockReset().mockResolvedValue({})
         replace.mockReset()
@@ -254,5 +260,18 @@ describe('ApplicationForm profile completion prompt', () => {
         expect(screen.getByText(/two or more levels below the requirement/)).toBeInTheDocument()
         expect(screen.getByRole('button', { name: 'Recheck qualification' })).toBeInTheDocument()
         expect(screen.queryByRole('button', { name: 'Apply anyway' })).not.toBeInTheDocument()
+    })
+
+    it('submits the chosen uploaded CV instead of a public link', async () => {
+        profileComplete = true
+        uploadedCvs = [
+            { id: 'cv-one', name: 'General', originalName: 'general.pdf' },
+            { id: 'cv-two', name: 'Design', originalName: 'design.pdf' },
+        ]
+        render(<ApplicationForm jobId="job-1" jobTitle="Designer" />)
+        fireEvent.change(screen.getByLabelText('CV from your profile'), { target: { value: 'cv-two' } })
+        fireEvent.click(screen.getByRole('button', { name: 'Submit application for Designer' }))
+        await waitFor(() => expect(mutateAsync).toHaveBeenCalledWith(expect.objectContaining({ cvDocumentId: 'cv-two' })))
+        expect(mutateAsync.mock.calls[0][0]).not.toHaveProperty('cvLink')
     })
 })

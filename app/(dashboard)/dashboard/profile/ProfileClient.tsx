@@ -14,9 +14,10 @@ import { useEditUserDetails, useUser } from '@/hooks/useUsers'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, type ReactNode } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
-import { FiCheck, FiExternalLink } from 'react-icons/fi'
+import { FiCheck, FiChevronDown, FiExternalLink } from 'react-icons/fi'
 import { toast } from 'sonner'
 import CvLinkGuidance from '@/components/CvLinkGuidance'
+import CvManager from '@/components/CvManager'
 import { ACADEMIC_QUALIFICATIONS } from '@/constants/enums'
 
 const inputClass = 'mt-1.5 w-full rounded-md border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-[#184aa2] focus:ring-2 focus:ring-[#184aa2]/15'
@@ -71,15 +72,24 @@ const Section = ({
     title,
     description,
     children,
+    number,
+    optional = false,
+    cv = false,
 }: {
     title: string
     description: string
     children: ReactNode
+    number?: number
+    optional?: boolean
+    cv?: boolean
 }) => (
-    <section className="rounded-xl border border-gray-200 bg-white p-5 sm:p-6">
+    <section className={`rounded-xl border p-5 sm:p-6 ${cv ? 'border-blue-200 bg-blue-50/20' : 'border-slate-200 bg-white'}`}>
         <div className="mb-5">
-            <h2 className="text-lg font-semibold text-gray-950">{title}</h2>
-            <p className="mt-1 text-sm text-gray-600">{description}</p>
+            <h2 className="flex flex-wrap items-center gap-2 text-lg font-semibold text-slate-950">
+                {number ? `${number}. ` : ''}{title}
+                {optional && <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">Optional</span>}
+            </h2>
+            <p className="mt-1 text-sm text-slate-600">{description}</p>
         </div>
         {children}
     </section>
@@ -108,7 +118,7 @@ const ProfileClient = () => {
 
     const identityForm = useForm<IdentityProfileValues>({
         resolver: zodResolver(identityProfileSchema),
-        defaultValues: { firstName: '', middleName: '', lastName: '', telephone: '', whatsapp: '' },
+        defaultValues: { firstName: '', middleName: '', otherName: '', lastName: '', dob: '', gender: '', telephone: '', whatsapp: '' },
     })
     const professionalForm = useForm<ProfessionalProfileValues>({
         resolver: zodResolver(professionalProfileSchema),
@@ -125,7 +135,7 @@ const ProfileClient = () => {
     })
     const personalForm = useForm<PersonalProfileValues>({
         resolver: zodResolver(personalProfileSchema),
-        defaultValues: { otherName: '', gender: '', dob: '', maritalStatus: '', residentialAddress: '' },
+        defaultValues: { maritalStatus: '', residentialAddress: '' },
     })
     const nyscStatus = useWatch({
         control: professionalForm.control,
@@ -137,38 +147,40 @@ const ProfileClient = () => {
         identityForm.reset({
             firstName: user.firstName ?? '',
             middleName: user.middleName ?? '',
+            otherName: user.otherName ?? '',
             lastName: user.lastName ?? '',
+            dob: user.dob ? user.dob.slice(0, 10) : '',
+            gender: user.gender ?? '',
             telephone: user.telephone ?? '',
             whatsapp: user.whatsapp ?? '',
-        })
+        }, { keepDirtyValues: true })
         professionalForm.reset({
             highestEducation: user.highestEducation ?? '',
             nyscStatus: user.nyscStatus ?? 'not-started',
             yearCompletedNysc: user.yearCompletedNysc?.toString() ?? '',
             postNyscExperience: user.postNyscExperience?.toString() ?? '',
-        })
+        }, { keepDirtyValues: true })
         documentsForm.reset({
             cvLink: user.cvLink ?? '',
             coverLetterLink: user.coverLetterLink ?? '',
-        })
+        }, { keepDirtyValues: true })
         personalForm.reset({
-            otherName: user.otherName ?? '',
-            gender: user.gender ?? '',
-            dob: user.dob ? user.dob.slice(0, 10) : '',
             maritalStatus: user.maritalStatus ?? '',
             residentialAddress: user.residentialAddress ?? '',
-        })
+        }, { keepDirtyValues: true })
     }, [user, identityForm, professionalForm, documentsForm, personalForm])
 
     const save = async (
         mutation: ReturnType<typeof useEditUserDetails>,
         setRootError: (message: string) => void,
         payload: Record<string, unknown>,
+        onSaved: () => void,
     ) => {
         try {
             const profileWasComplete = user?.profileCompletion?.complete === true
             const updatedUser = await mutation.mutateAsync(payload)
             const profileIsNowComplete = updatedUser?.profileCompletion?.complete === true
+            onSaved()
 
             toast.success(
                 !profileWasComplete && profileIsNowComplete
@@ -195,18 +207,18 @@ const ProfileClient = () => {
     const personalDirty = personalForm.formState.dirtyFields
 
     return (
-        <div className="mx-auto max-w-4xl space-y-5">
+        <div className="mx-auto max-w-5xl space-y-5 font-sans">
             <header>
                 <h1 className="text-3xl font-bold text-gray-950">My profile</h1>
                 <p className="mt-2 text-gray-600">Keep your information current so recruiters can review your applications confidently.</p>
             </header>
 
             {completion && (
-                <section aria-labelledby="profile-progress-title" className="rounded-xl border border-blue-100 bg-blue-50/60 p-5">
+                <section aria-labelledby="profile-progress-title" className="rounded-xl border border-blue-200 bg-blue-50/70 p-5 sm:p-6">
                     <div className="flex items-start justify-between gap-4">
                         <div>
-                            <h2 id="profile-progress-title" className="font-semibold text-[#123d87]">
-                                {completion.complete ? 'Profile complete' : `${completion.completedSteps} of ${completion.totalSteps} steps complete`}
+                            <h2 id="profile-progress-title" className="font-semibold text-slate-950">
+                                {completion.complete ? 'Profile complete' : `${completion.completedSteps} of ${completion.totalSteps} sections complete`}
                             </h2>
                             <p className="mt-1 text-sm text-gray-700">
                                 {completion.complete
@@ -216,14 +228,14 @@ const ProfileClient = () => {
                         </div>
                         <span className="text-sm font-semibold text-[#184aa2]">{completion.percentage}%</span>
                     </div>
-                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-white" aria-hidden="true">
+                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-blue-100" role="progressbar" aria-label="Profile completion" aria-valuenow={completion.percentage} aria-valuemin={0} aria-valuemax={100}>
                         <div className="h-full rounded-full bg-[#184aa2]" style={{ width: `${completion.percentage}%` }} />
                     </div>
-                    <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-                        {completion.steps.map((step) => (
-                            <li key={step.id} className="flex items-center gap-2 text-sm text-gray-700">
-                                <span className={`grid h-5 w-5 place-items-center rounded-full ${step.complete ? 'bg-emerald-100 text-emerald-700' : 'border border-gray-300 bg-white text-gray-400'}`}>
-                                    {step.complete && <FiCheck aria-hidden="true" size={13} />}
+                    <ul className="mt-5 grid gap-3 sm:grid-cols-3">
+                        {completion.steps.map((step, index) => (
+                            <li key={step.id} className="flex items-center gap-3 text-sm font-medium text-slate-700">
+                                <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold ${step.complete ? 'bg-[#184aa2] text-white' : 'bg-blue-100 text-slate-700'}`}>
+                                    {step.complete ? <FiCheck aria-hidden="true" size={15} /> : index + 1}
                                 </span>
                                 {step.label}
                             </li>
@@ -232,7 +244,7 @@ const ProfileClient = () => {
                 </section>
             )}
 
-            <Section title="Identity and contact" description="Your primary contact details. Your email address is managed through your account.">
+            <Section number={1} title="Identity and contact" description="Your primary contact details. Your email address is managed through your account.">
                 <form
                     className="space-y-5"
                     noValidate
@@ -244,6 +256,7 @@ const ProfileClient = () => {
                             middleName: emptyToNull(values.middleName),
                             whatsapp: emptyToNull(values.whatsapp),
                         },
+                        () => identityForm.reset(identityForm.getValues()),
                     ))}
                 >
                     <div className="grid gap-4 sm:grid-cols-2">
@@ -253,8 +266,23 @@ const ProfileClient = () => {
                         <Field id="profile-middle-name" label="Middle name" optional saved={isSavedProfileValue(user.middleName, identityDirty.middleName)} error={identityForm.formState.errors.middleName?.message}>
                             <input id="profile-middle-name" className={profileInputClass(isSavedProfileValue(user.middleName, identityDirty.middleName))} {...identityForm.register('middleName')} />
                         </Field>
+                        <Field id="profile-other-name" label="Other name" saved={isSavedProfileValue(user.otherName, identityDirty.otherName)} error={identityForm.formState.errors.otherName?.message}>
+                            <input id="profile-other-name" className={profileInputClass(isSavedProfileValue(user.otherName, identityDirty.otherName))} aria-invalid={Boolean(identityForm.formState.errors.otherName)} {...identityForm.register('otherName')} />
+                        </Field>
                         <Field id="profile-last-name" label="Last name" saved={isSavedProfileValue(user.lastName, identityDirty.lastName)} error={identityForm.formState.errors.lastName?.message}>
                             <input id="profile-last-name" className={profileInputClass(isSavedProfileValue(user.lastName, identityDirty.lastName))} aria-invalid={Boolean(identityForm.formState.errors.lastName)} {...identityForm.register('lastName')} />
+                        </Field>
+                        <Field id="profile-dob" label="Date of birth" saved={isSavedProfileValue(user.dob, identityDirty.dob)} error={identityForm.formState.errors.dob?.message}>
+                            <input id="profile-dob" type="date" max={new Date().toISOString().slice(0, 10)} className={profileInputClass(isSavedProfileValue(user.dob, identityDirty.dob))} aria-invalid={Boolean(identityForm.formState.errors.dob)} {...identityForm.register('dob')} />
+                        </Field>
+                        <Field id="profile-gender" label="Gender" saved={isSavedProfileValue(user.gender, identityDirty.gender)} error={identityForm.formState.errors.gender?.message}>
+                            <select id="profile-gender" className={profileInputClass(isSavedProfileValue(user.gender, identityDirty.gender))} aria-invalid={Boolean(identityForm.formState.errors.gender)} aria-describedby={identityForm.formState.errors.gender ? 'profile-gender-error' : undefined} {...identityForm.register('gender')}>
+                                <option value="" disabled>Select an option</option>
+                                <option value="female">Female</option>
+                                <option value="male">Male</option>
+                                <option value="other">Other</option>
+                                <option value="prefer-not-to-say">Prefer not to say</option>
+                            </select>
                         </Field>
                         <Field id="profile-email" label="Email address" saved>
                             <input id="profile-email" className={`${profileInputClass(true)} cursor-not-allowed text-slate-600`} value={user.email} readOnly />
@@ -267,11 +295,11 @@ const ProfileClient = () => {
                         </Field>
                     </div>
                     <RootError message={identityForm.formState.errors.root?.message} />
-                    <SaveButton pending={identityMutation.isPending} />
+                    <div className="flex justify-end"><SaveButton pending={identityMutation.isPending} /></div>
                 </form>
             </Section>
 
-            <Section title="Professional profile" description="Tell recruiters about your education and experience.">
+            <Section number={2} title="Professional profile" description="Tell recruiters about your education and experience.">
                 <form
                     className="space-y-5"
                     noValidate
@@ -286,6 +314,7 @@ const ProfileClient = () => {
                                 : null,
                             postNyscExperience: Number(values.postNyscExperience),
                         },
+                        () => professionalForm.reset(professionalForm.getValues()),
                     ))}
                 >
                     <div className="grid gap-4 sm:grid-cols-2">
@@ -317,11 +346,22 @@ const ProfileClient = () => {
                         </Field>
                     </div>
                     <RootError message={professionalForm.formState.errors.root?.message} />
-                    <SaveButton pending={professionalMutation.isPending} />
+                    <div className="flex justify-end"><SaveButton pending={professionalMutation.isPending} /></div>
                 </form>
             </Section>
 
-            <Section title="Documents" description="Use shareable links that recruiters can open without requesting access.">
+            <Section number={3} cv title="CV" description="Upload a CV and choose which one to use when you apply.">
+                <CvManager />
+                <div className="mt-6 flex items-center gap-4" role="separator" aria-label="Or add a CV link instead">
+                    <span className="h-px flex-1 bg-slate-200" aria-hidden="true" />
+                    <span className="whitespace-nowrap text-sm font-medium text-slate-500">Or add a CV link instead</span>
+                    <span className="h-px flex-1 bg-slate-200" aria-hidden="true" />
+                </div>
+                <details className="group mt-4 rounded-lg border border-slate-200 bg-white">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2] [&::-webkit-details-marker]:hidden">
+                        <span>Add a CV link <span className="ml-1 font-normal text-slate-500">Optional</span></span>
+                        <FiChevronDown aria-hidden="true" className="transition-transform group-open:rotate-180" />
+                    </summary>
                 <form
                     className="space-y-5"
                     noValidate
@@ -332,10 +372,14 @@ const ProfileClient = () => {
                             cvLink: values.cvLink,
                             coverLetterLink: emptyToNull(values.coverLetterLink),
                         },
+                        () => documentsForm.reset(documentsForm.getValues()),
                     ))}
                 >
-                    <Field id="profile-cv" label="CV link" saved={isSavedProfileValue(user.cvLink, documentsDirty.cvLink)} error={documentsForm.formState.errors.cvLink?.message}>
+                    <div className="border-t border-slate-200 px-4 py-5 sm:px-5">
+                    <div className="space-y-5">
+                    <Field id="profile-cv" label="CV link" optional saved={isSavedProfileValue(user.cvLink, documentsDirty.cvLink)} error={documentsForm.formState.errors.cvLink?.message}>
                         <>
+                            <p className="mt-1 text-sm text-slate-600">Add a link to your CV or keep one you previously saved. Uploaded CVs do not need a public link.</p>
                             <CvLinkGuidance id="profile-cv-help" />
                             <input
                                 id="profile-cv"
@@ -352,7 +396,7 @@ const ProfileClient = () => {
                     <Field id="profile-cover-letter" label="Cover-letter link" optional saved={isSavedProfileValue(user.coverLetterLink, documentsDirty.coverLetterLink)} error={documentsForm.formState.errors.coverLetterLink?.message}>
                         <input id="profile-cover-letter" type="url" inputMode="url" placeholder="https://drive.google.com/file/d/your-cover-letter-file-id/view" className={profileInputClass(isSavedProfileValue(user.coverLetterLink, documentsDirty.coverLetterLink))} {...documentsForm.register('coverLetterLink')} />
                     </Field>
-                    <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex flex-wrap items-center justify-end gap-3">
                         <SaveButton pending={documentsMutation.isPending} />
                         {currentCvUrl && (
                             <a href={currentCvUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm font-medium text-[#184aa2] underline-offset-4 hover:underline">
@@ -361,10 +405,13 @@ const ProfileClient = () => {
                         )}
                     </div>
                     <RootError message={documentsForm.formState.errors.root?.message} />
+                    </div>
+                    </div>
                 </form>
+                </details>
             </Section>
 
-            <Section title="Optional personal details" description="These details are optional and do not affect profile completion.">
+            <Section title="Additional details" optional description="These details are optional and do not affect profile completion.">
                 <form
                     className="space-y-5"
                     noValidate
@@ -372,29 +419,13 @@ const ProfileClient = () => {
                         personalMutation,
                         (message) => personalForm.setError('root', { message }),
                         {
-                            otherName: emptyToNull(values.otherName),
-                            gender: values.gender || null,
-                            dob: values.dob || null,
                             maritalStatus: values.maritalStatus || null,
                             residentialAddress: emptyToNull(values.residentialAddress),
                         },
+                        () => personalForm.reset(personalForm.getValues()),
                     ))}
                 >
                     <div className="grid gap-4 sm:grid-cols-2">
-                        <Field id="profile-other-name" label="Other name" optional saved={isSavedProfileValue(user.otherName, personalDirty.otherName)} error={personalForm.formState.errors.otherName?.message}>
-                            <input id="profile-other-name" className={profileInputClass(isSavedProfileValue(user.otherName, personalDirty.otherName))} {...personalForm.register('otherName')} />
-                        </Field>
-                        <Field id="profile-gender" label="Gender" optional saved={isSavedProfileValue(user.gender, personalDirty.gender)} error={personalForm.formState.errors.gender?.message}>
-                            <select id="profile-gender" className={profileInputClass(isSavedProfileValue(user.gender, personalDirty.gender))} {...personalForm.register('gender')}>
-                                <option value="">Prefer not to provide</option>
-                                <option value="female">Female</option>
-                                <option value="male">Male</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </Field>
-                        <Field id="profile-dob" label="Date of birth" optional saved={isSavedProfileValue(user.dob, personalDirty.dob)} error={personalForm.formState.errors.dob?.message}>
-                            <input id="profile-dob" type="date" max={new Date().toISOString().slice(0, 10)} className={profileInputClass(isSavedProfileValue(user.dob, personalDirty.dob))} {...personalForm.register('dob')} />
-                        </Field>
                         <Field id="profile-marital-status" label="Marital status" optional saved={isSavedProfileValue(user.maritalStatus, personalDirty.maritalStatus)} error={personalForm.formState.errors.maritalStatus?.message}>
                             <select id="profile-marital-status" className={profileInputClass(isSavedProfileValue(user.maritalStatus, personalDirty.maritalStatus))} {...personalForm.register('maritalStatus')}>
                                 <option value="">Prefer not to provide</option>
@@ -409,7 +440,7 @@ const ProfileClient = () => {
                         <textarea id="profile-address" rows={3} maxLength={500} className={profileInputClass(isSavedProfileValue(user.residentialAddress, personalDirty.residentialAddress))} {...personalForm.register('residentialAddress')} />
                     </Field>
                     <RootError message={personalForm.formState.errors.root?.message} />
-                    <SaveButton pending={personalMutation.isPending} />
+                    <div className="flex justify-end"><SaveButton pending={personalMutation.isPending} /></div>
                 </form>
             </Section>
         </div>

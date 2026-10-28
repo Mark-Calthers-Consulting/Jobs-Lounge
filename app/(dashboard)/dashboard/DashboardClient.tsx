@@ -96,15 +96,15 @@ const DashboardClient: React.FC = () => {
                 </p>
             ) : null}
 
-            {user && !user.cvLink ? (
+            {user && !user.cvLink && !user.cvDocumentIds?.length ? (
                 <aside className="my-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <h2 className="text-sm font-semibold text-amber-950">A CV is required to apply</h2>
-                            <p className="mt-1 text-sm text-amber-800">Add a shareable CV link before submitting an application.</p>
+                            <p className="mt-1 text-sm text-amber-800">Upload a CV to your profile before submitting an application.</p>
                         </div>
                         <Link href="/dashboard/profile" className="text-sm font-semibold text-amber-900 underline underline-offset-4">
-                            Add CV link
+                            Add a CV
                         </Link>
                     </div>
                 </aside>

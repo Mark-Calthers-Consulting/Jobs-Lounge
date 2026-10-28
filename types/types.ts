@@ -162,6 +162,7 @@ export type User = {
   nyscStatus?: UserNyscStatus
   postNyscExperience?: number
   cvLink?: string
+  cvDocumentIds?: string[]
   coverLetterLink?: string
   notificationPreferences?: NotificationPreferences
   createdAt: string
@@ -169,7 +170,7 @@ export type User = {
 }
 
 export type ProfileCompletionStep = {
-  id: 'identity' | 'education' | 'experience' | 'cv'
+  id: 'identity' | 'professional' | 'cv'
   label: string
   complete: boolean
   missingFields: string[]
@@ -267,7 +268,8 @@ export type BlogPageProps = {
 
 export type ApplyPayload = {
   jobId: string
-  cvLink: string
+  cvLink?: string
+  cvDocumentId?: string
   coverLetterLink?: string
   note?: string
 }
@@ -289,6 +291,7 @@ export type JobApplication = {
   job: Pick<Job, '_id' | 'title' | 'company' | 'location' | 'workMode' | 'jobType' | 'status' | 'deadline'> | null
   applicant?: Pick<User, '_id' | 'name' | 'firstName' | 'middleName' | 'lastName' | 'email' | 'telephone' | 'cvLink' | 'coverLetterLink'> | null
   cvLink?: string
+  cvDocumentId?: string
   coverLetterLink?: string
   note?: string
   createdAt: string
@@ -421,6 +424,7 @@ export type AdminApplication = {
   postNyscExperience?: number
   profileCompleted?: boolean
   cvLink?: string
+  cvDocumentId?: string
   coverLetterLink?: string
   note?: string
   academicAssessment?: AcademicAssessment
@@ -551,6 +555,7 @@ export type ApplicationDetail = {
     workflowVersion: number
     statusUpdatedAt?: string
     cvLink?: string
+    cvDocumentId?: string
     coverLetterLink?: string
     note?: string
     candidateSnapshot?: Partial<User>
@@ -727,6 +732,7 @@ export type CandidateApplication = {
   job: Pick<Job, '_id' | 'title' | 'company' | 'status'> | null
   status: ApplicationStatus
   cvLink?: string
+  cvDocumentId?: string
   coverLetterLink?: string
   note?: string
   createdAt: string
@@ -738,6 +744,7 @@ export type CandidateDeletionResult = {
   deletedApplications: number
   deletedApplicationActivities: number
   deletedExportRequests: number
+  cvCleanupPending?: number
 }
 
 export type DashboardStats = {

@@ -34,7 +34,7 @@ export const metadata: Metadata = {
 const steps = [
   {
     title: 'Create your profile',
-    description: 'Tell us about your experience and add a CV link recruiters can access.',
+    description: 'Tell us about your experience and upload a CV for recruiters to review.',
   },
   {
     title: 'Explore vacancies',
@@ -76,7 +76,7 @@ const faqs = [
   },
   {
     question: 'What do I need before I apply?',
-    answer: 'You need a valid CV link beginning with http:// or https://. Make sure recruiters can open the link without signing in or requesting access.',
+    answer: 'Add a PDF or DOCX CV to your profile and choose it when you apply. Existing shareable CV links can still be used.',
   },
   {
     question: 'Can I apply for more than one vacancy?',
@@ -88,7 +88,7 @@ const faqs = [
   },
   {
     question: 'Can I change my CV after applying?',
-    answer: 'You can update the CV link on your profile for future applications. An application you have already submitted keeps the document link supplied at the time you applied.',
+    answer: 'Yes. You can keep up to two named CVs on your profile and choose one for each application. Applications already submitted retain the CV you selected at the time.',
   },
   {
     question: 'How does Jobs Lounge recommend vacancies?',

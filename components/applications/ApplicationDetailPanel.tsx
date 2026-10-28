@@ -14,6 +14,7 @@ import Modal from '@/components/Modal'
 import { ErrorState, formatDate, LoadingState, STAGES, StatusBadge } from './workspaceUi'
 import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
 import AcademicAssessmentBadge from './AcademicAssessmentBadge'
+import { applicationCvUrl } from '@/api/cvs'
 
 const safeDocumentLink = (value?: string) => {
   if (!value) return undefined
@@ -51,7 +52,7 @@ export default function ApplicationDetailPanel({
   if (detail.isError || !detail.data) return <ErrorState retry={() => void detail.refetch()} />
 
   const { application, candidate, duplicateSignal } = detail.data
-  const cv = safeDocumentLink(application.cvLink)
+  const cv = application.cvDocumentId ? applicationCvUrl(applicationId) : safeDocumentLink(application.cvLink)
   const coverLetter = safeDocumentLink(application.coverLetterLink)
   const liveCv = safeDocumentLink(candidate?.cvLink)
   const liveCoverLetter = safeDocumentLink(candidate?.coverLetterLink)
@@ -193,7 +194,7 @@ export default function ApplicationDetailPanel({
         <section>
           <h3 className="font-semibold text-slate-950">Submitted with this application</h3>
           <div className="mt-3 flex flex-wrap gap-2">
-            {cv ? <a href={cv} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white">Open submitted CV</a> : <span className="text-sm text-slate-500">No valid CV link</span>}
+            {cv ? <a href={cv} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white">Open submitted CV</a> : <span className="text-sm text-slate-500">No CV available</span>}
             {coverLetter ? <a href={coverLetter} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold">Open submitted cover letter</a> : null}
           </div>
           {application.note ? <div className="mt-4 rounded-lg bg-slate-50 p-4 text-sm whitespace-pre-wrap text-slate-700">{application.note}</div> : null}
