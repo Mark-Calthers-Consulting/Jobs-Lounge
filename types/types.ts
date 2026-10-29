@@ -511,6 +511,39 @@ export type ApplicationAnalyticsSummary = {
     month: number
     allTime: number
   }
+  recruitment: {
+    period: {
+      fromDate: string
+      throughDate: string
+      previousFromDate: string
+      previousThroughDate: string
+    }
+    applications: {
+      current: number
+      previous: number
+      distinctApplicants: number
+      daily: Array<{ date: string; count: number }>
+      currentStages: ApplicationStageTotals
+    }
+    workload: {
+      pendingOlderThanSevenDays: number
+      openVacanciesWithoutApplications: number
+    }
+    candidates: {
+      registered: number
+      profilesComplete: number
+      everApplied: number
+    }
+    topVacancies: Array<{
+      jobId: string
+      title: string
+      company: string | null
+      status: JobStatus | null
+      archived: boolean
+      available: boolean
+      applications: number
+    }>
+  }
   confirmations: {
     queued: number
     sent: number

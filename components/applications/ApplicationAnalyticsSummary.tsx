@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import {
   PiArrowsClockwise,
   PiCheckCircle,
@@ -8,8 +9,78 @@ import {
 } from 'react-icons/pi'
 import { useApplicationAnalyticsSummary } from '@/hooks/useApplicationWorkspace'
 import { formatDateInTimeZone } from '@/utils/dateTime'
+import { STAGES } from './workspaceUi'
+import type { ApplicationAnalyticsSummary as AnalyticsSummary } from '@/types/types'
 
 const number = (value: number) => value.toLocaleString('en-NG')
+const calendarDate = (value: string) => new Intl.DateTimeFormat('en-NG', {
+  day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC',
+}).format(new Date(`${value}T12:00:00.000Z`))
+
+const comparison = (current: number, previous: number) => {
+  if (previous === 0) return current === 0
+    ? 'No applications in either period'
+    : 'No applications in the previous period'
+  const difference = current - previous
+  if (difference === 0) return 'The same as the previous period'
+  return `${number(Math.abs(difference))} ${difference > 0 ? 'more' : 'fewer'} than the previous period`
+}
+
+const DailyTrend = ({ recruitment }: { recruitment: AnalyticsSummary['recruitment'] }) => {
+  const { daily, current, previous, distinctApplicants } = recruitment.applications
+  const highest = Math.max(1, ...daily.map((day) => day.count))
+  const { fromDate, throughDate, previousFromDate, previousThroughDate } = recruitment.period
+
+  return (
+    <section aria-labelledby="application-trend-heading" className="rounded-xl border border-slate-200 bg-white p-6">
+      <div className="flex flex-wrap items-start justify-between gap-6">
+        <div>
+          <h2 id="application-trend-heading" className="text-xl font-semibold text-slate-950 text-balance">Application trend</h2>
+          <p className="mt-1 text-sm text-slate-600 text-pretty">
+            {calendarDate(fromDate)} to {calendarDate(throughDate)} · 30 completed calendar days
+          </p>
+        </div>
+        <Link href="/admin-center/applications/inbox" className="text-sm font-semibold text-blue-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2">
+          Open application inbox
+        </Link>
+      </div>
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        <div><p className="text-sm text-slate-600">Applications</p><p className="mt-1 text-3xl font-semibold tabular-nums text-slate-950">{number(current)}</p></div>
+        <div><p className="text-sm text-slate-600">Previous 30 days</p><p className="mt-1 text-3xl font-semibold tabular-nums text-slate-950">{number(previous)}</p></div>
+        <div><p className="text-sm text-slate-600">Distinct applicants</p><p className="mt-1 text-3xl font-semibold tabular-nums text-slate-950">{number(distinctApplicants)}</p></div>
+      </div>
+      <p className="mt-4 text-sm font-medium text-slate-700">{comparison(current, previous)}.</p>
+      <p className="mt-1 text-xs text-slate-500">Previous period: {calendarDate(previousFromDate)} to {calendarDate(previousThroughDate)}.</p>
+      <p className="mt-1 text-xs text-slate-500">Distinct applicants counts each candidate once, even if they applied to multiple vacancies.</p>
+      {current === 0 ? (
+        <p className="mt-6 rounded-lg bg-slate-50 p-4 text-sm text-slate-600">No applications were received during these 30 completed days.</p>
+      ) : (
+        <div className="mt-6 overflow-x-auto rounded-lg bg-slate-50 p-4" aria-hidden="true">
+          <ol className="flex h-40 min-w-max items-end gap-2">
+            {daily.map((day) => (
+              <li key={day.date} className="flex h-full w-3 shrink-0 items-end" title={`${calendarDate(day.date)}: ${number(day.count)} applications`}>
+                <span className="block w-full rounded-t bg-blue-700" style={{ height: day.count ? `${Math.max(4, day.count / highest * 100)}%` : '0%' }} />
+              </li>
+            ))}
+          </ol>
+          <div className="mt-2 flex justify-between gap-4 text-xs text-slate-600"><span>{calendarDate(fromDate)}</span><span>{calendarDate(throughDate)}</span></div>
+        </div>
+      )}
+      <details className="mt-4 rounded-lg border border-slate-200">
+        <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-700">View daily application counts</summary>
+        <div className="max-h-72 overflow-auto border-t border-slate-200">
+          <table className="w-full text-left text-sm">
+            <caption className="sr-only">Applications received on each completed calendar day</caption>
+            <thead className="bg-slate-50"><tr><th scope="col" className="px-4 py-2">Date</th><th scope="col" className="px-4 py-2 text-right">Applications</th></tr></thead>
+            <tbody className="divide-y divide-slate-100">{daily.map((day) => (
+              <tr key={day.date}><th scope="row" className="px-4 py-2 font-normal"><time dateTime={day.date}>{calendarDate(day.date)}</time></th><td className="px-4 py-2 text-right tabular-nums">{number(day.count)}</td></tr>
+            ))}</tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+  )
+}
 
 const LoadingState = () => (
   <div className="space-y-8" role="status" aria-label="Loading application analytics">
@@ -102,7 +173,7 @@ export default function ApplicationAnalyticsSummary() {
     )
   }
 
-  const { applications, confirmations, generatedAt, timeZone } = analytics.data
+  const { applications, recruitment, confirmations, generatedAt, timeZone } = analytics.data
   const updatedAt = formatDateInTimeZone(generatedAt, timeZone, {
     dateStyle: 'medium',
     timeStyle: 'short',
@@ -134,6 +205,95 @@ export default function ApplicationAnalyticsSummary() {
             { label: 'All time', value: applications.allTime, detail: 'All application records' },
           ]} />
         </div>
+      </section>
+
+      <DailyTrend recruitment={recruitment} />
+
+      <section aria-labelledby="review-workload-heading">
+        <h2 id="review-workload-heading" className="text-xl font-semibold text-slate-950 text-balance">Review workload</h2>
+        <p className="mt-1 text-sm text-slate-600 text-pretty">
+          Current stages of applications received in the 30-day period. These are not historical stage transitions.
+        </p>
+        <dl className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {STAGES.map((stage) => (
+            <div key={stage.value} className="rounded-xl border border-slate-200 bg-white p-5">
+              <dt className="text-sm font-medium text-slate-600">{stage.label}</dt>
+              <dd className="mt-2 text-2xl font-semibold tabular-nums text-slate-950">{number(recruitment.applications.currentStages[stage.value])}</dd>
+            </div>
+          ))}
+        </dl>
+        <div className="mt-4 rounded-xl border border-slate-200 bg-white p-5 sm:flex sm:items-center sm:justify-between sm:gap-6">
+          <div>
+            <p className="text-sm font-medium text-slate-600">Pending for more than seven days</p>
+            <p className="mt-2 text-2xl font-semibold tabular-nums text-slate-950">{number(recruitment.workload.pendingOlderThanSevenDays)}</p>
+            <p className="mt-1 text-xs text-slate-500">Current backlog across all applications, not limited to the trend period.</p>
+          </div>
+          <Link href="/admin-center/applications/inbox?status=pending" className="mt-4 inline-block text-sm font-semibold text-blue-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 sm:mt-0">
+            Review pending applications
+          </Link>
+        </div>
+      </section>
+
+      <section aria-labelledby="vacancy-demand-heading">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 id="vacancy-demand-heading" className="text-xl font-semibold text-slate-950 text-balance">Vacancy demand</h2>
+            <p className="mt-1 text-sm text-slate-600 text-pretty">Most applications received during the 30 completed days.</p>
+          </div>
+          <Link href="/admin-center/applications/by-vacancy" className="text-sm font-semibold text-blue-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2">
+            View vacancy inbox
+          </Link>
+        </div>
+        <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+            {recruitment.topVacancies.length ? (
+              <ol className="divide-y divide-slate-100">
+                {recruitment.topVacancies.map((vacancy, index) => (
+                  <li key={vacancy.jobId} className="flex items-center gap-4 p-4">
+                    <span aria-hidden="true" className="w-6 shrink-0 text-sm font-semibold tabular-nums text-slate-500">{index + 1}.</span>
+                    <div className="min-w-0 flex-1">
+                      {vacancy.available ? (
+                        <Link href={`/admin-center/applications/jobs/${vacancy.jobId}`} className="block truncate font-semibold text-slate-950 hover:text-blue-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2">
+                          {vacancy.title}
+                        </Link>
+                      ) : <p className="font-semibold text-slate-700">{vacancy.title}</p>}
+                      <p className="mt-1 truncate text-xs text-slate-500">{vacancy.company || 'Company unavailable'}{vacancy.archived ? ' · Archived' : ''}</p>
+                    </div>
+                    <span className="shrink-0 text-right"><strong className="block text-xl tabular-nums text-slate-950">{number(vacancy.applications)}</strong><span className="text-xs text-slate-500">applications</span></span>
+                  </li>
+                ))}
+              </ol>
+            ) : <p className="p-6 text-sm text-slate-600">No vacancies received applications in this period.</p>}
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <p className="text-sm font-medium text-slate-600">Open vacancies with no applications</p>
+            <p className="mt-3 text-3xl font-semibold tabular-nums text-slate-950">{number(recruitment.workload.openVacanciesWithoutApplications)}</p>
+            <p className="mt-2 text-xs text-slate-500 text-pretty">Current open vacancies with zero applications over their lifetime.</p>
+            <Link href="/admin-center/applications/by-vacancy?view=open" className="mt-5 inline-block text-sm font-semibold text-blue-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2">
+              Review open vacancies
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="candidate-snapshot-heading">
+        <h2 id="candidate-snapshot-heading" className="text-xl font-semibold text-slate-950 text-balance">Candidate snapshot</h2>
+        <p className="mt-1 text-sm text-slate-600 text-pretty">Current registered accounts and profile state, plus candidates who have ever applied.</p>
+        <dl className="mt-4 grid gap-3 sm:grid-cols-3">
+          {[
+            { label: 'Registered candidates', value: recruitment.candidates.registered },
+            { label: 'Profiles complete now', value: recruitment.candidates.profilesComplete },
+            { label: 'Have applied at least once', value: recruitment.candidates.everApplied },
+          ].map((item) => (
+            <div key={item.label} className="rounded-xl border border-slate-200 bg-white p-5">
+              <dt className="text-sm font-medium text-slate-600">{item.label}</dt>
+              <dd className="mt-2 text-2xl font-semibold tabular-nums text-slate-950">{number(item.value)}</dd>
+            </div>
+          ))}
+        </dl>
+        <Link href="/admin-center/candidates" className="mt-4 inline-block text-sm font-semibold text-blue-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2">
+          Open candidates
+        </Link>
       </section>
 
       <section aria-labelledby="confirmation-health-heading">
