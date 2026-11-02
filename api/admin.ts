@@ -36,7 +36,8 @@ export const fetchAdminDashboard = async (): Promise<DashboardStats> => {
     const res = await fetch(apiPath('/admin/dashboard'),
         {
             method: 'GET',
-            credentials: 'include'
+            credentials: 'include',
+            cache: 'no-store',
         }
     )
     const dashboard = await readApiResponse<ApiSuccess<DashboardStats>>(

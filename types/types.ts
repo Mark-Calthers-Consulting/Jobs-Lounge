@@ -786,6 +786,19 @@ export type DashboardStats = {
   totalApplications?: number
   totalCandidates?: number
   totalTeamMembers?: number
+  insights?: {
+    timeZone: string
+    period: {
+      fromDate: string
+      throughDate: string
+      previousFromDate: string
+      previousThroughDate: string
+    }
+    pendingOverSevenDays: number
+    registeredCandidates: number
+    applications: { current: number; previous: number; daily: Array<{ date: string; count: number }> }
+    registrations: { current: number; previous: number; daily: Array<{ date: string; count: number }> }
+  }
 }
 
 export type StaffMember = {

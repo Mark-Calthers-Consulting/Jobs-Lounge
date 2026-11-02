@@ -25,6 +25,8 @@ export type ContentOptions = { articles: { _id: string; title: string }[]; vacan
 export type Delivery = { _id: string; recipient: string; recipientLabel?: string; status: string; attempts: number; sentAt?: string; lastFailure?: { code: string } }
 export type EmailTotals = { accepted: number; sent: number; failed: number; skipped: number; cancelled: number; retryAttempts: number }
 export type EmailAnalytics = { from: string; to: string; timeZone: string; reportingStartedAt: string | null; totals: Record<string, EmailTotals>; daily: (EmailTotals & { day: string; source: string; template: string; audience: string })[]; backlog: { _id: { status: string; scheduled: boolean; template: string }; count: number }[]; definition: string }
+export type EmailDiagnostics = { generatedAt: string; periodStart: string; workerConfigured: boolean; dueCount: number; oldestDueAt: string | null; accountStatuses: { template: string; status: string; count: number }[]; failures: { code: string; responseCode: number | null; count: number }[]; definition: string }
+export type EmailAttemptHistory = { rows: { id: string; template: string; status: string; attempts: number; createdAt: string; sentAt: string | null; nextAttemptAt: string | null; failure: { code: string; responseCode: number | null } | null }[]; limit: number; retentionDays: number }
 
 export async function dispatchRequest<T>(path = '', method = 'GET', body?: unknown): Promise<T> {
   const options: RequestInit = { method, credentials: 'include', cache: 'no-store', ...(body !== undefined ? { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {}) }
