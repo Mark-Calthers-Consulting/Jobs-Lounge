@@ -43,6 +43,21 @@ describe('Candidate email centre', () => {
     fireEvent.change(screen.getByLabelText('CV'), { target: { value: 'missing' } })
     await waitFor(() => expect(screen.getByRole('checkbox', { name: 'Select Ada Candidate' })).not.toBeChecked())
   })
+  it('offers unverified accounts only and passes that audience filter to review', async () => {
+    mount(); compose()
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Select Ada Candidate' }))
+    fireEvent.change(screen.getByLabelText('Email verification'), { target: { value: 'unverified' } })
+    await waitFor(() => expect(screen.getByRole('checkbox', { name: 'Select Ada Candidate' })).not.toBeChecked())
+    expect(screen.getByRole('option', { name: 'Unverified accounts only' })).toBeInTheDocument()
+    await waitFor(() => expect(vi.mocked(dispatchRequest).mock.calls.some(([path, , body]) =>
+      path === '/recipients' && (body as { filters?: { verified?: string } })?.filters?.verified === 'unverified',
+    )).toBe(true))
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select Ada Candidate' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Review email →' }))
+    await screen.findByTitle('Server-rendered email preview')
+    const call = vi.mocked(dispatchData).mock.calls.find(([, , body]) => (body as { filters?: { verified?: string } })?.filters?.verified === 'unverified')
+    expect(call?.[2]).toMatchObject({ filters: { verified: 'unverified' } })
+  })
   it('preserves explicit selections across pages', async () => {
     mount(); compose()
     fireEvent.click(await screen.findByRole('checkbox', { name: 'Select Ada Candidate' }))

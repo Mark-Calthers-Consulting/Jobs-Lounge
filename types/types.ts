@@ -743,7 +743,8 @@ export type CandidateFilterOptions = {
 }
 
 export type AdminCandidateDetail = {
-  candidate: Omit<User, 'role' | 'lastLogin' | 'notificationPreferences'> & {
+  candidate: Omit<User, 'role' | 'lastLogin' | 'notificationPreferences' | 'emailVerifiedAt'> & {
+    emailVerifiedAt: string | null
     profileCompletion: ProfileCompletion
     lastActiveAt?: string | null
     lastLoginAt?: string | null

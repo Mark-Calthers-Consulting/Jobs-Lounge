@@ -159,6 +159,9 @@ const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
                             <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${completion.complete ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>
                                 {completion.complete ? 'Profile complete' : `${completion.percentage}% complete`}
                             </span>
+                            <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${candidate.emailVerified ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-800'}`}>
+                                {candidate.emailVerified ? 'Email verified' : 'Email not verified'}
+                            </span>
                         </div>
                         <p className="mt-2 text-sm text-gray-600">Joined {formatDate(candidate.createdAt, timeZone)} · Updated {formatDate(candidate.updatedAt, timeZone)}</p>
                         {canViewAccountActivity && (
@@ -269,6 +272,19 @@ const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
                         <h2 className="font-semibold text-gray-950">Contact</h2>
                         <dl className="mt-4 space-y-4">
                             <Detail label="Email" value={candidate.email} />
+                            <div>
+                                <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Email verification</dt>
+                                <dd className="mt-1 text-sm text-gray-900">
+                                    {candidate.emailVerifiedAt
+                                        ? `Verified ${formatActivityDate(candidate.emailVerifiedAt, timeZone)}`
+                                        : 'Not verified'}
+                                </dd>
+                            </div>
+                            {canViewAccountActivity && (
+                                <Link href="/admin-center/analytics?tab=emails" className="inline-flex text-sm font-semibold text-[#184aa2] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]">
+                                    Open email diagnostics
+                                </Link>
+                            )}
                             <Detail label="Telephone" value={candidate.telephone} />
                             <Detail label="WhatsApp" value={candidate.whatsapp} />
                         </dl>
