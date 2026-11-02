@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import Modal from '@/components/Modal'
 import { usePlatformSettings } from '@/components/PlatformSettingsProvider'
 import { dateTimeInputToUtc, formatDateInTimeZone } from '@/utils/dateTime'
-import { dispatchData, dispatchRequest, type AudienceFilters, type BroadcastDraft, type BroadcastTemplate, type ContentOptions, type Delivery, type Dispatch, type EmailChannel, type EmailSelection, type Paging, type RecipientResult, type Review } from '@/api/emailDispatches'
+import { dispatchData, dispatchRequest, type AudienceFilters, type BroadcastDraft, type BroadcastTemplate, type ContentOptions, type Delivery, type Dispatch, type EmailChannel, type EmailSelection, type Paging, type Recipient, type RecipientResult, type Review } from '@/api/emailDispatches'
 
 const templates: { key: BroadcastTemplate; title: string; description: string; subject: string; message: string }[] = [
   { key: 'candidate-message', title: 'Custom message', description: 'Write a general update to your selected audience.', subject: '', message: '' },
@@ -26,6 +26,7 @@ export const selectedCount = (selection: EmailSelection, total: number) => selec
 
 export default function BroadcastEmailCenter({ channel, superAdmin }: { channel: EmailChannel; superAdmin: boolean }) {
   const [draft, setDraft] = useState(() => initialDraft(channel))
+  const [selectedPeople, setSelectedPeople] = useState<Record<string, Pick<Recipient, 'name' | 'email'>>>({})
   const [saved, setSaved] = useState<Dispatch | null>(null)
   const [step, setStep] = useState(0)
   const [page, setPage] = useState(1)
@@ -54,19 +55,60 @@ export default function BroadcastEmailCenter({ channel, superAdmin }: { channel:
     const filters = { ...draft.filters }
     if (value === undefined || value === '') delete filters[key]
     else Object.assign(filters, { [key]: value })
-    change({ ...draft, filters, selection: { mode: 'explicit', ids: [], excludeIds: [] } }); setPage(1)
+    const keepSelection = key === 'search' && draft.selection.mode === 'explicit'
+    change({ ...draft, filters, selection: keepSelection ? draft.selection : { mode: 'explicit', ids: [], excludeIds: [] } })
+    if (!keepSelection) setSelectedPeople({})
+    setPage(1)
+  }
+  const clearFilters = () => {
+    const keepSelection = draft.selection.mode === 'explicit'
+      && Object.keys(draft.filters).every((key) => key === 'search')
+    change({ ...draft, filters: {}, selection: keepSelection ? draft.selection : { mode: 'explicit', ids: [], excludeIds: [] } })
+    if (!keepSelection) setSelectedPeople({})
+    setPage(1)
   }
   const selectPerson = (id: string, checked: boolean) => {
     const selection = draft.selection
     const key = selection.mode === 'all' ? 'excludeIds' : 'ids'
     const add = selection.mode === 'all' ? !checked : checked
     const next = new Set(selection[key]); if (add) next.add(id); else next.delete(id)
-    if (key === 'ids' && next.size > 1000) { toast.error('Select no more than 1,000 people'); return }
+    if (next.size > 1000) { toast.error('Select no more than 1,000 people'); return }
+    if (selection.mode === 'explicit') {
+      const person = audience.data?.data.find((entry) => entry.id === id)
+      setSelectedPeople((current) => {
+        const updated = { ...current }
+        if (checked && person) updated[id] = { name: person.name, email: person.email }
+        if (!checked) delete updated[id]
+        return updated
+      })
+    }
+    change({ ...draft, selection: { ...selection, [key]: [...next] } })
+  }
+  const selectCurrentPage = (checked: boolean) => {
+    const people = audience.data?.data || []
+    const selection = draft.selection
+    const key = selection.mode === 'all' ? 'excludeIds' : 'ids'
+    const add = selection.mode === 'all' ? !checked : checked
+    const next = new Set(selection[key])
+    people.forEach((person) => { if (add) next.add(person.id); else next.delete(person.id) })
+    if (next.size > 1000) { toast.error('Select no more than 1,000 people'); return }
+    if (selection.mode === 'explicit') {
+      setSelectedPeople((current) => {
+        const updated = { ...current }
+        people.forEach((person) => {
+          if (checked) updated[person.id] = { name: person.name, email: person.email }
+          else delete updated[person.id]
+        })
+        return updated
+      })
+    }
     change({ ...draft, selection: { ...selection, [key]: [...next] } })
   }
   const isSelected = (id: string) => draft.selection.mode === 'all' ? !draft.selection.excludeIds.includes(id) : draft.selection.ids.includes(id)
   const save = async () => {
-    const result = await dispatchData<Dispatch>(saved ? `/${saved._id}` : '', saved ? 'PATCH' : 'POST', { ...draft, ...(saved ? { revision: saved.revision } : {}) })
+    const filters = { ...draft.filters }
+    if (draft.selection.mode === 'explicit') delete filters.search
+    const result = await dispatchData<Dispatch>(saved ? `/${saved._id}` : '', saved ? 'PATCH' : 'POST', { ...draft, filters, ...(saved ? { revision: saved.revision } : {}) })
     setSaved(result); await client.invalidateQueries({ queryKey: ['broadcast-history'] }); return result
   }
   const act = async (action: () => Promise<void>) => {
@@ -83,13 +125,13 @@ export default function BroadcastEmailCenter({ channel, superAdmin }: { channel:
     if (schedule && !when) throw new Error('Choose a valid delivery time')
     const result = await dispatchData<Dispatch>(`/${saved._id}/send`, 'POST', { requestId, fingerprint: review.fingerprint, ...(when ? { scheduledFor: when } : {}) })
     toast.success(result.state === 'scheduled' ? 'Email scheduled' : 'Email queued')
-    setConfirm(false); setDraft(initialDraft(channel)); setSaved(null); setReview(null); setSchedule(''); setStep(0)
+    setConfirm(false); setDraft(initialDraft(channel)); setSelectedPeople({}); setSaved(null); setReview(null); setSchedule(''); setStep(0)
     await client.invalidateQueries({ queryKey: ['broadcast-history'] })
     await client.invalidateQueries({ queryKey: ['email-analytics'] })
   })
   const choose = (key: BroadcastTemplate) => {
     const template = templates.find((item) => item.key === key)!
-    change({ ...initialDraft(channel), template: key, content: { ...initialDraft(channel).content, subject: template.subject, message: template.message } }); setSaved(null)
+    change({ ...initialDraft(channel), template: key, content: { ...initialDraft(channel).content, subject: template.subject, message: template.message } }); setSelectedPeople({}); setSaved(null)
   }
   const activeFilters = Object.entries(draft.filters).filter(([, value]) => value !== '' && value !== undefined)
   return <div className="space-y-8">
@@ -117,9 +159,9 @@ export default function BroadcastEmailCenter({ channel, superAdmin }: { channel:
       {step === 1 && <div className="space-y-5">
         <p className="text-sm text-slate-600">{superAdmin ? 'Find candidate accounts, including registered users without applications.' : 'Only applicants to your own non-archived vacancies are available.'} Different filters combine with AND. Opted-out recipients are excluded.</p>
         <div className="grid gap-4 rounded-lg bg-slate-50 p-4 sm:grid-cols-2 xl:grid-cols-4">
-          <label className="text-sm font-semibold">Search name or email<input className={control} maxLength={100} value={draft.filters.search || ''} onChange={(event) => filter('search', event.target.value)} /></label>
-          <label className="text-sm font-semibold">Joined<select className={control} value={draft.filters.joinedFrom || draft.filters.joinedTo ? 'custom' : draft.filters.joinedDays || ''} onChange={(event) => { const value = event.target.value; change({ ...draft, filters: { ...draft.filters, joinedDays: value && value !== 'custom' ? Number(value) : undefined, joinedFrom: value === 'custom' ? new Date().toISOString().slice(0, 10) : undefined, joinedTo: undefined }, selection: { mode: 'explicit', ids: [], excludeIds: [] } }); setPage(1) }}><option value="">Any time</option>{[7, 30, 60, 90].map((days) => <option value={days} key={days}>Within {days} days</option>)}<option value="custom">Custom date range</option></select></label>
-          <label className="text-sm font-semibold">Last active<select className={control} value={draft.filters.activity === 'unknown' ? 'unknown' : draft.filters.activityDays ? `${draft.filters.activity}:${draft.filters.activityDays}` : ''} onChange={(event) => { const [activity, days] = event.target.value.split(':'); change({ ...draft, filters: { ...draft.filters, activity: activity || undefined, activityDays: days ? Number(days) : undefined }, selection: { mode: 'explicit', ids: [], excludeIds: [] } }); setPage(1) }}><option value="">Any time</option>{['active', 'inactive'].flatMap((type) => [7, 30, 60, 90].map((days) => <option value={`${type}:${days}`} key={`${type}:${days}`}>{type === 'active' ? `Active within ${days} days` : `Inactive for at least ${days} days`}</option>))}<option value="unknown">No recorded activity</option></select></label>
+          <label className="text-sm font-semibold">Search name or email<input aria-label="Search name or email" className={control} maxLength={100} value={draft.filters.search || ''} onChange={(event) => filter('search', event.target.value)} /><span className="mt-1 block font-normal text-slate-500">Searching keeps individually selected recipients.</span></label>
+          <label className="text-sm font-semibold">Joined<select className={control} value={draft.filters.joinedFrom || draft.filters.joinedTo ? 'custom' : draft.filters.joinedDays || ''} onChange={(event) => { const value = event.target.value; change({ ...draft, filters: { ...draft.filters, joinedDays: value && value !== 'custom' ? Number(value) : undefined, joinedFrom: value === 'custom' ? new Date().toISOString().slice(0, 10) : undefined, joinedTo: undefined }, selection: { mode: 'explicit', ids: [], excludeIds: [] } }); setSelectedPeople({}); setPage(1) }}><option value="">Any time</option>{[7, 30, 60, 90].map((days) => <option value={days} key={days}>Within {days} days</option>)}<option value="custom">Custom date range</option></select></label>
+          <label className="text-sm font-semibold">Last active<select className={control} value={draft.filters.activity === 'unknown' ? 'unknown' : draft.filters.activityDays ? `${draft.filters.activity}:${draft.filters.activityDays}` : ''} onChange={(event) => { const [activity, days] = event.target.value.split(':'); change({ ...draft, filters: { ...draft.filters, activity: activity || undefined, activityDays: days ? Number(days) : undefined }, selection: { mode: 'explicit', ids: [], excludeIds: [] } }); setSelectedPeople({}); setPage(1) }}><option value="">Any time</option>{['active', 'inactive'].flatMap((type) => [7, 30, 60, 90].map((days) => <option value={`${type}:${days}`} key={`${type}:${days}`}>{type === 'active' ? `Active within ${days} days` : `Inactive for at least ${days} days`}</option>))}<option value="unknown">No recorded activity</option></select></label>
           {superAdmin && <FilterSelect label="Account group" value={draft.filters.group} onChange={(value) => filter('group', value)} choices={[['', 'All accounts'], ['applicants', 'Applicants'], ['registered', 'Registered users without applications']]} />}
           <FilterSelect label="Profile" value={draft.filters.profile} onChange={(value) => filter('profile', value)} choices={[['', 'Any'], ['complete', 'Complete'], ['incomplete', 'Incomplete']]} />
           <FilterSelect label="CV" value={draft.filters.cv} onChange={(value) => filter('cv', value)} choices={[['', 'Any'], ['available', 'Available'], ['missing', 'Missing']]} />
@@ -128,13 +170,29 @@ export default function BroadcastEmailCenter({ channel, superAdmin }: { channel:
           <FilterSelect label="Application stage" value={draft.filters.stage} onChange={(value) => filter('stage', value)} choices={[['', 'Any stage'], ['pending', 'New'], ['reviewed', 'In review'], ['shortlisted', 'Shortlisted'], ['rejected', 'Rejected']]} />
           {(draft.filters.joinedFrom || draft.filters.joinedTo) && <><label className="text-sm font-semibold">Joined from<input className={control} type="date" value={draft.filters.joinedFrom || ''} onChange={(event) => filter('joinedFrom', event.target.value)} /></label><label className="text-sm font-semibold">Joined to<input className={control} type="date" value={draft.filters.joinedTo || ''} onChange={(event) => filter('joinedTo', event.target.value)} /></label></>}
         </div>
-        {channel === 'newsletter' && superAdmin && <label className="flex items-start gap-3 text-sm"><input type="checkbox" className="mt-0.5 size-4 accent-blue-700" checked={draft.includeTeam} onChange={(event) => { change({ ...draft, includeTeam: event.target.checked, selection: { mode: 'explicit', ids: [], excludeIds: [] } }); setPage(1) }} /><span className="font-semibold">Include active team members<span className="mt-1 block text-slate-500">For this newsletter only. Pending invites, suspended staff and previous opt-outs are excluded.</span></span></label>}
-        {activeFilters.length > 0 && <div aria-label="Active filters" className="flex flex-wrap gap-2">{activeFilters.map(([key, value]) => <span key={key} className="rounded bg-slate-100 px-2 py-1 text-xs text-slate-700">{key}: {String(value)}</span>)}<button className="text-sm text-blue-800 underline" onClick={() => { change({ ...draft, filters: {}, selection: { mode: 'explicit', ids: [], excludeIds: [] } }); setPage(1) }}>Clear filters</button></div>}
-        <div className="flex flex-wrap items-center justify-between gap-3 text-sm"><p aria-live="polite"><strong>{audience.data?.pagination.total.toLocaleString() || 0}</strong> matching · <strong>{count}</strong> selected / 1,000</p><div className="flex gap-3"><button className={button} disabled={!audience.data?.pagination.total || busy} onClick={() => change({ ...draft, selection: { mode: 'all', ids: [], excludeIds: [] } })}>Select all matching</button><button className={button} onClick={() => change({ ...draft, selection: { mode: 'explicit', ids: [], excludeIds: [] } })}>Clear selection</button></div></div>
+        {channel === 'newsletter' && superAdmin && <label className="flex items-start gap-3 text-sm"><input type="checkbox" className="mt-0.5 size-4 accent-blue-700" checked={draft.includeTeam} onChange={(event) => { change({ ...draft, includeTeam: event.target.checked, selection: { mode: 'explicit', ids: [], excludeIds: [] } }); setSelectedPeople({}); setPage(1) }} /><span className="font-semibold">Include active team members<span className="mt-1 block text-slate-500">For this newsletter only. Pending invites, suspended staff and previous opt-outs are excluded.</span></span></label>}
+        {activeFilters.length > 0 && <div aria-label="Active filters" className="flex flex-wrap gap-2">{activeFilters.map(([key, value]) => <span key={key} className="rounded bg-slate-100 px-2 py-1 text-xs text-slate-700">{key}: {String(value)}</span>)}<button className="text-sm text-blue-800 underline" onClick={clearFilters}>Clear filters</button></div>}
+        {draft.selection.mode === 'explicit' && draft.selection.ids.length > 0 && (
+          <section aria-label="Selected recipients" className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+            <h3 className="text-sm font-semibold text-slate-950">Selected recipients ({draft.selection.ids.length})</h3>
+            <p className="mt-1 text-sm text-slate-600">Your selections stay here while you search. Eligibility is checked again before sending.</p>
+            <ul className="mt-3 flex max-h-48 flex-wrap gap-2 overflow-y-auto">
+              {draft.selection.ids.map((id) => {
+                const person = selectedPeople[id] || audience.data?.data.find((entry) => entry.id === id)
+                const label = person?.name || `Saved recipient · ${id.slice(-6)}`
+                return <li key={id} className="flex min-w-0 items-center gap-2 rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm">
+                  <span className="min-w-0"><span className="block truncate font-semibold text-slate-900">{label}</span>{person?.email && <span className="block truncate text-slate-600">{person.email}</span>}</span>
+                  <button type="button" className="rounded px-2 py-1 text-blue-800 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-blue-700" aria-label={`Remove ${label} from selected recipients`} onClick={() => selectPerson(id, false)}>Remove</button>
+                </li>
+              })}
+            </ul>
+          </section>
+        )}
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm"><p aria-live="polite"><strong>{audience.data?.pagination.total.toLocaleString() || 0}</strong> matching current search · <strong>{count}</strong> selected / 1,000</p><div className="flex gap-3"><button className={button} disabled={!audience.data?.pagination.total || busy} onClick={() => { change({ ...draft, selection: { mode: 'all', ids: [], excludeIds: [] } }); setSelectedPeople({}) }}>Select all matching</button><button className={button} onClick={() => { change({ ...draft, selection: { mode: 'explicit', ids: [], excludeIds: [] } }); setSelectedPeople({}) }}>Clear selection</button></div></div>
         {count > 1000 && <p role="alert" className="text-sm text-red-700">This audience exceeds 1,000 people. Narrow your filters or exclude people before reviewing.</p>}
         {audience.isPending && <p role="status" className="animate-pulse py-8 text-slate-500">Loading recipients…</p>}
         {audience.isError && <p role="alert" className="text-red-700">{audience.error.message} <button className={button} onClick={() => void audience.refetch()}>Retry</button></p>}
-        {audience.data && <div className="overflow-x-auto rounded-lg border border-slate-200"><table className="w-full text-left text-sm"><thead className="bg-slate-50 text-slate-600"><tr><th className="p-3"><input aria-label="Select current page" type="checkbox" className="size-4 accent-blue-700" checked={Boolean(audience.data.data.length) && audience.data.data.every((person) => isSelected(person.id))} onChange={(event) => { const pageIds = audience.data!.data.map((person) => person.id); const selection = draft.selection; const key = selection.mode === 'all' ? 'excludeIds' : 'ids'; const add = selection.mode === 'all' ? !event.target.checked : event.target.checked; const next = new Set(selection[key]); pageIds.forEach((id) => { if (add) next.add(id); else next.delete(id) }); if (next.size > 1000) { toast.error('Select no more than 1,000 people'); return } change({ ...draft, selection: { ...selection, [key]: [...next] } }) }} /></th><th className="p-3">Recipient</th><th className="p-3">Account</th><th className="p-3">Profile / CV</th>{superAdmin && <th className="p-3">Last active</th>}</tr></thead><tbody className="divide-y divide-slate-100">{audience.data.data.map((person) => <tr key={person.id}><td className="p-3"><input type="checkbox" className="size-4 accent-blue-700" aria-label={`Select ${person.name}`} checked={isSelected(person.id)} onChange={(event) => selectPerson(person.id, event.target.checked)} /></td><td className="p-3"><span className="block font-semibold text-slate-950">{person.name}</span><span className="text-slate-500">{person.email}</span></td><td className="p-3 capitalize">{person.audience}{person.audience === 'candidate' && <span className="block text-xs text-slate-500">{person.emailVerified ? 'Verified' : 'Unverified'}</span>}</td><td className="p-3">{person.audience === 'team' ? '—' : <>{person.profileComplete ? 'Complete profile' : 'Incomplete profile'}<span className="block text-slate-500">{person.hasCv ? 'CV available' : 'No CV link'}</span></>}</td>{superAdmin && <td className="p-3 text-slate-500">{person.lastActiveAt ? formatDateInTimeZone(person.lastActiveAt, settings.timeZone, { dateStyle: 'medium', timeStyle: 'short' }) : 'Not recorded'}</td>}</tr>)}{!audience.data.data.length && <tr><td colSpan={superAdmin ? 5 : 4} className="p-8 text-center text-slate-500">No eligible people match these filters.</td></tr>}</tbody></table></div>}
+        {audience.data && <div className="overflow-x-auto rounded-lg border border-slate-200"><table className="w-full text-left text-sm"><thead className="bg-slate-50 text-slate-600"><tr><th className="p-3"><input aria-label="Select current page" type="checkbox" className="size-4 accent-blue-700" checked={Boolean(audience.data.data.length) && audience.data.data.every((person) => isSelected(person.id))} onChange={(event) => selectCurrentPage(event.target.checked)} /></th><th className="p-3">Recipient</th><th className="p-3">Account</th><th className="p-3">Profile / CV</th>{superAdmin && <th className="p-3">Last active</th>}</tr></thead><tbody className="divide-y divide-slate-100">{audience.data.data.map((person) => <tr key={person.id}><td className="p-3"><input type="checkbox" className="size-4 accent-blue-700" aria-label={`Select ${person.name}`} checked={isSelected(person.id)} onChange={(event) => selectPerson(person.id, event.target.checked)} /></td><td className="p-3"><span className="block font-semibold text-slate-950">{person.name}</span><span className="text-slate-500">{person.email}</span></td><td className="p-3 capitalize">{person.audience}{person.audience === 'candidate' && <span className="block text-xs text-slate-500">{person.emailVerified ? 'Verified' : 'Unverified'}</span>}</td><td className="p-3">{person.audience === 'team' ? '—' : <>{person.profileComplete ? 'Complete profile' : 'Incomplete profile'}<span className="block text-slate-500">{person.hasCv ? 'CV available' : 'No CV link'}</span></>}</td>{superAdmin && <td className="p-3 text-slate-500">{person.lastActiveAt ? formatDateInTimeZone(person.lastActiveAt, settings.timeZone, { dateStyle: 'medium', timeStyle: 'short' }) : 'Not recorded'}</td>}</tr>)}{!audience.data.data.length && <tr><td colSpan={superAdmin ? 5 : 4} className="p-8 text-center text-slate-500">No eligible people match these filters.</td></tr>}</tbody></table></div>}
         {audience.data && <Pages paging={audience.data.pagination} setPage={setPage} />}
         <div className="flex flex-wrap gap-3"><button className={button} disabled={busy} onClick={() => setStep(0)}>← Choose email</button><button className={button} disabled={busy} onClick={() => void act(async () => { await save(); toast.success('Draft saved') })}>Save draft</button><button className={`${button} !bg-slate-950 !text-white`} disabled={busy || !count || count > 1000 || audience.isFetching || audience.isError} onClick={() => void reviewEmail()}>{busy ? 'Preparing review…' : 'Review email →'}</button></div>
       </div>}
@@ -150,7 +208,7 @@ export default function BroadcastEmailCenter({ channel, superAdmin }: { channel:
     <section aria-label="Email history" className="rounded-xl border border-slate-200 bg-white p-5 sm:p-7"><h2 className="text-xl font-semibold text-slate-950">Drafts and recent dispatches</h2><p className="mt-1 text-sm text-slate-500">Dispatch summaries last one year. Individual delivery details last 30 days.</p>
       {history.isPending && <p role="status" className="py-6">Loading email history…</p>}
       {history.isError && <p role="alert">Unable to load history. <button className={button} onClick={() => void history.refetch()}>Retry</button></p>}
-      <div className="mt-5 divide-y divide-slate-200">{history.data?.data.map((item) => <div key={item._id} className="flex flex-wrap items-start justify-between gap-4 py-4"><div><p className="font-semibold text-slate-900">{templates.find((template) => template.key === item.template)?.title || item.template} <span className="ml-2 rounded bg-slate-100 px-2 py-1 text-xs font-medium capitalize">{item.state === 'queued' && item.live?.processing ? 'Processing' : item.state === 'queued' && item.live?.retry ? 'Retrying' : item.state}</span></p><p className="mt-1 text-sm text-slate-500">{item.ownerName || 'Team member'} · {item.recipientCount} recipients · {formatDateInTimeZone(item.scheduledFor || item.queuedAt || item.createdAt, settings.timeZone, { dateStyle: 'medium', timeStyle: 'short' })}</p>{item.state !== 'draft' && <p className="mt-1 text-sm text-slate-600">{item.outcomes.sent} sent · {item.outcomes.dead} failed · {item.outcomes.skipped} skipped · {item.outcomes.cancelled} cancelled</p>}</div><div className="flex flex-wrap gap-2">{item.state === 'draft' && <button className={button} disabled={busy} onClick={() => void act(async () => { const stored = await dispatchData<Dispatch>(`/${item._id}`); setSaved(stored); setDraft({ channel: stored.channel, template: stored.template, content: stored.content, filters: stored.filters, selection: stored.selection, includeTeam: stored.includeTeam }); setReview(null); setStep(0) })}>Resume draft</button>}{item.state !== 'draft' && <button className={button} onClick={() => { setDetail(item._id); setDetailPage(1) }}>Delivery details</button>}{['draft', 'queued', 'scheduled'].includes(item.state) && <button className={button} disabled={busy} onClick={() => void act(async () => { await dispatchData(`/${item._id}/cancel`, 'POST', {}); toast.success('Unfinished deliveries cancelled. Emails already transmitting cannot be recalled.'); await client.invalidateQueries({ queryKey: ['broadcast-history'] }) })}>Cancel</button>}</div></div>)}{history.data && !history.data.data.length && <p className="py-8 text-center text-slate-500">No saved drafts or dispatches yet.</p>}</div>
+      <div className="mt-5 divide-y divide-slate-200">{history.data?.data.map((item) => <div key={item._id} className="flex flex-wrap items-start justify-between gap-4 py-4"><div><p className="font-semibold text-slate-900">{templates.find((template) => template.key === item.template)?.title || item.template} <span className="ml-2 rounded bg-slate-100 px-2 py-1 text-xs font-medium capitalize">{item.state === 'queued' && item.live?.processing ? 'Processing' : item.state === 'queued' && item.live?.retry ? 'Retrying' : item.state}</span></p><p className="mt-1 text-sm text-slate-500">{item.ownerName || 'Team member'} · {item.recipientCount} recipients · {formatDateInTimeZone(item.scheduledFor || item.queuedAt || item.createdAt, settings.timeZone, { dateStyle: 'medium', timeStyle: 'short' })}</p>{item.state !== 'draft' && <p className="mt-1 text-sm text-slate-600">{item.outcomes.sent} sent · {item.outcomes.dead} failed · {item.outcomes.skipped} skipped · {item.outcomes.cancelled} cancelled</p>}</div><div className="flex flex-wrap gap-2">{item.state === 'draft' && <button className={button} disabled={busy} onClick={() => void act(async () => { const stored = await dispatchData<Dispatch>(`/${item._id}`); setSaved(stored); setDraft({ channel: stored.channel, template: stored.template, content: stored.content, filters: stored.filters, selection: stored.selection, includeTeam: stored.includeTeam }); setReview(null); setSelectedPeople({}); setStep(0) })}>Resume draft</button>}{item.state !== 'draft' && <button className={button} onClick={() => { setDetail(item._id); setDetailPage(1) }}>Delivery details</button>}{['draft', 'queued', 'scheduled'].includes(item.state) && <button className={button} disabled={busy} onClick={() => void act(async () => { await dispatchData(`/${item._id}/cancel`, 'POST', {}); toast.success('Unfinished deliveries cancelled. Emails already transmitting cannot be recalled.'); await client.invalidateQueries({ queryKey: ['broadcast-history'] }) })}>Cancel</button>}</div></div>)}{history.data && !history.data.data.length && <p className="py-8 text-center text-slate-500">No saved drafts or dispatches yet.</p>}</div>
       {history.data && <Pages paging={history.data.pagination} setPage={setHistoryPage} />}
     </section>
     {detail && <section className="rounded-xl border border-slate-200 bg-white p-5"><div className="flex items-center justify-between"><h2 className="font-semibold">Individual delivery details</h2><button className={button} onClick={() => setDetail(null)}>Close details</button></div>{deliveries.isPending && <p role="status" className="py-5">Loading deliveries…</p>}{deliveries.isError && <p role="alert">Unable to load delivery details. <button onClick={() => void deliveries.refetch()} className={button}>Retry</button></p>}<ul className="mt-4 divide-y divide-slate-200">{deliveries.data?.data.map((item) => <li key={item._id} className="flex flex-wrap justify-between gap-3 py-3 text-sm"><span>{item.recipientLabel} <span className="text-slate-500">{item.recipient}</span></span><span className={`capitalize ${item.status === 'dead' ? 'text-red-700' : 'text-slate-600'}`}>{item.status === 'dead' ? 'Failed' : item.status === 'pending' ? 'Queued' : item.status}{item.lastFailure && ` · ${item.lastFailure.code}`}</span></li>)}</ul>{deliveries.data && !deliveries.data.data.length && <p className="py-5 text-slate-500">No individual records available. Delivery details expire after 30 days.</p>}{deliveries.data && <Pages paging={deliveries.data.pagination} setPage={setDetailPage} />}</section>}

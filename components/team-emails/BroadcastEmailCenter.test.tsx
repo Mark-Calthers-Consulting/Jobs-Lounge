@@ -22,6 +22,10 @@ beforeEach(() => {
   vi.mocked(dispatchRequest).mockImplementation(async (path = '', _method, body) => {
     if (path.startsWith('/recipients')) {
       const page = (body as { page: number }).page
+      const search = (body as { filters?: { search?: string } }).filters?.search?.toLowerCase()
+      if (search) {
+        return { data: search.includes('second') ? [people[1]] : [people[0]], pagination: { page: 1, total: 1, totalPages: 1, hasNextPage: false, hasPreviousPage: false }, vacancies: [] } as never
+      }
       return { data: page === 2 ? [people[1]] : [people[0]], pagination: { ...pagination, page, hasNextPage: page === 1, hasPreviousPage: page === 2 }, vacancies: [] } as never
     }
     return { data: [], pagination: { ...pagination, total: 0, totalPages: 1, hasNextPage: false } } as never
@@ -65,6 +69,42 @@ describe('Candidate email centre', () => {
     fireEvent.click(await screen.findByRole('checkbox', { name: 'Select Second Candidate' }))
     fireEvent.click(screen.getAllByRole('button', { name: 'Previous' }).find((button) => !button.hasAttribute('disabled'))!)
     expect(await screen.findByRole('checkbox', { name: 'Select Ada Candidate' })).toBeChecked()
+  })
+  it('keeps named selections across searches and reviews every selected recipient', async () => {
+    mount(); compose()
+    fireEvent.change(screen.getByLabelText('Search name or email'), { target: { value: 'ada' } })
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Select Ada Candidate' }))
+    const selected = screen.getByRole('region', { name: 'Selected recipients' })
+    expect(within(selected).getByText('Ada Candidate')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Search name or email'), { target: { value: 'second' } })
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Select Second Candidate' }))
+    expect(within(selected).getByText('Ada Candidate')).toBeInTheDocument()
+    expect(within(selected).getByText('Second Candidate')).toBeInTheDocument()
+    expect(within(selected).getByText('Selected recipients (2)')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Review email →' }))
+    await screen.findByTitle('Server-rendered email preview')
+    const call = vi.mocked(dispatchData).mock.calls.find(([, , body]) => (body as { selection?: unknown })?.selection)
+    expect(call?.[2]).toMatchObject({ selection: { mode: 'explicit', ids: ['person-one', 'person-two'] }, filters: {} })
+  })
+  it('lets staff remove a recipient outside the current search', async () => {
+    mount(); compose()
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Select Ada Candidate' }))
+    fireEvent.change(screen.getByLabelText('Search name or email'), { target: { value: 'second' } })
+    const selected = screen.getByRole('region', { name: 'Selected recipients' })
+    fireEvent.click(within(selected).getByRole('button', { name: 'Remove Ada Candidate from selected recipients' }))
+    expect(screen.queryByRole('region', { name: 'Selected recipients' })).not.toBeInTheDocument()
+  })
+  it('keeps search as a filter when selecting all matching recipients', async () => {
+    mount(); compose()
+    fireEvent.change(screen.getByLabelText('Search name or email'), { target: { value: 'ada' } })
+    await screen.findByRole('checkbox', { name: 'Select Ada Candidate' })
+    fireEvent.click(screen.getByRole('button', { name: 'Select all matching' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Review email →' }))
+    await screen.findByTitle('Server-rendered email preview')
+    const call = vi.mocked(dispatchData).mock.calls.find(([, , body]) => (body as { selection?: unknown })?.selection)
+    expect(call?.[2]).toMatchObject({ selection: { mode: 'all' }, filters: { search: 'ada' } })
   })
   it('supports all matching recipients with explicit exclusions', async () => {
     mount(); compose(); await screen.findByRole('checkbox', { name: 'Select Ada Candidate' })
