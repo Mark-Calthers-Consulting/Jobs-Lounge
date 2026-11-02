@@ -22,7 +22,7 @@ const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ''} https://www.googletagmanager.com`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://res.cloudinary.com https://www.google-analytics.com https://www.googletagmanager.com https://upload.wikimedia.org https://global.ariseplay.com https://arikair.com https://www.businesslist.com.ng https://www.nbplc.com",
+  "img-src 'self' data: blob: https://assets.markcalthers.com https://res.cloudinary.com https://www.google-analytics.com https://www.googletagmanager.com https://upload.wikimedia.org https://global.ariseplay.com https://arikair.com https://www.businesslist.com.ng https://www.nbplc.com",
   "font-src 'self' data:",
   `connect-src 'self'${publicApiOrigin ? ` ${publicApiOrigin}` : ''} https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com`,
   "frame-src https://www.openstreetmap.org",

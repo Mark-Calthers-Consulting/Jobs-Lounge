@@ -31,7 +31,7 @@ beforeEach(() => {
     return { data: [], pagination: { ...pagination, total: 0, totalPages: 1, hasNextPage: false } } as never
   })
   vi.mocked(dispatchData).mockImplementation(async (path = '', method, body) => {
-    if (path.startsWith('/options')) return { articles: [], vacancies: [] } as never
+    if (path.startsWith('/options')) return { articles: [], vacancies: [], images: [{ key: 'welcome', label: 'Jobs Lounge welcome', alt: 'Jobs Lounge welcome artwork', url: 'https://assets.example.com/welcome.jpg' }] } as never
     if (path.endsWith('/preview')) return review as never
     if (path.endsWith('/send')) return { ...draft, state: 'queued' } as never
     if (method === 'POST' || method === 'PATCH') { draft = { ...(body as object), _id: 'draft-id', revision: 0 }; return draft as never }
@@ -39,6 +39,20 @@ beforeEach(() => {
   })
 })
 describe('Candidate email centre', () => {
+  it('saves an optional image and offers the rendered HTML and plain text previews', async () => {
+    mount()
+    expect(screen.getByRole('radio', { name: 'No image' })).toBeChecked()
+    fireEvent.click(await screen.findByRole('radio', { name: 'Jobs Lounge welcome' }))
+    compose()
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Select Ada Candidate' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Preview email →' }))
+    expect(await screen.findByTitle('Server-rendered email preview')).toHaveAttribute('srcdoc', review.html)
+    const savedBody = vi.mocked(dispatchData).mock.calls.find(([, , body]) => (body as { content?: unknown })?.content)?.[2] as { content: { imageKey: string } }
+    expect(savedBody.content.imageKey).toBe('welcome')
+    fireEvent.click(screen.getByRole('button', { name: 'Text version' }))
+    expect(screen.getByLabelText('Plain text email preview')).toHaveTextContent('Hello Ada')
+    expect(screen.queryByTitle('Server-rendered email preview')).not.toBeInTheDocument()
+  })
   it('provides accessible template choice and clears selections when filters change', async () => {
     mount(); compose()
     await screen.findByRole('checkbox', { name: 'Select Ada Candidate' })
@@ -57,7 +71,7 @@ describe('Candidate email centre', () => {
       path === '/recipients' && (body as { filters?: { verified?: string } })?.filters?.verified === 'unverified',
     )).toBe(true))
     fireEvent.click(screen.getByRole('checkbox', { name: 'Select Ada Candidate' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Review email →' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Preview email →' }))
     await screen.findByTitle('Server-rendered email preview')
     const call = vi.mocked(dispatchData).mock.calls.find(([, , body]) => (body as { filters?: { verified?: string } })?.filters?.verified === 'unverified')
     expect(call?.[2]).toMatchObject({ filters: { verified: 'unverified' } })
@@ -83,7 +97,7 @@ describe('Candidate email centre', () => {
     expect(within(selected).getByText('Second Candidate')).toBeInTheDocument()
     expect(within(selected).getByText('Selected recipients (2)')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Review email →' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Preview email →' }))
     await screen.findByTitle('Server-rendered email preview')
     const call = vi.mocked(dispatchData).mock.calls.find(([, , body]) => (body as { selection?: unknown })?.selection)
     expect(call?.[2]).toMatchObject({ selection: { mode: 'explicit', ids: ['person-one', 'person-two'] }, filters: {} })
@@ -101,7 +115,7 @@ describe('Candidate email centre', () => {
     fireEvent.change(screen.getByLabelText('Search name or email'), { target: { value: 'ada' } })
     await screen.findByRole('checkbox', { name: 'Select Ada Candidate' })
     fireEvent.click(screen.getByRole('button', { name: 'Select all matching' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Review email →' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Preview email →' }))
     await screen.findByTitle('Server-rendered email preview')
     const call = vi.mocked(dispatchData).mock.calls.find(([, , body]) => (body as { selection?: unknown })?.selection)
     expect(call?.[2]).toMatchObject({ selection: { mode: 'all' }, filters: { search: 'ada' } })
@@ -111,14 +125,14 @@ describe('Candidate email centre', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Select all matching' }))
     expect(screen.getByRole('checkbox', { name: 'Select Ada Candidate' })).toBeChecked()
     fireEvent.click(screen.getByRole('checkbox', { name: 'Select Ada Candidate' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Review email →' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Preview email →' }))
     await screen.findByTitle('Server-rendered email preview')
     const call = vi.mocked(dispatchData).mock.calls.find(([, , body]) => (body as { selection?: unknown })?.selection)
     expect((call?.[2] as { selection: unknown }).selection).toEqual({ mode: 'all', ids: [], excludeIds: ['person-one'] })
   })
   it('requires explicit confirmation and reports queue acceptance', async () => {
     mount(); compose(); fireEvent.click(await screen.findByRole('checkbox', { name: 'Select Ada Candidate' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Review email →' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Preview email →' }))
     expect(await screen.findByTitle('Server-rendered email preview')).toHaveAttribute('sandbox', '')
     fireEvent.click(screen.getByRole('button', { name: 'Queue email' }))
     expect(vi.mocked(dispatchData).mock.calls.some(([path]) => path?.endsWith('/send'))).toBe(false)
