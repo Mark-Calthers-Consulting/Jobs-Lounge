@@ -116,10 +116,17 @@ export default function BroadcastEmailCenter({ channel, superAdmin }: { channel:
     setBusy(true); setError('')
     try { await action() } catch (failure) { setError(failure instanceof Error ? failure.message : 'Unable to complete this request. Your message has been kept.') } finally { setBusy(false) }
   }
-  const reviewEmail = () => act(async () => {
+  const reviewEmail = () => {
+    if (draft.template === 'candidate-roundup' && !draft.content.vacancyIds.length) {
+      setError('Choose at least one public opportunity for the vacancy roundup.')
+      setStep(0)
+      return
+    }
+    return act(async () => {
     const stored = await save()
     setReview(await dispatchData<Review>(`/${stored._id}/preview`, 'POST', {})); setRequestId(crypto.randomUUID()); setPreviewFormat('html'); setStep(2)
-  })
+    })
+  }
   const send = () => act(async () => {
     if (!saved || !review) return
     const when = schedule ? dateTimeInputToUtc(schedule, settings.timeZone) : null
@@ -135,13 +142,14 @@ export default function BroadcastEmailCenter({ channel, superAdmin }: { channel:
     change({ ...initialDraft(channel), template: key, content: { ...initialDraft(channel).content, subject: template.subject, message: template.message } }); setSelectedPeople({}); setSaved(null)
   }
   const activeFilters = Object.entries(draft.filters).filter(([, value]) => value !== '' && value !== undefined)
+  const roundupNeedsOpportunity = draft.template === 'candidate-roundup' && !draft.content.vacancyIds.length
   return <div className="space-y-8">
     <fieldset disabled={busy} className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 sm:p-7">
       <legend className="sr-only">{channel === 'newsletter' ? 'Newsletter composer' : 'Candidate email composer'}</legend>
       <ol aria-label="Email composition steps" className="mb-7 flex flex-wrap gap-x-7 gap-y-3 border-b border-slate-200 pb-5 text-sm">
         {['Choose email', 'Select recipients', 'Preview and send'].map((label, index) => <li key={label}><button type="button" disabled={busy || (index === 2 && !review)} aria-current={step === index ? 'step' : undefined} className={`flex items-center gap-2 font-semibold focus-visible:outline-2 focus-visible:outline-blue-700 ${step === index ? 'text-blue-800' : 'text-slate-500'}`} onClick={() => setStep(index)}><span className={`grid size-6 place-items-center rounded-full ${step === index ? 'bg-blue-50' : 'bg-slate-100'}`}>{index + 1}</span>{label}</button></li>)}
       </ol>
-      {error && <p role="alert" className="mb-5 rounded-lg bg-red-50 p-4 text-sm text-red-800">{error} <span className="block mt-1">Your composition has been kept. If eligibility changed, refresh recipients and review again.</span></p>}
+      {error && <p role="alert" className="mb-5 rounded-lg bg-red-50 p-4 text-sm text-red-800">{error} <span className="mt-1 block">Your composition has been kept.</span></p>}
       {step === 0 && <div className="space-y-6">
         {channel === 'candidate' && <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" role="group" aria-label="Choose email template">{templates.filter((item) => item.key !== 'candidate-newsletter').map((item) => <button type="button" key={item.key} aria-pressed={draft.template === item.key} onClick={() => choose(item.key)} className={`rounded-lg border p-4 text-left focus-visible:outline-2 focus-visible:outline-blue-700 ${draft.template === item.key ? 'border-blue-700 bg-blue-50/40' : 'border-slate-200 hover:border-slate-400'}`}><span className="block font-semibold text-slate-950">{item.title}</span><span className="mt-1 block text-sm leading-6 text-slate-600">{item.description}</span></button>)}</div>}
         <label className="block text-sm font-semibold text-slate-800">Subject<input className={control} minLength={3} maxLength={150} value={draft.content.subject} onChange={(event) => change({ ...draft, content: { ...draft.content, subject: event.target.value } })} /></label>
@@ -166,10 +174,10 @@ export default function BroadcastEmailCenter({ channel, superAdmin }: { channel:
           <label className="text-sm font-semibold">Search public opportunities<input className={control} maxLength={100} value={vacancySearch} onChange={(event) => setVacancySearch(event.target.value)} /></label>
           {options.isPending && <p role="status">Loading published content…</p>}
           {options.isError && <p role="alert">Unable to load published content. <button className={button} onClick={() => void options.refetch()}>Retry</button></p>}
-          {(channel === 'newsletter' ? ['articleIds', 'vacancyIds'] as const : ['vacancyIds'] as const).map((key) => <fieldset key={key} className="rounded-lg border border-slate-200 p-4"><legend className="px-1 text-sm font-semibold">{key === 'articleIds' ? 'Career Insights · up to 3' : 'Public opportunities · up to 6'}</legend><div className="max-h-60 space-y-3 overflow-auto">{(key === 'articleIds' ? options.data?.articles : options.data?.vacancies)?.map((item) => <label key={item._id} className="flex items-start gap-3 text-sm"><input type="checkbox" className="mt-1 size-4 accent-blue-700" checked={draft.content[key].includes(item._id)} disabled={!draft.content[key].includes(item._id) && draft.content[key].length >= (key === 'articleIds' ? 3 : 6)} onChange={(event) => change({ ...draft, content: { ...draft.content, [key]: event.target.checked ? [...draft.content[key], item._id] : draft.content[key].filter((id) => id !== item._id) } })} />{item.title}{'locations' in item && Array.isArray(item.locations) && <span className="text-slate-500"> · {item.locations.join(', ')}</span>}</label>)}{options.data && !(key === 'articleIds' ? options.data.articles : options.data.vacancies).length && <p className="text-sm text-slate-500">No published content available.</p>}</div></fieldset>)}
+          {(channel === 'newsletter' ? ['articleIds', 'vacancyIds'] as const : ['vacancyIds'] as const).map((key) => <fieldset key={key} className="rounded-lg border border-slate-200 p-4"><legend className="px-1 text-sm font-semibold">{key === 'articleIds' ? 'Career Insights · up to 3' : draft.template === 'candidate-roundup' ? 'Public opportunities · choose 1 to 6' : 'Public opportunities · up to 6'}</legend><div className="max-h-60 space-y-3 overflow-auto">{(key === 'articleIds' ? options.data?.articles : options.data?.vacancies)?.map((item) => <label key={item._id} className="flex items-start gap-3 text-sm"><input type="checkbox" className="mt-1 size-4 accent-blue-700" checked={draft.content[key].includes(item._id)} disabled={!draft.content[key].includes(item._id) && draft.content[key].length >= (key === 'articleIds' ? 3 : 6)} onChange={(event) => change({ ...draft, content: { ...draft.content, [key]: event.target.checked ? [...draft.content[key], item._id] : draft.content[key].filter((id) => id !== item._id) } })} />{item.title}{'locations' in item && Array.isArray(item.locations) && <span className="text-slate-500"> · {item.locations.join(', ')}</span>}</label>)}{options.data && !(key === 'articleIds' ? options.data.articles : options.data.vacancies).length && <p className="text-sm text-slate-500">No published content available.</p>}</div>{key === 'vacancyIds' && draft.template === 'candidate-roundup' && <p className="mt-3 text-sm text-slate-600">{draft.content.vacancyIds.length} selected. At least one opportunity is required for this email.</p>}</fieldset>)}
         </div>}
         {channel === 'newsletter' && <label className="block text-sm font-semibold">Closing message <span className="font-normal text-slate-500">(optional)</span><textarea className={control} rows={3} maxLength={1000} value={draft.content.closing} onChange={(event) => change({ ...draft, content: { ...draft.content, closing: event.target.value } })} /></label>}
-        <div className="flex flex-wrap gap-3"><button className={button} disabled={busy} onClick={() => void act(async () => { await save(); toast.success('Draft saved') })}>Save draft</button><button className={`${button} !bg-slate-950 !text-white`} disabled={!draft.content.subject.trim() || !draft.content.message.trim()} onClick={() => setStep(1)}>Select recipients →</button></div>
+        <div className="flex flex-wrap gap-3"><button className={button} disabled={busy} onClick={() => void act(async () => { await save(); toast.success('Draft saved') })}>Save draft</button><button className={`${button} !bg-slate-950 !text-white`} disabled={!draft.content.subject.trim() || !draft.content.message.trim() || roundupNeedsOpportunity} onClick={() => setStep(1)}>Select recipients →</button></div>
       </div>}
       {step === 1 && <div className="space-y-5">
         <p className="text-sm text-slate-600">{superAdmin ? 'Find candidate accounts, including registered users without applications.' : 'Only applicants to your own non-archived vacancies are available.'} Different filters combine with AND. Opted-out recipients are excluded.</p>

@@ -31,7 +31,7 @@ beforeEach(() => {
     return { data: [], pagination: { ...pagination, total: 0, totalPages: 1, hasNextPage: false } } as never
   })
   vi.mocked(dispatchData).mockImplementation(async (path = '', method, body) => {
-    if (path.startsWith('/options')) return { articles: [], vacancies: [], images: [{ key: 'welcome', label: 'Jobs Lounge welcome', alt: 'Jobs Lounge welcome artwork', url: 'https://assets.example.com/welcome.jpg' }] } as never
+    if (path.startsWith('/options')) return { articles: [], vacancies: [{ _id: 'vacancy-one', title: 'Sales Manager', locations: ['Abuja'] }], images: [{ key: 'welcome', label: 'Jobs Lounge welcome', alt: 'Jobs Lounge welcome artwork', url: 'https://assets.example.com/welcome.jpg' }] } as never
     if (path.endsWith('/preview')) return review as never
     if (path.endsWith('/send')) return { ...draft, state: 'queued' } as never
     if (method === 'POST' || method === 'PATCH') { draft = { ...(body as object), _id: 'draft-id', revision: 0 }; return draft as never }
@@ -39,6 +39,31 @@ beforeEach(() => {
   })
 })
 describe('Candidate email centre', () => {
+  it('requires a public opportunity before moving a vacancy roundup to recipients', async () => {
+    mount()
+    fireEvent.click(screen.getByRole('button', { name: /Vacancy roundup/ }))
+    await screen.findByRole('checkbox', { name: /Sales Manager/ })
+    expect(screen.getByRole('button', { name: 'Select recipients →' })).toBeDisabled()
+    expect(screen.getByText('0 selected. At least one opportunity is required for this email.')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('checkbox', { name: /Sales Manager/ }))
+    expect(screen.getByRole('button', { name: 'Select recipients →' })).toBeEnabled()
+    fireEvent.click(screen.getByRole('button', { name: 'Select recipients →' }))
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Select Ada Candidate' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Preview email →' }))
+    await screen.findByTitle('Server-rendered email preview')
+    const savedBody = vi.mocked(dispatchData).mock.calls.find(([, , body]) => (body as { content?: unknown })?.content)?.[2] as { content: { vacancyIds: string[] } }
+    expect(savedBody.content.vacancyIds).toEqual(['vacancy-one'])
+  })
+  it('returns an incomplete roundup draft to its opportunity picker', async () => {
+    mount()
+    fireEvent.click(screen.getByRole('button', { name: /Vacancy roundup/ }))
+    fireEvent.click(screen.getByRole('button', { name: '2 Select recipients' }))
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Select Ada Candidate' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Preview email →' }))
+    expect(screen.getByRole('alert')).toHaveTextContent('Choose at least one public opportunity for the vacancy roundup.')
+    expect(screen.getByRole('button', { name: 'Select recipients →' })).toBeDisabled()
+    expect(vi.mocked(dispatchData).mock.calls.some(([path]) => path?.endsWith('/preview'))).toBe(false)
+  })
   it('saves an optional image and offers the rendered HTML and plain text previews', async () => {
     mount()
     expect(screen.getByRole('radio', { name: 'No image' })).toBeChecked()
