@@ -1,7 +1,9 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import {
+  type FormEvent,
   Suspense,
   useCallback,
   useEffect,
@@ -123,6 +125,20 @@ const VacanciesContent = () => {
     router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false })
   }, [pathname, queryString, router])
 
+  const applySearch = useCallback((rawSearch: string) => {
+    const trimmed = rawSearch.trim()
+    const nextSearch = trimmed.length >= 3 ? trimmed : ''
+    replaceParams((params) => {
+      if (nextSearch) params.set('search', nextSearch)
+      else params.delete('search')
+    })
+  }, [replaceParams])
+
+  const handleSearchSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    applySearch(inputValue)
+  }, [applySearch, inputValue])
+
   const applyFilters = useCallback((next: VacancyFilterState) => {
     replaceParams((params) => {
       for (const name of FILTER_PARAM_NAMES) params.delete(name)
@@ -161,14 +177,11 @@ const VacanciesContent = () => {
       const trimmed = inputValue.trim()
       const nextSearch = trimmed.length >= 3 ? trimmed : ''
       if (nextSearch === urlSearch) return
-      replaceParams((params) => {
-        if (nextSearch) params.set('search', nextSearch)
-        else params.delete('search')
-      })
+      applySearch(inputValue)
     }, 400)
 
     return () => window.clearTimeout(timer)
-  }, [inputValue, replaceParams, urlSearch])
+  }, [applySearch, inputValue, urlSearch])
 
   const vacancyFilters: VacancyFilters = {
     page,
@@ -194,32 +207,62 @@ const VacanciesContent = () => {
 
   return (
     <div>
-      <header className="mb-6 w-full bg-[#003B6D]">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-6 py-5 sm:flex-row sm:items-center sm:justify-between md:px-12">
-          <h1 className="text-xl font-semibold text-white">Find jobs</h1>
-          <div className="w-full sm:w-80">
-            <label htmlFor="job-search" className="sr-only">Search jobs by title</label>
-            <input
-              id="job-search"
-              type="search"
-              maxLength={80}
-              value={inputValue}
-              onChange={(event) => setInputValue(event.target.value)}
-              className="w-full rounded-md border border-transparent bg-white px-4 py-2.5 text-black placeholder:text-sm focus:outline-none"
-              placeholder="Search jobs by title"
-              aria-describedby="job-search-hint"
-            />
-            <span id="job-search-hint" className="sr-only">
-              Enter at least three letters to search.
-            </span>
+      <header className="relative isolate w-full overflow-hidden bg-[#071a3d] text-white">
+        <div className="relative mx-auto flex min-h-56 max-w-7xl items-center px-6 py-6 md:px-12">
+          <Image
+            src="/vacancies-hero.png"
+            alt=""
+            aria-hidden="true"
+            width={1536}
+            height={1024}
+            sizes="(min-width: 1024px) 320px, 0px"
+            className="pointer-events-none absolute bottom-0 right-0 z-0 hidden h-56 w-80 object-contain object-bottom lg:block"
+          />
+          <div className="relative z-10 w-full">
+            <div className="lg:max-w-[56%]">
+              <h1 className="max-w-[42.5rem] text-balance text-4xl font-semibold text-white">
+                Find work that moves you forward.
+              </h1>
+              <p className="mt-3 max-w-[42.5rem] text-pretty text-base text-white/90 sm:text-lg">
+                Explore opportunities across leading companies and take the next step in your career.
+              </p>
+            </div>
+            <form
+              role="search"
+              aria-label="Search vacancies"
+              onSubmit={handleSearchSubmit}
+              className="relative z-20 mt-4 flex min-h-14 w-full max-w-5xl items-center gap-2 rounded-full bg-white p-1 text-[#101A35] shadow-md focus-within:ring-2 focus-within:ring-white focus-within:ring-offset-2 focus-within:ring-offset-[#071a3d]"
+            >
+              <svg aria-hidden="true" className="ml-3 size-5 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <circle cx="11" cy="11" r="7" strokeWidth="1.8" />
+                <path strokeLinecap="round" strokeWidth="1.8" d="m16 16 4 4" />
+              </svg>
+              <label htmlFor="job-search" className="sr-only">Search vacancies by title</label>
+              <input
+                id="job-search"
+                type="search"
+                maxLength={80}
+                value={inputValue}
+                onChange={(event) => setInputValue(event.target.value)}
+                className="min-w-0 flex-1 rounded-full border-0 bg-transparent px-2 py-3 text-base text-[#101A35] placeholder:text-sm placeholder:text-slate-500 focus:outline-none"
+                placeholder="Search jobs by title"
+                aria-describedby="job-search-hint"
+              />
+              <span id="job-search-hint" className="sr-only">
+                Enter at least three characters to search.
+              </span>
+              <button
+                type="submit"
+                className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-full bg-[#e23845] px-4 text-base font-semibold text-white transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-[#c92f3b] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e23845] focus-visible:ring-offset-2 focus-visible:ring-offset-white sm:px-6"
+              >
+                Search jobs
+              </button>
+            </form>
           </div>
-          <p className="hidden text-sm text-white/85 sm:block">
-            Home <span aria-hidden="true">/</span> Vacancies
-          </p>
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-6 pb-8 md:px-12">
+      <main className="mx-auto max-w-7xl px-6 pb-8 pt-8 md:px-12 md:pt-10">
         <div className="grid items-start gap-6 lg:grid-cols-[14rem_minmax(0,1fr)] xl:gap-6">
           <JobFilters
             filters={filters}
