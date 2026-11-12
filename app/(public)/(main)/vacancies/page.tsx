@@ -143,6 +143,15 @@ const VacanciesContent = () => {
     })
   }, [replaceParams])
 
+  const clearFilters = useCallback(() => applyFilters({
+    category: [],
+    workMode: [],
+    jobType: [],
+    level: [],
+    location: [],
+    salaryDisclosed: false,
+  }), [applyFilters])
+
   useEffect(() => {
     setInputValue(urlSearch)
   }, [urlSearch])
@@ -211,110 +220,142 @@ const VacanciesContent = () => {
       </header>
 
       <main className="mx-auto max-w-7xl px-6 pb-8 md:px-12">
-        <JobFilters
-          filters={filters}
-          sort={sort}
-          options={filterOptionsQuery.data}
-          optionsLoading={filterOptionsQuery.isLoading}
-          optionsError={filterOptionsQuery.isError}
-          resultTotal={vacancyPage?.pagination.total ?? 0}
-          onFiltersChange={applyFilters}
-          onSortChange={(nextSort) => replaceParams((params) => {
-            if (nextSort === 'newest') params.delete('sort')
-            else params.set('sort', nextSort)
-          })}
-          onClearFilters={() => applyFilters({
-            category: [],
-            workMode: [],
-            jobType: [],
-            level: [],
-            location: [],
-            salaryDisclosed: false,
-          })}
-        />
+        <div className="grid items-start gap-6 lg:grid-cols-[14rem_minmax(0,1fr)] xl:gap-6">
+          <JobFilters
+            filters={filters}
+            options={filterOptionsQuery.data}
+            optionsLoading={filterOptionsQuery.isLoading}
+            optionsError={filterOptionsQuery.isError}
+            onFiltersChange={applyFilters}
+            onClearFilters={clearFilters}
+          />
 
-        <section
-          aria-label="Job search results"
-          aria-busy={vacancyQuery.isFetching}
-          aria-live="polite"
-          className="mt-5 grid grid-cols-1 content-start gap-2 md:grid-cols-2 lg:grid-cols-3"
-        >
-          {vacancyQuery.isLoading ? (
-            <p role="status" className="col-span-full mx-auto py-16 text-xl">Loading jobs…</p>
-          ) : null}
-
-          {vacancyQuery.isError ? (
-            <div className="col-span-full py-16 text-center">
-              <p role="alert" className="text-red-700">Could not load jobs.</p>
-              <button
-                type="button"
-                onClick={() => void vacancyQuery.refetch()}
-                className="mt-3 rounded-md border border-gray-300 px-4 py-2 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003B6D]"
-              >
-                Try again
-              </button>
-            </div>
-          ) : null}
-
-          {!vacancyQuery.isLoading && !vacancyQuery.isError && jobs.length === 0 ? (
-            <div className="col-span-full flex items-center justify-center py-16">
-              <div className="px-4 text-center">
-                <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gray-100">
-                  <svg aria-hidden="true" className="size-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 9.172a4 4 0 115.656 5.656M15 15l5 5m-5-5A7 7 0 1110 3a7 7 0 015 12z" />
-                  </svg>
-                </div>
-                <h2 className="mt-4 text-lg font-semibold text-gray-900">No matching jobs</h2>
-                <p className="mx-auto mt-2 max-w-sm text-sm text-gray-500">
-                  Try changing your search keywords or removing some filters to see more results.
+          <div className="min-w-0">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-base font-semibold text-gray-950" aria-live="polite">
+                  {vacancyQuery.isLoading
+                    ? 'Loading vacancies…'
+                    : vacancyQuery.isError
+                      ? 'Vacancies unavailable'
+                      : `${(vacancyPage?.pagination.total ?? 0).toLocaleString()} ${(vacancyPage?.pagination.total ?? 0) === 1 ? 'vacancy' : 'vacancies'} found`}
                 </p>
+                {vacancyQuery.isFetching && !vacancyQuery.isLoading ? (
+                  <p role="status" className="text-xs text-gray-500">Updating results…</p>
+                ) : null}
               </div>
-            </div>
-          ) : jobs.map((job: Job) => {
-            const locations = publicJobLocations(job)
-            return (
-            <article key={job._id} className="min-w-0 overflow-hidden rounded p-5 ring-2 ring-gray-100">
-              <p className="break-words text-sm text-gray-600 [overflow-wrap:anywhere]">{job.company.name}</p>
-              <h2 className="break-words font-semibold [overflow-wrap:anywhere]">{job.title}</h2>
-              <p className="my-2 break-words leading-5 text-gray-600 [overflow-wrap:anywhere]">
-                {job.description.slice(0, 90)}...
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <p className="rounded bg-[#e3e3e3] px-2 py-1 text-sm text-[#222]">{job.jobType}</p>
-                <p className="rounded bg-[#e3e3e3] px-2 py-1 text-sm text-[#222]">{job.level} level</p>
-              </div>
-              <hr className="my-3 text-[#d4d4d4]" />
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0 flex-1 text-sm text-gray-600">
-                  <p className="break-words [overflow-wrap:anywhere]">
-                    {publicJobLocationSummary(job, { compact: true })}
-                  </p>
-                  {locations.length > 1 ? (
-                    <p className="mt-1 text-xs font-semibold text-[#184aa2]">
-                      {locations.length} locations available
-                    </p>
-                  ) : null}
-                </div>
-                <Link
-                  className="shrink-0 rounded bg-[#003B6D] px-5 py-2 text-sm text-white"
-                  href={`/vacancies/${job._id}`}
-                  aria-label={`View ${job.title} at ${job.company.name}`}
+              <label className="flex items-center gap-2 text-sm text-gray-600">
+                <span>Sort by</span>
+                <select
+                  value={sort}
+                  onChange={(event) => replaceParams((params) => {
+                    if (event.target.value === 'newest') params.delete('sort')
+                    else params.set('sort', event.target.value)
+                  })}
+                  className="min-h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#003B6D]"
                 >
-                  View job
-                </Link>
-              </div>
-            </article>
-            )
-          })}
-        </section>
+                  <option value="newest">Newest</option>
+                  <option value="oldest">Oldest</option>
+                </select>
+              </label>
+            </div>
 
-        <PaginationControls
-          pagination={vacancyPage?.pagination}
-          onPageChange={(nextPage) => replaceParams((params) => {
-            if (nextPage <= 1) params.delete('page')
-            else params.set('page', String(nextPage))
-          }, false)}
-        />
+            <section
+              aria-label="Job search results"
+              aria-busy={vacancyQuery.isFetching}
+              className="grid grid-cols-1 content-start gap-4 md:grid-cols-2 xl:grid-cols-3"
+            >
+              {vacancyQuery.isLoading ? (
+                <p role="status" className="col-span-full mx-auto py-16 text-xl">Loading vacancies…</p>
+              ) : null}
+
+              {vacancyQuery.isError ? (
+                <div className="col-span-full py-16 text-center">
+                  <p role="alert" className="text-red-700">Could not load vacancies.</p>
+                  <button
+                    type="button"
+                    onClick={() => void vacancyQuery.refetch()}
+                    className="mt-3 rounded-md border border-gray-300 px-4 py-2 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003B6D]"
+                  >
+                    Try again
+                  </button>
+                </div>
+              ) : null}
+
+              {!vacancyQuery.isLoading && !vacancyQuery.isError && jobs.length === 0 ? (
+                <div className="col-span-full flex items-center justify-center py-16">
+                  <div className="px-4 text-center">
+                    <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gray-100">
+                      <svg aria-hidden="true" className="size-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 9.172a4 4 0 115.656 5.656M15 15l5 5m-5-5A7 7 0 1110 3a7 7 0 015 12z" />
+                      </svg>
+                    </div>
+                    <h2 className="mt-4 text-lg font-semibold text-gray-900">No matching vacancies</h2>
+                    <p className="mx-auto mt-2 max-w-sm text-sm text-gray-500">
+                      Try changing your search or clearing filters to see more vacancies.
+                    </p>
+                    {FILTER_PARAM_NAMES.some((name) => searchParams.has(name)) ? (
+                      <button
+                        type="button"
+                        onClick={clearFilters}
+                        className="mt-4 rounded-md px-3 py-2 text-sm font-semibold text-[#003B6D] underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]"
+                      >
+                        Clear filters
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
+
+              {!vacancyQuery.isLoading && !vacancyQuery.isError && jobs.length > 0
+                ? jobs.map((job: Job) => {
+                  const locations = publicJobLocations(job)
+                  return (
+                    <article key={job._id} className="min-w-0 overflow-hidden rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+                      <p className="break-words text-sm text-gray-600 [overflow-wrap:anywhere]">{job.company.name}</p>
+                      <h2 className="break-words font-semibold [overflow-wrap:anywhere]">{job.title}</h2>
+                      <p className="my-2 break-words leading-5 text-gray-600 [overflow-wrap:anywhere]">
+                        {job.description.slice(0, 90)}...
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <p className="rounded bg-[#e3e3e3] px-2 py-1 text-sm text-[#222]">{job.jobType}</p>
+                        <p className="rounded bg-[#e3e3e3] px-2 py-1 text-sm text-[#222]">{job.level} level</p>
+                      </div>
+                      <hr className="my-3 text-[#d4d4d4]" />
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0 flex-1 text-sm text-gray-600">
+                          <p className="break-words [overflow-wrap:anywhere]">
+                            {publicJobLocationSummary(job, { compact: true })}
+                          </p>
+                          {locations.length > 1 ? (
+                            <p className="mt-1 text-xs font-semibold text-[#184aa2]">
+                              {locations.length} locations available
+                            </p>
+                          ) : null}
+                        </div>
+                        <Link
+                          className="shrink-0 rounded bg-[#003B6D] px-5 py-2 text-sm text-white"
+                          href={`/vacancies/${job._id}`}
+                          aria-label={`View ${job.title} at ${job.company.name}`}
+                        >
+                          View job
+                        </Link>
+                      </div>
+                    </article>
+                  )
+                })
+                : null}
+            </section>
+
+            <PaginationControls
+              pagination={vacancyPage?.pagination}
+              onPageChange={(nextPage) => replaceParams((params) => {
+                if (nextPage <= 1) params.delete('page')
+                else params.set('page', String(nextPage))
+              }, false)}
+            />
+          </div>
+        </div>
       </main>
     </div>
   )

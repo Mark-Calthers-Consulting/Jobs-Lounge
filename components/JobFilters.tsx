@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useId,
   useRef,
   useState,
 } from 'react'
@@ -19,7 +20,6 @@ import type {
   JobFilterOption,
   JobFilterOptions,
   VacancyDatePosted,
-  VacancySort,
 } from '@/types/types'
 
 export type VacancyFilterState = {
@@ -37,13 +37,10 @@ export type VacancyFilterState = {
 
 type JobFiltersProps = {
   filters: VacancyFilterState
-  sort: VacancySort
   options?: JobFilterOptions
   optionsLoading: boolean
   optionsError: boolean
-  resultTotal: number
   onFiltersChange: (filters: VacancyFilterState) => void
-  onSortChange: (sort: VacancySort) => void
   onClearFilters: () => void
 }
 
@@ -60,7 +57,7 @@ const focusableSelector = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(',')
 
-const baseFilters = (): VacancyFilterState => ({
+const emptyFilters = (): VacancyFilterState => ({
   category: [],
   workMode: [],
   jobType: [],
@@ -112,18 +109,16 @@ const FilterChoices = <T extends string>({
   selected,
   onChange,
   maximum,
-  compact = false,
 }: {
   legend: string
   choices: Choice[]
   selected: T[]
   onChange: (values: T[]) => void
   maximum?: number
-  compact?: boolean
 }) => (
   <fieldset>
-    <legend className="mb-2 text-sm font-semibold text-gray-900">{legend}</legend>
-    <div className={compact ? 'space-y-2' : 'grid gap-2 sm:grid-cols-2'}>
+    <legend className="sr-only">{legend}</legend>
+    <div className="space-y-1">
       {choices.map((choice) => {
         const checked = selected.includes(choice.value as T)
         const selectionLimitReached = maximum !== undefined
@@ -132,7 +127,7 @@ const FilterChoices = <T extends string>({
         return (
           <label
             key={choice.value}
-            className="flex cursor-pointer items-start justify-between gap-3 rounded-md px-1 py-1 text-sm text-gray-700"
+            className={`flex cursor-pointer items-start justify-between gap-3 rounded-md px-1 py-1.5 text-sm ${selectionLimitReached ? 'cursor-not-allowed text-gray-400' : 'text-gray-700 hover:bg-gray-50'}`}
           >
             <span className="flex min-w-0 items-start gap-2">
               <input
@@ -144,13 +139,15 @@ const FilterChoices = <T extends string>({
                   choice.value as T,
                   maximum,
                 ))}
-                className="mt-0.5 size-4 accent-[#003B6D]"
+                className="mt-0.5 size-4 shrink-0 accent-[#003B6D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2] focus-visible:ring-offset-2"
               />
               <span className="break-words">{choice.value}</span>
             </span>
-            {choice.count !== undefined
-              ? <span className="shrink-0 text-xs text-gray-400">{choice.count}</span>
-              : null}
+            {choice.count !== undefined ? (
+              <span className="shrink-0 text-xs tabular-nums text-gray-500">
+                {choice.count}
+              </span>
+            ) : null}
           </label>
         )
       })}
@@ -158,58 +155,50 @@ const FilterChoices = <T extends string>({
   </fieldset>
 )
 
-const MultiSelectMenu = <T extends string>({
+const FilterGroup = ({
   label,
-  choices,
-  selected,
-  onChange,
+  selectedCount = 0,
+  initiallyOpen = false,
+  children,
 }: {
   label: string
-  choices: Choice[]
-  selected: T[]
-  onChange: (values: T[]) => void
+  selectedCount?: number
+  initiallyOpen?: boolean
+  children: React.ReactNode
 }) => {
-  const menuRef = useRef<HTMLDetailsElement>(null)
+  const [open, setOpen] = useState(initiallyOpen)
+  const contentId = useId()
 
   return (
-    <details ref={menuRef} className="group relative">
-      <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:border-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003B6D] [&::-webkit-details-marker]:hidden">
-        <span>{label}</span>
-        {selected.length > 0 ? (
-          <span className="rounded-full bg-[#003B6D] px-1.5 py-0.5 text-xs font-semibold text-white">
-            {selected.length}
-          </span>
-        ) : null}
-        <FiChevronDown aria-hidden="true" className="ml-auto transition group-open:rotate-180" />
-      </summary>
-      <div className="absolute left-0 top-full z-30 mt-2 max-h-80 w-72 overflow-y-auto rounded-lg border border-gray-200 bg-white p-4 pr-12 shadow-lg">
+    <section className="border-b border-gray-200 py-3 last:border-b-0">
+      <h3>
         <button
           type="button"
-          onClick={() => menuRef.current?.removeAttribute('open')}
-          aria-label={`Close ${label} filters`}
-          className="absolute right-2.5 top-2.5 rounded-md p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003B6D]"
+          aria-expanded={open}
+          aria-controls={contentId}
+          onClick={() => setOpen((current) => !current)}
+          className="flex min-h-8 w-full items-center gap-2 rounded text-left text-sm font-semibold text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]"
         >
-          <FiX aria-hidden="true" size={18} />
+          <span className="min-w-0 flex-1">{label}</span>
+          {selectedCount > 0 ? (
+            <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-[#003B6D]">
+              {selectedCount}
+              <span className="sr-only"> selected</span>
+            </span>
+          ) : null}
+          <FiChevronDown aria-hidden="true" className={open ? 'rotate-180' : ''} />
         </button>
-        <FilterChoices
-          legend={label}
-          choices={choices}
-          selected={selected}
-          onChange={onChange}
-          compact
-        />
-      </div>
-    </details>
+      </h3>
+      <div id={contentId} hidden={!open} className="pt-2">{children}</div>
+    </section>
   )
 }
 
-const AdvancedFields = ({
+const AdditionalFields = ({
   filters,
-  locationChoices,
   onChange,
 }: {
   filters: VacancyFilterState
-  locationChoices: Choice[]
   onChange: (filters: VacancyFilterState) => void
 }) => {
   const updateExperience = (
@@ -238,159 +227,215 @@ const AdvancedFields = ({
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-4">
-      <div className="lg:col-span-2">
-        <FilterChoices
-          legend="Location"
-          choices={locationChoices}
-          selected={filters.location}
-          maximum={5}
-          onChange={(location) => onChange({ ...filters, location })}
+    <div className="space-y-4">
+      <label className="block text-sm font-medium text-gray-800">
+        Date posted
+        <select
+          value={filters.datePosted ?? ''}
+          onChange={(event) => onChange({
+            ...filters,
+            datePosted: (event.target.value || undefined) as VacancyDatePosted | undefined,
+          })}
+          className="mt-1.5 min-h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#003B6D]"
+        >
+          <option value="">Any time</option>
+          <option value="24h">Last 24 hours</option>
+          <option value="7d">Last 7 days</option>
+          <option value="30d">Last 30 days</option>
+        </select>
+      </label>
+
+      <fieldset>
+        <legend className="text-sm font-medium text-gray-800">Required experience</legend>
+        <div className="mt-1.5 grid grid-cols-2 gap-2">
+          <label className="text-xs text-gray-600">
+            Minimum years
+            <input
+              type="number"
+              inputMode="numeric"
+              min="0"
+              max="60"
+              value={filters.experienceMin ?? ''}
+              onChange={(event) => updateExperience('experienceMin', event.target.value)}
+              className="mt-1 min-h-10 w-full rounded-md border border-gray-300 px-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#003B6D]"
+            />
+          </label>
+          <label className="text-xs text-gray-600">
+            Maximum years
+            <input
+              type="number"
+              inputMode="numeric"
+              min="0"
+              max="60"
+              value={filters.experienceMax ?? ''}
+              onChange={(event) => updateExperience('experienceMax', event.target.value)}
+              className="mt-1 min-h-10 w-full rounded-md border border-gray-300 px-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#003B6D]"
+            />
+          </label>
+        </div>
+      </fieldset>
+
+      <label className="block text-sm font-medium text-gray-800">
+        Minimum salary (NGN)
+        <input
+          type="number"
+          inputMode="numeric"
+          min="0"
+          max="1000000000000"
+          step="50000"
+          value={filters.salaryMin ?? ''}
+          onChange={(event) => {
+            const value = event.target.value
+            onChange({
+              ...filters,
+              salaryMin: value === ''
+                ? undefined
+                : boundedNumberInput(value, 1_000_000_000_000),
+            })
+          }}
+          placeholder="e.g. 500000"
+          className="mt-1.5 min-h-10 w-full rounded-md border border-gray-300 px-3 py-2 text-sm font-normal text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#003B6D]"
         />
-        {locationChoices.length === 0 ? (
-          <p className="text-sm text-gray-500">No locations are currently available.</p>
-        ) : null}
-      </div>
+      </label>
 
-      <div className="space-y-5">
-        <label className="block text-sm font-semibold text-gray-900">
-          Date posted
-          <select
-            value={filters.datePosted ?? ''}
-            onChange={(event) => onChange({
-              ...filters,
-              datePosted: (event.target.value || undefined) as VacancyDatePosted | undefined,
-            })}
-            className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 font-normal text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#003B6D]"
-          >
-            <option value="">Any time</option>
-            <option value="24h">Last 24 hours</option>
-            <option value="7d">Last 7 days</option>
-            <option value="30d">Last 30 days</option>
-          </select>
-        </label>
-
-        <fieldset>
-          <legend className="text-sm font-semibold text-gray-900">Required experience</legend>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            <label className="text-xs text-gray-600">
-              Minimum years
-              <input
-                type="number"
-                inputMode="numeric"
-                min="0"
-                max="60"
-                value={filters.experienceMin ?? ''}
-                onChange={(event) => updateExperience('experienceMin', event.target.value)}
-                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#003B6D]"
-              />
-            </label>
-            <label className="text-xs text-gray-600">
-              Maximum years
-              <input
-                type="number"
-                inputMode="numeric"
-                min="0"
-                max="60"
-                value={filters.experienceMax ?? ''}
-                onChange={(event) => updateExperience('experienceMax', event.target.value)}
-                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#003B6D]"
-              />
-            </label>
-          </div>
-        </fieldset>
-      </div>
-
-      <div className="space-y-5">
-        <label className="block text-sm font-semibold text-gray-900">
-          Minimum salary (NGN)
-          <input
-            type="number"
-            inputMode="numeric"
-            min="0"
-            max="1000000000000"
-            step="50000"
-            value={filters.salaryMin ?? ''}
-            onChange={(event) => {
-              const value = event.target.value
-              onChange({
-                ...filters,
-                salaryMin: value === ''
-                  ? undefined
-                  : boundedNumberInput(value, 1_000_000_000_000),
-              })
-            }}
-            placeholder="e.g. 500000"
-            className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 font-normal text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#003B6D]"
-          />
-        </label>
-
-        <label className="flex cursor-pointer items-start gap-2 text-sm text-gray-700">
-          <input
-            type="checkbox"
-            checked={filters.salaryDisclosed}
-            onChange={(event) => onChange({
-              ...filters,
-              salaryDisclosed: event.target.checked,
-            })}
-            className="mt-0.5 size-4 accent-[#003B6D]"
-          />
-          Only show jobs with salary information
-        </label>
-      </div>
+      <label className="flex cursor-pointer items-start gap-2 rounded-md px-1 py-1 text-sm text-gray-700 hover:bg-gray-50">
+        <input
+          type="checkbox"
+          checked={filters.salaryDisclosed}
+          onChange={(event) => onChange({
+            ...filters,
+            salaryDisclosed: event.target.checked,
+          })}
+          className="mt-0.5 size-4 accent-[#003B6D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2] focus-visible:ring-offset-2"
+        />
+        Only show jobs with salary information
+      </label>
     </div>
   )
 }
 
-const formatSalary = (value: number) => new Intl.NumberFormat('en-NG', {
-  style: 'currency',
-  currency: 'NGN',
-  maximumFractionDigits: 0,
-}).format(value)
+const FilterGroups = ({
+  filters,
+  options,
+  onChange,
+  idPrefix,
+}: {
+  filters: VacancyFilterState
+  options?: JobFilterOptions
+  onChange: (filters: VacancyFilterState) => void
+  idPrefix: string
+}) => {
+  const [locationSearch, setLocationSearch] = useState('')
+  const [showAllLocations, setShowAllLocations] = useState(false)
+
+  const categoryChoices = choicesWithFallback(options?.categories, JOB_ENUMS.category, filters.category)
+  const workModeChoices = choicesWithFallback(options?.workModes, JOB_ENUMS.workMode, filters.workMode)
+  const jobTypeChoices = choicesWithFallback(options?.jobTypes, JOB_ENUMS.jobType, filters.jobType)
+  const levelChoices = choicesWithFallback(options?.levels, JOB_ENUMS.level, filters.level)
+  const locationChoices = choicesWithFallback(options?.locations, [], filters.location)
+  const matchingLocations = locationChoices.filter(({ value }) => (
+    value.toLocaleLowerCase().includes(locationSearch.trim().toLocaleLowerCase())
+  ))
+  const visibleLocations = showAllLocations || locationSearch.trim()
+    ? matchingLocations
+    : matchingLocations.slice(0, 5)
+  const additionalFilterCount = Number(Boolean(filters.datePosted))
+    + Number(filters.experienceMin !== undefined || filters.experienceMax !== undefined)
+    + Number(filters.salaryMin !== undefined)
+    + Number(filters.salaryDisclosed)
+
+  return (
+    <>
+      <FilterGroup label="Job type" selectedCount={filters.jobType.length} initiallyOpen>
+        <FilterChoices
+          legend="Job type"
+          choices={jobTypeChoices}
+          selected={filters.jobType}
+          onChange={(jobType) => onChange({ ...filters, jobType })}
+        />
+      </FilterGroup>
+      <FilterGroup label="Experience level" selectedCount={filters.level.length} initiallyOpen>
+        <FilterChoices
+          legend="Experience level"
+          choices={levelChoices}
+          selected={filters.level}
+          onChange={(level) => onChange({ ...filters, level })}
+        />
+      </FilterGroup>
+      <FilterGroup label="Work arrangement" selectedCount={filters.workMode.length} initiallyOpen>
+        <FilterChoices
+          legend="Work arrangement"
+          choices={workModeChoices}
+          selected={filters.workMode}
+          onChange={(workMode) => onChange({ ...filters, workMode })}
+        />
+      </FilterGroup>
+      <FilterGroup label="Category" selectedCount={filters.category.length}>
+        <FilterChoices
+          legend="Category"
+          choices={categoryChoices}
+          selected={filters.category}
+          onChange={(category) => onChange({ ...filters, category })}
+        />
+      </FilterGroup>
+      <FilterGroup label="Location" selectedCount={filters.location.length} initiallyOpen>
+        <label htmlFor={`${idPrefix}-location-search`} className="sr-only">Search locations</label>
+        <input
+          id={`${idPrefix}-location-search`}
+          type="search"
+          value={locationSearch}
+          onChange={(event) => {
+            setLocationSearch(event.target.value)
+            setShowAllLocations(false)
+          }}
+          placeholder="Search locations…"
+          className="mb-2 min-h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#003B6D]"
+        />
+        {visibleLocations.length > 0 ? (
+          <div className="max-h-52 overflow-y-auto">
+            <FilterChoices
+              legend="Location"
+              choices={visibleLocations}
+              selected={filters.location}
+              maximum={5}
+              onChange={(location) => onChange({ ...filters, location })}
+            />
+          </div>
+        ) : (
+          <p className="px-1 py-2 text-sm text-gray-500">
+            {locationChoices.length ? 'No locations match your search.' : 'No locations are currently available.'}
+          </p>
+        )}
+        {!locationSearch.trim() && locationChoices.length > 5 ? (
+          <button
+            type="button"
+            onClick={() => setShowAllLocations((shown) => !shown)}
+            className="mt-1 rounded px-1 py-1 text-xs font-semibold text-[#003B6D] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]"
+          >
+            {showAllLocations ? 'Show fewer' : `Show all ${locationChoices.length} locations`}
+          </button>
+        ) : null}
+      </FilterGroup>
+      <FilterGroup label="More filters" selectedCount={additionalFilterCount}>
+        <AdditionalFields filters={filters} onChange={onChange} />
+      </FilterGroup>
+    </>
+  )
+}
 
 const JobFilters = ({
   filters,
-  sort,
   options,
   optionsLoading,
   optionsError,
-  resultTotal,
   onFiltersChange,
-  onSortChange,
   onClearFilters,
 }: JobFiltersProps) => {
-  const [advancedOpen, setAdvancedOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [draftFilters, setDraftFilters] = useState<VacancyFilterState>(filters)
   const drawerRef = useRef<HTMLDivElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const mobileTriggerRef = useRef<HTMLButtonElement>(null)
-
-  const categoryChoices = choicesWithFallback(
-    options?.categories,
-    JOB_ENUMS.category,
-    filters.category,
-  )
-  const workModeChoices = choicesWithFallback(
-    options?.workModes,
-    JOB_ENUMS.workMode,
-    filters.workMode,
-  )
-  const jobTypeChoices = choicesWithFallback(
-    options?.jobTypes,
-    JOB_ENUMS.jobType,
-    filters.jobType,
-  )
-  const levelChoices = choicesWithFallback(
-    options?.levels,
-    JOB_ENUMS.level,
-    filters.level,
-  )
-  const locationChoices = choicesWithFallback(
-    options?.locations,
-    [],
-    filters.location,
-  )
 
   const chips: Array<{ key: string, label: string, remove: () => void }> = []
   const addArrayChips = <K extends 'category' | 'workMode' | 'jobType' | 'level' | 'location'>(
@@ -444,7 +489,7 @@ const JobFilters = ({
   if (filters.salaryMin !== undefined) {
     chips.push({
       key: 'salaryMin',
-      label: `Salary from ${formatSalary(filters.salaryMin)}`,
+      label: `Salary from ${new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(filters.salaryMin)}`,
       remove: () => onFiltersChange({ ...filters, salaryMin: undefined }),
     })
   }
@@ -500,10 +545,58 @@ const JobFilters = ({
   }, [closeDrawer, drawerOpen])
 
   return (
-    <section aria-labelledby="vacancy-filter-heading" className="space-y-4">
-      <h2 id="vacancy-filter-heading" className="sr-only">Filter vacancies</h2>
+    <>
+      <aside aria-label="Vacancy filters" className="hidden min-w-0 lg:block">
+        <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3 border-b border-gray-200 pb-3">
+            <h2 className="text-base font-semibold text-gray-950">Filter jobs</h2>
+            <button
+              type="button"
+              onClick={onClearFilters}
+              disabled={chips.length === 0}
+              className="rounded px-1 py-1 text-xs font-semibold text-[#b42318] hover:underline disabled:cursor-default disabled:text-gray-400 disabled:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]"
+            >
+              Clear all
+            </button>
+          </div>
 
-      <div className="flex items-center justify-between gap-3 md:hidden">
+          <div>
+            <FilterGroups
+              filters={filters}
+              options={options}
+              onChange={onFiltersChange}
+              idPrefix="desktop"
+            />
+          </div>
+          {optionsLoading ? <p role="status" className="mt-2 text-xs text-gray-500">Loading filter options…</p> : null}
+          {optionsError ? <p role="status" className="mt-2 text-xs text-amber-700">Some filter options are unavailable.</p> : null}
+        </section>
+
+        {chips.length > 0 ? (
+          <section aria-label="Active filters" className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold text-gray-900">Active filters</h2>
+              <span className="text-xs text-gray-500">{chips.length}</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {chips.map((chip) => (
+                <button
+                  key={chip.key}
+                  type="button"
+                  onClick={chip.remove}
+                  className="inline-flex items-center gap-1 rounded-full border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:border-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]"
+                  aria-label={`Remove filter: ${chip.label}`}
+                >
+                  {chip.label}
+                  <FiX aria-hidden="true" />
+                </button>
+              ))}
+            </div>
+          </section>
+        ) : null}
+      </aside>
+
+      <div className="lg:hidden">
         <button
           ref={mobileTriggerRef}
           type="button"
@@ -513,127 +606,10 @@ const JobFilters = ({
           <FiFilter aria-hidden="true" />
           Filters{chips.length > 0 ? ` (${chips.length})` : ''}
         </button>
-        <label className="flex items-center gap-2 text-sm text-gray-600">
-          <span>Sort</span>
-          <select
-            value={sort}
-            onChange={(event) => onSortChange(event.target.value as VacancySort)}
-            className="min-h-11 rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#003B6D]"
-          >
-            <option value="newest">Newest</option>
-            <option value="oldest">Oldest</option>
-          </select>
-        </label>
       </div>
-
-      <div className="hidden flex-wrap items-center gap-2 md:flex">
-        <MultiSelectMenu
-          label="Category"
-          choices={categoryChoices}
-          selected={filters.category}
-          onChange={(category) => onFiltersChange({ ...filters, category })}
-        />
-        <MultiSelectMenu
-          label="Work arrangement"
-          choices={workModeChoices}
-          selected={filters.workMode}
-          onChange={(workMode) => onFiltersChange({ ...filters, workMode })}
-        />
-        <MultiSelectMenu
-          label="Job type"
-          choices={jobTypeChoices}
-          selected={filters.jobType}
-          onChange={(jobType) => onFiltersChange({ ...filters, jobType })}
-        />
-        <MultiSelectMenu
-          label="Experience level"
-          choices={levelChoices}
-          selected={filters.level}
-          onChange={(level) => onFiltersChange({ ...filters, level })}
-        />
-        <button
-          type="button"
-          aria-expanded={advancedOpen}
-          aria-controls="advanced-vacancy-filters"
-          onClick={() => setAdvancedOpen((open) => !open)}
-          className="inline-flex min-h-10 items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:border-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003B6D]"
-        >
-          <FiFilter aria-hidden="true" />
-          All filters
-          {chips.length > 0 ? (
-            <span className="rounded-full bg-[#003B6D] px-1.5 py-0.5 text-xs font-semibold text-white">
-              {chips.length}
-            </span>
-          ) : null}
-        </button>
-        <label className="ml-auto flex items-center gap-2 text-sm text-gray-600">
-          <span>Sort by</span>
-          <select
-            value={sort}
-            onChange={(event) => onSortChange(event.target.value as VacancySort)}
-            className="min-h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#003B6D]"
-          >
-            <option value="newest">Newest</option>
-            <option value="oldest">Oldest</option>
-          </select>
-        </label>
-      </div>
-
-      {advancedOpen ? (
-        <div
-          id="advanced-vacancy-filters"
-          className="relative hidden rounded-lg border border-gray-200 bg-gray-50 p-5 pt-12 md:block"
-        >
-          <button
-            type="button"
-            onClick={() => setAdvancedOpen(false)}
-            aria-label="Close all filters"
-            className="absolute right-3 top-3 rounded-md p-1.5 text-gray-500 hover:bg-gray-200 hover:text-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003B6D]"
-          >
-            <FiX aria-hidden="true" size={20} />
-          </button>
-          <AdvancedFields
-            filters={filters}
-            locationChoices={locationChoices}
-            onChange={onFiltersChange}
-          />
-        </div>
-      ) : null}
-
-      <div className="flex flex-wrap items-center gap-2">
-        <p className="mr-auto text-sm text-gray-600" aria-live="polite">
-          {resultTotal.toLocaleString()} {resultTotal === 1 ? 'job' : 'jobs'} found
-        </p>
-        {optionsLoading ? <p className="text-xs text-gray-500">Loading filter options…</p> : null}
-        {optionsError ? <p className="text-xs text-amber-700">Some filter options are unavailable.</p> : null}
-      </div>
-
-      {chips.length > 0 ? (
-        <div className="flex flex-wrap items-center gap-2" aria-label="Active filters">
-          {chips.map((chip) => (
-            <button
-              key={chip.key}
-              type="button"
-              onClick={chip.remove}
-              className="inline-flex items-center gap-1.5 rounded-full border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:border-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003B6D]"
-              aria-label={`Remove filter: ${chip.label}`}
-            >
-              {chip.label}
-              <FiX aria-hidden="true" />
-            </button>
-          ))}
-          <button
-            type="button"
-            onClick={onClearFilters}
-            className="rounded px-2 py-1.5 text-xs font-semibold text-[#003B6D] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003B6D]"
-          >
-            Clear filters
-          </button>
-        </div>
-      ) : null}
 
       {drawerOpen ? (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className="fixed inset-0 z-50 lg:hidden">
           <button
             type="button"
             aria-label="Close filters"
@@ -652,7 +628,7 @@ const JobFilters = ({
                 <h2 id="mobile-filter-title" className="text-lg font-semibold text-gray-950">
                   Filter jobs
                 </h2>
-                <p className="mt-0.5 text-sm text-gray-500">Choose filters, then show matching jobs.</p>
+                <p className="mt-0.5 text-sm text-gray-500">Choose filters, then show matching vacancies.</p>
               </div>
               <button
                 ref={closeButtonRef}
@@ -665,47 +641,22 @@ const JobFilters = ({
               </button>
             </div>
 
-            <div className="flex-1 space-y-7 overflow-y-auto px-5 py-5">
-              <FilterChoices
-                legend="Category"
-                choices={categoryChoices}
-                selected={draftFilters.category}
-                onChange={(category) => setDraftFilters({ ...draftFilters, category })}
-                compact
-              />
-              <FilterChoices
-                legend="Work arrangement"
-                choices={workModeChoices}
-                selected={draftFilters.workMode}
-                onChange={(workMode) => setDraftFilters({ ...draftFilters, workMode })}
-                compact
-              />
-              <FilterChoices
-                legend="Job type"
-                choices={jobTypeChoices}
-                selected={draftFilters.jobType}
-                onChange={(jobType) => setDraftFilters({ ...draftFilters, jobType })}
-                compact
-              />
-              <FilterChoices
-                legend="Experience level"
-                choices={levelChoices}
-                selected={draftFilters.level}
-                onChange={(level) => setDraftFilters({ ...draftFilters, level })}
-                compact
-              />
-              <AdvancedFields
+            <div className="flex-1 overflow-y-auto px-5 py-3">
+              <FilterGroups
                 filters={draftFilters}
-                locationChoices={locationChoices}
+                options={options}
                 onChange={setDraftFilters}
+                idPrefix="mobile"
               />
+              {optionsLoading ? <p role="status" className="mt-2 text-xs text-gray-500">Loading filter options…</p> : null}
+              {optionsError ? <p role="status" className="mt-2 text-xs text-amber-700">Some filter options are unavailable.</p> : null}
             </div>
 
             <div className="grid grid-cols-2 gap-3 border-t border-gray-200 bg-white px-5 py-4">
               <button
                 type="button"
-                onClick={() => setDraftFilters(baseFilters())}
-                className="rounded-md border border-gray-300 px-4 py-3 text-sm font-semibold text-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003B6D]"
+                onClick={() => setDraftFilters(emptyFilters())}
+                className="min-h-11 rounded-md border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003B6D]"
               >
                 Clear filters
               </button>
@@ -715,15 +666,15 @@ const JobFilters = ({
                   onFiltersChange(draftFilters)
                   closeDrawer()
                 }}
-                className="rounded-md bg-[#003B6D] px-4 py-3 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003B6D] focus-visible:ring-offset-2"
+                className="min-h-11 rounded-md bg-[#003B6D] px-4 py-2 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#003B6D] focus-visible:ring-offset-2"
               >
-                Show jobs
+                Show vacancies
               </button>
             </div>
           </div>
         </div>
       ) : null}
-    </section>
+    </>
   )
 }
 
