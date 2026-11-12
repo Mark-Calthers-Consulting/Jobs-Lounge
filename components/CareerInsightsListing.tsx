@@ -56,9 +56,6 @@ const ArticleGridCard = ({ post, priority }: { post: BlogPostSummary; priority: 
           Read article <span aria-hidden="true" className="ml-1 transition-transform group-hover:translate-x-0.5">→</span>
         </span>
       </Link>
-      <p className="mt-4 border-t border-slate-100 pt-4 text-xs text-slate-500">
-        By {post.postedBy.name}
-      </p>
     </div>
   </article>
 )
@@ -87,7 +84,6 @@ const ArticleListRow = ({ post, priority }: { post: BlogPostSummary; priority: b
           Read article <span aria-hidden="true" className="ml-1 transition-transform group-hover:translate-x-0.5">→</span>
         </span>
       </Link>
-      <p className="mt-4 text-xs text-slate-500">By {post.postedBy.name}</p>
     </div>
   </article>
 )

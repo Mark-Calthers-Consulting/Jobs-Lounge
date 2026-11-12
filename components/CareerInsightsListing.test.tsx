@@ -62,11 +62,11 @@ describe('career insights listing', () => {
     expect(screen.getByText('List view selected')).toBeInTheDocument()
   })
 
-  it('renders article metadata, author, excerpt, and stable public routing', () => {
+  it('renders article metadata and excerpt without showing the author on cards', () => {
     render(<CareerInsightsListing />)
     expect(screen.getAllByText('CV & applications')).not.toHaveLength(0)
     expect(screen.getByText(/Practical ways/)).toBeInTheDocument()
-    expect(screen.getByText('By Jobs Lounge team')).toBeInTheDocument()
+    expect(screen.queryByText('By Jobs Lounge team')).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Write a stronger CV/ }))
       .toHaveAttribute('href', '/blog/write-a-stronger-cv')
   })

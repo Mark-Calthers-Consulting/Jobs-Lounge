@@ -24,12 +24,9 @@ const Contact = (): React.JSX.Element => {
 
                 <div className="relative mx-auto flex min-h-[300px] max-w-7xl items-center px-5 py-14 sm:px-6 sm:py-16 lg:min-h-[340px] lg:px-8">
                     <div className="relative max-w-2xl">
-                        <p className="text-sm font-medium text-blue-200">
-                            Contact Jobs Lounge
-                        </p>
                         <h1
                             id="contact-page-title"
-                            className="mt-4 text-4xl font-semibold tracking-[-0.035em] sm:text-5xl lg:text-6xl"
+                            className="text-4xl font-semibold tracking-[-0.035em] sm:text-5xl lg:text-6xl"
                         >
                             We&apos;re here to help.
                         </h1>
