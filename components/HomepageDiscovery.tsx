@@ -217,7 +217,7 @@ const FeaturedVacancy = ({ job }: { job: Job }) => {
     <span aria-hidden="true" className="mt-8 grid size-12 place-items-center rounded-md bg-white text-xl text-[#0d4fd7]">
       <PiSuitcaseSimpleFill />
     </span>
-    <p className="mt-auto text-xs font-semibold uppercase text-blue-100">{job.category}</p>
+    <p className="mt-6 text-xs font-semibold uppercase text-blue-100">{job.category}</p>
     <h3 className="mt-3 max-w-md text-2xl font-semibold leading-tight tracking-[-0.025em] sm:text-3xl">{job.title}</h3>
     <p className="mt-2 text-sm text-blue-100">{employer}</p>
     <dl className="mt-5 flex flex-col gap-2 text-sm text-blue-50 sm:flex-row sm:flex-wrap sm:gap-x-6">

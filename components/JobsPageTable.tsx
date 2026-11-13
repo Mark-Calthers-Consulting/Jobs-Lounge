@@ -28,6 +28,8 @@ import {
 import {
     FiArchive,
     FiEdit3,
+    FiGrid,
+    FiList,
     FiMoreHorizontal,
     FiRefreshCw,
     FiSearch,
@@ -229,6 +231,7 @@ const JobsPageTable = () => {
     const urlSearch = searchParams.get('search') ?? ''
     const uploaderId = objectIdParam(searchParams.get('uploaderId'))
     const [searchValue, setSearchValue] = useState(urlSearch)
+    const [layout, setLayout] = useState<'list' | 'grid'>('list')
     const [confirmation, setConfirmation] = useState<Confirmation>(null)
     const [permanentDeleteError, setPermanentDeleteError] = useState('')
 
@@ -480,7 +483,7 @@ const JobsPageTable = () => {
                 </nav>
             </section>
 
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-sm text-gray-600" aria-live="polite">
                     {jobsQuery.isLoading
                         ? 'Loading jobs…'
@@ -488,18 +491,42 @@ const JobsPageTable = () => {
                             jobsQuery.data?.pagination.total === 1 ? 'job' : 'jobs'
                         }`}
                 </p>
-                {urlSearch || uploaderId ? (
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setSearchValue('')
-                            updateParams({ search: undefined, uploaderId: undefined })
-                        }}
-                        className="text-sm font-semibold text-[#184aa2] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]"
-                    >
-                        Clear filters
-                    </button>
-                ) : null}
+                <div className="flex flex-wrap items-center gap-3">
+                    {urlSearch || uploaderId ? (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setSearchValue('')
+                                updateParams({ search: undefined, uploaderId: undefined })
+                            }}
+                            className="text-sm font-semibold text-[#184aa2] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]"
+                        >
+                            Clear filters
+                        </button>
+                    ) : null}
+                    {!jobsQuery.isLoading && !jobsQuery.isError && rows.length > 0 ? (
+                        <div role="group" aria-label="Jobs layout" className="inline-flex rounded-lg border border-gray-300 bg-white p-1">
+                            <button
+                                type="button"
+                                aria-pressed={layout === 'list'}
+                                onClick={() => setLayout('list')}
+                                className={`inline-flex min-h-9 items-center gap-2 rounded-md px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2] focus-visible:ring-offset-1 ${layout === 'list' ? 'bg-[#184aa2] text-white' : 'text-gray-700 hover:bg-gray-50'}`}
+                            >
+                                <FiList aria-hidden="true" />
+                                List
+                            </button>
+                            <button
+                                type="button"
+                                aria-pressed={layout === 'grid'}
+                                onClick={() => setLayout('grid')}
+                                className={`inline-flex min-h-9 items-center gap-2 rounded-md px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2] focus-visible:ring-offset-1 ${layout === 'grid' ? 'bg-[#184aa2] text-white' : 'text-gray-700 hover:bg-gray-50'}`}
+                            >
+                                <FiGrid aria-hidden="true" />
+                                Grid
+                            </button>
+                        </div>
+                    ) : null}
+                </div>
             </div>
 
             {jobsQuery.isLoading ? (
@@ -537,7 +564,7 @@ const JobsPageTable = () => {
 
             {!jobsQuery.isLoading && !jobsQuery.isError && rows.length > 0 ? (
                 <>
-                    <div className="hidden overflow-visible rounded-xl border border-gray-200 bg-white lg:block">
+                    {layout === 'list' ? <div className="hidden overflow-visible rounded-xl border border-gray-200 bg-white lg:block">
                         <div className="overflow-x-auto">
                             <table className="w-full min-w-[1080px] text-left">
                                 <caption className="sr-only">Admin job directory</caption>
@@ -620,9 +647,9 @@ const JobsPageTable = () => {
                             pagination={jobsQuery.data?.pagination}
                             onPageChange={(nextPage) => updateParams({ page: String(nextPage) }, false)}
                         />
-                    </div>
+                    </div> : null}
 
-                    <div className="grid gap-3 lg:hidden">
+                    {layout === 'list' ? <div className="grid gap-3 lg:hidden">
                         {rows.map((job) => (
                             <article key={job._id} className="rounded-xl border border-gray-200 bg-white p-4">
                                 <div className="flex items-start justify-between gap-3">
@@ -701,7 +728,93 @@ const JobsPageTable = () => {
                                 onPageChange={(nextPage) => updateParams({ page: String(nextPage) }, false)}
                             />
                         </div>
-                    </div>
+                    </div> : null}
+
+                    {layout === 'grid' ? (
+                        <>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                            {rows.map((job) => (
+                                <article key={job._id} className="flex min-w-0 flex-col rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="min-w-0">
+                                            <Link
+                                                href={`/admin-center/jobs/${job._id}`}
+                                                className="break-words font-semibold text-gray-950 hover:text-[#184aa2] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]"
+                                            >
+                                                {job.title}
+                                            </Link>
+                                            <p className="mt-1 break-words text-sm text-gray-600">
+                                                {job.company.name} · {job.location}
+                                            </p>
+                                        </div>
+                                        <JobStatus job={job} />
+                                    </div>
+
+                                    <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-gray-100 pt-3 text-sm">
+                                        <div>
+                                            <dt className="text-xs font-medium text-gray-500">Deadline</dt>
+                                            <dd className="mt-0.5 font-medium text-gray-900">
+                                                {job.deadline ? formatJobDeadline(job.deadline, timeZone) : 'No deadline'}
+                                            </dd>
+                                        </div>
+                                        <div>
+                                            <dt className="text-xs font-medium text-gray-500">Applications</dt>
+                                            <dd className="mt-0.5 font-medium text-gray-900">
+                                                {canReviewApplications ? (
+                                                    <Link
+                                                        href={`/admin-center/applications?jobId=${encodeURIComponent(job._id)}`}
+                                                        className="text-[#184aa2] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]"
+                                                    >
+                                                        {(job.totalApplicants ?? 0).toLocaleString()}
+                                                        <span className="sr-only"> applications for {job.title}</span>
+                                                    </Link>
+                                                ) : (
+                                                    (job.totalApplicants ?? 0).toLocaleString()
+                                                )}
+                                            </dd>
+                                        </div>
+                                        <div className="min-w-0">
+                                            <dt className="text-xs font-medium text-gray-500">Uploaded by</dt>
+                                            <dd className="mt-0.5 truncate font-medium text-gray-900">
+                                                {job.postedBy?.name || 'Not recorded'}
+                                            </dd>
+                                        </div>
+                                        <div>
+                                            <dt className="text-xs font-medium text-gray-500">{job.archivedAt ? 'Archived' : 'Posted'}</dt>
+                                            <dd className="mt-0.5 font-medium text-gray-900">
+                                                {formatDate(job.archivedAt || job.createdAt)}
+                                            </dd>
+                                        </div>
+                                        {job.lastEditedBy ? (
+                                            <div className="col-span-2 min-w-0">
+                                                <dt className="text-xs font-medium text-gray-500">Last edited by</dt>
+                                                <dd className="mt-0.5 truncate font-medium text-gray-900">{job.lastEditedBy.name}</dd>
+                                            </div>
+                                        ) : null}
+                                    </dl>
+
+                                    <div className="mt-auto flex justify-end pt-3">
+                                        <JobActions
+                                            job={job}
+                                            canArchive={canArchive}
+                                            canPermanentlyDelete={canPermanentlyDelete}
+                                            onAction={(type, selectedJob) => {
+                                                setPermanentDeleteError('')
+                                                setConfirmation({ type, job: selectedJob })
+                                            }}
+                                        />
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
+                        <div className="rounded-xl border border-gray-200 bg-white">
+                            <PaginationControls
+                                pagination={jobsQuery.data?.pagination}
+                                onPageChange={(nextPage) => updateParams({ page: String(nextPage) }, false)}
+                            />
+                        </div>
+                        </>
+                    ) : null}
                 </>
             ) : null}
 

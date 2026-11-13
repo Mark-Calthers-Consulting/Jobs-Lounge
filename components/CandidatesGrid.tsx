@@ -11,6 +11,8 @@ import {
     FiChevronDown,
     FiChevronUp,
     FiFilter,
+    FiGrid,
+    FiList,
     FiSearch,
     FiX,
 } from 'react-icons/fi'
@@ -278,6 +280,7 @@ const CandidatesGrid = () => {
     const pathname = usePathname()
     const searchParams = useSearchParams()
     const [filtersOpen, setFiltersOpen] = useState(false)
+    const [layout, setLayout] = useState<'list' | 'grid'>('list')
     const [searchValue, setSearchValue] = useState(searchParams.get('search') ?? '')
     const [jobOptionSearch, setJobOptionSearch] = useState('')
     const [debouncedJobSearch, setDebouncedJobSearch] = useState('')
@@ -580,11 +583,33 @@ const CandidatesGrid = () => {
 
             {!candidatesQuery.isLoading && !candidatesQuery.isError && (
                 <>
-                    <p className="text-sm text-gray-600" aria-live="polite">
-                        {candidatesQuery.data?.pagination.total ?? 0} {isRegisteredView ? 'registered users' : 'candidates'}
-                    </p>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <p className="text-sm text-gray-600" aria-live="polite">
+                            {candidatesQuery.data?.pagination.total ?? 0} {isRegisteredView ? 'registered users' : 'candidates'}
+                        </p>
+                        <div role="group" aria-label="Directory layout" className="inline-flex rounded-lg border border-gray-300 bg-white p-1">
+                            <button
+                                type="button"
+                                aria-pressed={layout === 'list'}
+                                onClick={() => setLayout('list')}
+                                className={`inline-flex min-h-9 items-center gap-2 rounded-md px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2] focus-visible:ring-offset-1 ${layout === 'list' ? 'bg-[#184aa2] text-white' : 'text-gray-700 hover:bg-gray-50'}`}
+                            >
+                                <FiList aria-hidden="true" />
+                                List
+                            </button>
+                            <button
+                                type="button"
+                                aria-pressed={layout === 'grid'}
+                                onClick={() => setLayout('grid')}
+                                className={`inline-flex min-h-9 items-center gap-2 rounded-md px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2] focus-visible:ring-offset-1 ${layout === 'grid' ? 'bg-[#184aa2] text-white' : 'text-gray-700 hover:bg-gray-50'}`}
+                            >
+                                <FiGrid aria-hidden="true" />
+                                Grid
+                            </button>
+                        </div>
+                    </div>
 
-                    <div className="hidden overflow-hidden rounded-xl border border-gray-200 bg-white md:block">
+                    {layout === 'list' && <div className="hidden overflow-hidden rounded-xl border border-gray-200 bg-white md:block">
                         <div className="overflow-x-auto">
                             <table className={`w-full text-left ${canViewAccountActivity ? 'min-w-[1160px]' : 'min-w-[940px]'}`}>
                                 <caption className="sr-only">{isRegisteredView ? 'Registered user' : 'Candidate'} directory. Rows can be clicked to open the full profile.</caption>
@@ -650,9 +675,9 @@ const CandidatesGrid = () => {
                             </table>
                         </div>
                         {!rows.length && <p className="p-10 text-center text-gray-500">No {isRegisteredView ? 'registered users' : 'candidates'} match these filters.</p>}
-                    </div>
+                    </div>}
 
-                    <div className="grid gap-3 md:hidden">
+                    {layout === 'list' && <div className="grid gap-3 md:hidden">
                         {rows.map((candidate) => (
                             <article key={candidate._id} className="rounded-xl border border-gray-200 bg-white p-4">
                                 <div className="flex items-start justify-between gap-3">
@@ -681,7 +706,70 @@ const CandidatesGrid = () => {
                             </article>
                         ))}
                         {!rows.length && <p className="rounded-xl border border-gray-200 bg-white p-8 text-center text-gray-500">No {isRegisteredView ? 'registered users' : 'candidates'} match these filters.</p>}
-                    </div>
+                    </div>}
+
+                    {layout === 'grid' && (
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                            {rows.map((candidate) => (
+                                <article key={candidate._id} className="flex min-w-0 flex-col rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="min-w-0">
+                                            <h3 className="break-words font-semibold text-gray-950">{candidate.name || 'Unnamed candidate'}</h3>
+                                            <div className="mt-1"><DuplicateBadge signal={candidate.duplicateSignal} /></div>
+                                        </div>
+                                        <Completion candidate={candidate} />
+                                    </div>
+
+                                    <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-gray-100 pt-3 text-sm">
+                                        <div className="min-w-0">
+                                            <dt className="text-xs font-medium text-gray-500">Email</dt>
+                                            <dd className="mt-0.5 truncate"><a className="text-[#184aa2] hover:underline" href={`mailto:${candidate.email}`}>{candidate.email}</a></dd>
+                                        </div>
+                                        <div className="min-w-0">
+                                            <dt className="text-xs font-medium text-gray-500">Phone</dt>
+                                            <dd className="mt-0.5 truncate"><a className="text-gray-800 hover:underline" href={`tel:${candidate.telephone}`}>{candidate.telephone}</a></dd>
+                                        </div>
+                                        <div className="min-w-0">
+                                            <dt className="text-xs font-medium text-gray-500">Education</dt>
+                                            <dd className="mt-0.5 break-words font-medium text-gray-900">{candidate.highestEducation || 'Not provided'}</dd>
+                                        </div>
+                                        <div>
+                                            <dt className="text-xs font-medium text-gray-500">Experience</dt>
+                                            <dd className="mt-0.5 font-medium text-gray-900">{experienceLabel(candidate.postNyscExperience)}</dd>
+                                        </div>
+                                        <div>
+                                            <dt className="text-xs font-medium text-gray-500">Joined</dt>
+                                            <dd className="mt-0.5 font-medium text-gray-900">{formatDate(candidate.createdAt, timeZone)}</dd>
+                                        </div>
+                                        {!isRegisteredView && (
+                                            <div>
+                                                <dt className="text-xs font-medium text-gray-500">Applications</dt>
+                                                <dd className="mt-0.5 font-medium text-gray-900">{candidate.applicationCount}<span className="font-normal text-gray-500"> · latest {formatDate(candidate.latestApplicationAt, timeZone)}</span></dd>
+                                            </div>
+                                        )}
+                                    </dl>
+
+                                    {canViewAccountActivity && (
+                                        <dl className="mt-3 grid grid-cols-2 gap-3 border-t border-gray-100 pt-3 text-xs">
+                                            <div className="min-w-0">
+                                                <dt className="font-medium text-gray-500">Last active</dt>
+                                                <dd className="mt-0.5 truncate text-gray-800">{formatActivityDate(candidate.lastActiveAt, timeZone)}</dd>
+                                            </div>
+                                            <div className="min-w-0">
+                                                <dt className="font-medium text-gray-500">Last login</dt>
+                                                <dd className="mt-0.5 truncate text-gray-800">{formatActivityDate(candidate.lastLoginAt, timeZone)}</dd>
+                                            </div>
+                                        </dl>
+                                    )}
+
+                                    <Link href={`/admin-center/candidates/${candidate._id}`} className="mt-3 inline-flex min-h-9 items-center justify-center self-start rounded-md bg-[#184aa2] px-3 text-sm font-semibold text-white hover:bg-[#123d8a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2] focus-visible:ring-offset-2">
+                                        View {isRegisteredView ? 'user' : 'candidate'}
+                                    </Link>
+                                </article>
+                            ))}
+                            {!rows.length && <p className="rounded-xl border border-gray-200 bg-white p-8 text-center text-gray-500 md:col-span-2 xl:col-span-3">No {isRegisteredView ? 'registered users' : 'candidates'} match these filters.</p>}
+                        </div>
+                    )}
 
                     <div className="rounded-xl border border-gray-200 bg-white">
                         <PaginationControls pagination={candidatesQuery.data?.pagination} onPageChange={(page) => updateParams({ page: String(page) }, false)} />
