@@ -74,6 +74,13 @@ const relativeServerPath = `./${path.relative(deployDirectory, serverPath).split
 const passengerEntry = `'use strict'\n\nprocess.env.NODE_ENV ||= 'production'\nprocess.env.HOSTNAME ||= '127.0.0.1'\n\nrequire(${JSON.stringify(relativeServerPath)})\n`
 
 fs.writeFileSync(path.join(deployDirectory, 'app.js'), passengerEntry, 'utf8')
+// Passenger and Apache must both protect the application root. Ship the installer
+// without a .htaccess so uploads cannot overwrite cPanel's generated directives.
+fs.mkdirSync(path.join(deployDirectory, 'scripts'), { recursive: true })
+fs.copyFileSync(
+  path.join(scriptDirectory, 'harden-cpanel.cjs'),
+  path.join(deployDirectory, 'scripts', 'harden-cpanel.cjs'),
+)
 fs.writeFileSync(
   path.join(deployDirectory, 'DEPLOYMENT.txt'),
   [
@@ -82,6 +89,10 @@ fs.writeFileSync(
     'Upload the CONTENTS of this directory to the cPanel frontend application path.',
     'Application mode: Production',
     'Startup file: app.js',
+    '',
+    'Before serving traffic, run from the application root:',
+    'node scripts/harden-cpanel.cjs "$PWD"',
+    'This preserves cPanel directives and protects runtime files from public access.',
     '',
     'Configure API_ORIGIN and the public environment variables in cPanel.',
     'No .env files are included in this bundle.',

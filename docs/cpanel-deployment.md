@@ -74,6 +74,51 @@ Add these server environment variables in cPanel:
 
 ## 4. Restart and verify
 
+Before restarting a manual upload, install the Apache protections from the
+application directory (the automated deployment does this for you):
+
+```sh
+/opt/cpanel/ea-nodejs22/bin/node scripts/harden-cpanel.cjs "$PWD"
+```
+
+The installer prepends a managed security block to `.htaccess`, preserves cPanel's
+existing directives, and saves the original once as
+`.htaccess.jobslounge-before-security`. Subsequent runs update only the managed
+block. Keep these files when synchronizing deployments.
+
+The rules deny direct requests to runtime files, dependency manifests, private
+directories, deployment archives, and dotfiles. Public assets, Next.js browser
+chunks under `/_next/static/`, and normal application routes remain available.
+They also remove `X-Powered-By` from both Apache response-header tables when
+`mod_headers` is enabled. If Passenger still adds the header later, ask the host
+to suppress it in the virtual-host configuration; do not put the server-only
+`PassengerShowVersionInHeader` directive in `.htaccess`.
+
+After deployment, verify `/package.json`, `/app.js`, `/server.js`,
+`/DEPLOYMENT.txt`, `/.next/`, and `/node_modules/` return 403 or 404. Check the
+homepage, a vacancy route, a JavaScript chunk, and the API gateway still work.
+The API application has the same installer in its own `scripts` directory.
+Its Apache document root is separate from its Node.js application directory;
+install there too with `--document-root`. The backend deployment script does both
+and accepts `BACKEND_DEPLOY_DOCUMENT_ROOT` if that hosting path changes.
+
+Run the public smoke checks from the frontend repository after deployment:
+
+```sh
+node scripts/verify-cpanel-security.mjs
+```
+
+The verifier checks blocked runtime files, header removal on both domains,
+homepage JavaScript, the logo, public pages, and API access directly and through
+the frontend gateway. It makes only public GET requests and sends no emails or
+registrations. Optional arguments override the frontend and API origins.
+
+To undo a first installation that causes a hosting error, restore the saved
+`.htaccess.jobslounge-before-security` over `.htaccess`. If no `.htaccess`
+existed before installation, removing the newly created file restores the
+previous configuration. Restoring it also removes the protection, so investigate
+the hosting error before leaving that rollback in place.
+
 Restart the app from Application Manager. If a manual restart is needed from the application directory, update Passenger's restart marker:
 
 ```sh
