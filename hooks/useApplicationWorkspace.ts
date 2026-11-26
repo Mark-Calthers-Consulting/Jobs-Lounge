@@ -8,6 +8,7 @@ import {
   createApplicationExportRequest,
   fetchApplicationActivity,
   fetchApplicationAnalyticsSummary,
+  fetchVacancyAnalytics,
   fetchApplicationDetail,
   fetchApplicationFilterOptions,
   fetchApplicationExportRequests,
@@ -22,6 +23,7 @@ import type {
   ApplicationJobDirectoryFilters,
   ApplicationExportRequestFilters,
   ApplicationWorkspaceFilters,
+  AnalyticsPeriodSelection,
 } from '@/types/types'
 import {
   useInfiniteQuery,
@@ -36,10 +38,18 @@ export const useApplicationsOverview = (enabled = true) => useQuery({
   enabled,
 })
 
-export const useApplicationAnalyticsSummary = () => useQuery({
-  queryKey: ['applicationWorkspace', 'analytics', 'summary'],
-  queryFn: fetchApplicationAnalyticsSummary,
+export const useApplicationAnalyticsSummary = (selection: AnalyticsPeriodSelection = {}) => useQuery({
+  queryKey: ['applicationWorkspace', 'analytics', 'summary', selection],
+  queryFn: () => fetchApplicationAnalyticsSummary(selection),
   staleTime: 60_000,
+})
+
+export const useVacancyAnalytics = (selection: AnalyticsPeriodSelection, page: number, enabled = true) => useQuery({
+  queryKey: ['applicationWorkspace', 'analytics', 'vacancies', selection, page],
+  queryFn: () => fetchVacancyAnalytics(selection, page),
+  enabled,
+  staleTime: 60_000,
+  placeholderData: (previousData) => previousData,
 })
 
 export const useApplicationJobs = (filters: ApplicationJobDirectoryFilters) => useQuery({

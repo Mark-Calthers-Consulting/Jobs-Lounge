@@ -1,88 +1,219 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { ApplicationAnalyticsSummary as Summary } from '@/types/types'
 import ApplicationAnalyticsSummary from './ApplicationAnalyticsSummary'
+import { recruitmentReport } from '@/test/fixtures/recruitmentReport'
 
-const { useAnalytics } = vi.hoisted(() => ({ useAnalytics: vi.fn() }))
-
+const { useAnalytics, useVacancies, downloadCsv, saveFile, downloadPdf } = vi.hoisted(() => ({
+  useAnalytics: vi.fn(),
+  useVacancies: vi.fn(),
+  downloadCsv: vi.fn(),
+  saveFile: vi.fn(),
+  downloadPdf: vi.fn(),
+}))
 vi.mock('@/hooks/useApplicationWorkspace', () => ({
   useApplicationAnalyticsSummary: useAnalytics,
+  useVacancyAnalytics: useVacancies,
 }))
+vi.mock('@/api/applicationWorkspace', () => ({
+  downloadRecruitmentAnalytics: downloadCsv,
+  saveDownloadedFile: saveFile,
+}))
+vi.mock('./analytics/RecruitmentPdf', () => ({ downloadRecruitmentPdf: downloadPdf }))
+const report = recruitmentReport()
 
-const daily = Array.from({ length: 30 }, (_, index) => {
-  const date = new Date(Date.UTC(2026, 7, 28 + index)).toISOString().slice(0, 10)
-  return { date, count: index === 29 ? 4 : 0 }
-})
-
-const summary: Summary = {
-  applications: { today: 2, week: 8, month: 16, allTime: 100 },
-  recruitment: {
-    period: {
-      fromDate: '2026-08-28', throughDate: '2026-09-26',
-      previousFromDate: '2026-07-29', previousThroughDate: '2026-08-27',
-    },
-    applications: {
-      current: 4, previous: 0, distinctApplicants: 3, daily,
-      currentStages: { pending: 2, reviewed: 1, shortlisted: 1, rejected: 0 },
-    },
-    workload: { pendingOlderThanSevenDays: 6, openVacanciesWithoutApplications: 2 },
-    candidates: { registered: 120, profilesComplete: 80, everApplied: 61 },
-    topVacancies: [
-      { jobId: 'job-1', title: 'Operations analyst', company: 'MCC', status: 'Open', archived: false, available: true, applications: 3 },
-      { jobId: 'job-2', title: 'Vacancy unavailable', company: null, status: null, archived: false, available: false, applications: 1 },
-    ],
-  },
-  confirmations: { queued: 1, sent: 12, retrying: 0, failed: 0, retentionDays: 30 },
-  timeZone: 'Africa/Lagos',
-  generatedAt: '2026-09-27T10:00:00.000Z',
-}
-
-describe('super-admin application analytics', () => {
+describe('Super-admin recruitment reporting', () => {
   beforeEach(() => {
-    useAnalytics.mockReturnValue({ data: summary, isLoading: false, isError: false, refetch: vi.fn() })
-  })
-
-  it('preserves headline totals and shows period, current workload, candidate snapshot and workspace links', () => {
-    render(<ApplicationAnalyticsSummary />)
-
-    expect(screen.getByRole('heading', { name: 'Application trend' })).toBeInTheDocument()
-    expect(screen.getByText('No applications in the previous period.')).toBeInTheDocument()
-    expect(screen.getByText(/Current stages of applications received in the 30-day period/)).toBeInTheDocument()
-    expect(screen.getByText(/Current backlog across all applications/)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Operations analyst' })).toHaveAttribute('href', '/admin-center/applications/jobs/job-1')
-    expect(screen.queryByRole('link', { name: 'Vacancy unavailable' })).not.toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Review open vacancies' })).toHaveAttribute('href', '/admin-center/applications/by-vacancy?view=open')
-    expect(screen.getByRole('link', { name: 'Open candidates' })).toHaveAttribute('href', '/admin-center/candidates')
-    expect(screen.getByRole('heading', { name: 'Application confirmation emails' })).toBeInTheDocument()
-    expect(screen.getByText('Profiles complete now')).toBeInTheDocument()
-  })
-
-  it('offers a keyboard-accessible daily data table with all 30 completed days', () => {
-    render(<ApplicationAnalyticsSummary />)
-
-    fireEvent.click(screen.getByText('View daily application counts'))
-    const table = screen.getByRole('table', { name: 'Applications received on each completed calendar day' })
-    expect(within(table).getAllByRole('row')).toHaveLength(31)
-    expect(within(table).getByText('26 Sept 2026')).toBeInTheDocument()
-    expect(within(table).getByText('28 Aug 2026')).toBeInTheDocument()
-  })
-
-  it('explains an empty period without implying a historical hiring funnel', () => {
+    vi.clearAllMocks()
     useAnalytics.mockReturnValue({
+      data: report,
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      refetch: vi.fn(),
+    })
+    useVacancies.mockReturnValue({
       data: {
-        ...summary,
-        recruitment: {
-          ...summary.recruitment,
-          applications: { ...summary.recruitment.applications, current: 0, previous: 0, distinctApplicants: 0, daily: daily.map((day) => ({ ...day, count: 0 })) },
-          topVacancies: [],
+        data: [
+          {
+            ...report.recruitment.topVacancies[0],
+            previous: 3,
+            comparison: { current: 9, previous: 3, change: 6, percentageChange: 200 },
+            currentStages: { pending: 3, reviewed: 6, shortlisted: 0, rejected: 0 },
+          },
+          {
+            ...report.recruitment.topVacancies[1],
+            previous: 2,
+            comparison: { current: 0, previous: 2, change: -2, percentageChange: -100 },
+            currentStages: { pending: 0, reviewed: 0, shortlisted: 0, rejected: 0 },
+          },
+        ],
+        pagination: {
+          page: 1,
+          total: 23,
+          totalPages: 2,
+          hasPreviousPage: false,
+          hasNextPage: true,
         },
       },
-      isLoading: false, isError: false, refetch: vi.fn(),
+      isPending: false,
+      isError: false,
+      isFetching: false,
+    })
+    downloadCsv.mockResolvedValue({ blob: new Blob(['csv']), filename: 'report.csv' })
+    downloadPdf.mockResolvedValue(undefined)
+  })
+
+  it('preserves totals, shows period comparisons and separates current snapshots from period stages', () => {
+    render(<ApplicationAnalyticsSummary />)
+    expect(screen.getByRole('heading', { name: 'Application trend' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Registration trend' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Current review stages' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Calendar application totals' })).toBeInTheDocument()
+    expect(screen.getByText('Profiles complete now')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Operations analyst' })).toHaveAttribute(
+      'href',
+      '/admin-center/applications/jobs/job-0',
+    )
+    expect(screen.queryByRole('link', { name: 'Vacancy unavailable' })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Review open vacancies' })).toHaveAttribute(
+      'href',
+      '/admin-center/applications/by-vacancy?view=open',
+    )
+    expect(
+      screen.getByText(/Current stages of applications received in the selected period/),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/Across all records/)).toBeInTheDocument()
+  })
+
+  it('has labelled chart alternatives and daily tables for both periods', () => {
+    render(<ApplicationAnalyticsSummary />)
+    expect(
+      screen.getByRole('img', { name: /Application trend: selected and previous periods/ }),
+    ).toBeInTheDocument()
+    fireEvent.click(screen.getByText('View daily application counts'))
+    const table = screen.getByRole('table', { name: 'Application trend: daily data' })
+    expect(within(table).getAllByRole('row')).toHaveLength(31)
+    expect(within(table).getByRole('columnheader', { name: 'Previous date' })).toBeInTheDocument()
+    expect(screen.getByText('View daily registration counts')).toHaveClass(
+      'focus-visible:outline-2',
+    )
+  })
+
+  it('requires applying a period before exports and sends the chosen preset', () => {
+    render(<ApplicationAnalyticsSummary />)
+    fireEvent.change(screen.getByLabelText('Reporting period'), { target: { value: 'last7' } })
+    expect(screen.getByRole('button', { name: 'Download PDF' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Export CSV' })).toBeDisabled()
+    expect(screen.getByText(/Apply your chosen period/)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Apply period' }))
+    expect(useAnalytics).toHaveBeenLastCalledWith({ preset: 'last7' })
+    expect(screen.getByRole('button', { name: 'Download PDF' })).toBeEnabled()
+  })
+
+  it('validates custom ranges and supports form submission with Enter', () => {
+    render(<ApplicationAnalyticsSummary />)
+    fireEvent.change(screen.getByLabelText('Reporting period'), { target: { value: 'custom' } })
+    fireEvent.change(screen.getByLabelText('From'), { target: { value: '2026-01-03' } })
+    fireEvent.change(screen.getByLabelText('Through'), { target: { value: '2026-01-01' } })
+    fireEvent.submit(screen.getByRole('button', { name: 'Apply period' }).closest('form')!)
+    expect(screen.getByRole('alert')).toHaveTextContent(/up to 366 days/)
+    fireEvent.change(screen.getByLabelText('Through'), { target: { value: '2026-01-31' } })
+    fireEvent.submit(screen.getByRole('button', { name: 'Apply period' }).closest('form')!)
+    expect(useAnalytics).toHaveBeenLastCalledWith({
+      preset: 'custom',
+      from: '2026-01-03',
+      to: '2026-01-31',
+    })
+  })
+
+  it('paginates vacancy results using fixed report dates', () => {
+    render(<ApplicationAnalyticsSummary />)
+    fireEvent.click(screen.getByRole('button', { name: 'Next vacancies' }))
+    expect(useVacancies).toHaveBeenLastCalledWith(
+      {
+        preset: 'custom',
+        from: report.recruitment.period.fromDate,
+        to: report.recruitment.period.throughDate,
+      },
+      2,
+    )
+  })
+
+  it('downloads the PDF from the displayed aggregate report and CSV from fixed dates', async () => {
+    render(<ApplicationAnalyticsSummary />)
+    fireEvent.click(screen.getByRole('button', { name: 'Download PDF' }))
+    await waitFor(() => expect(downloadPdf).toHaveBeenCalledWith(report))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Export CSV' })).toBeEnabled())
+    fireEvent.click(screen.getByRole('button', { name: 'Export CSV' }))
+    await waitFor(() =>
+      expect(downloadCsv).toHaveBeenCalledWith({
+        preset: 'custom',
+        from: report.recruitment.period.fromDate,
+        to: report.recruitment.period.throughDate,
+      }),
+    )
+    await waitFor(() => expect(saveFile).toHaveBeenCalled())
+  })
+
+  it('keeps the report available after an export failure with a retryable error', async () => {
+    downloadPdf.mockRejectedValue(new Error('PDF assets unavailable. Please try again.'))
+    render(<ApplicationAnalyticsSummary />)
+    fireEvent.click(screen.getByRole('button', { name: 'Download PDF' }))
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent('PDF assets unavailable'),
+    )
+    expect(screen.getByRole('button', { name: 'Download PDF' })).toBeEnabled()
+    expect(screen.getByRole('heading', { name: 'Application trend' })).toBeInTheDocument()
+  })
+
+  it('shows empty and zero baseline states without invented percentages', () => {
+    useAnalytics.mockReturnValue({
+      data: recruitmentReport({ empty: true }),
+      isLoading: false,
+      isError: false,
+    })
+    useVacancies.mockReturnValue({
+      data: { data: [], pagination: { total: 0, totalPages: 0 } },
+      isPending: false,
+      isError: false,
     })
     render(<ApplicationAnalyticsSummary />)
+    expect(screen.getAllByText('No previous activity')).toHaveLength(3)
+    expect(screen.getAllByText('No activity in either period.')).toHaveLength(2)
+    expect(
+      screen.getByText('No vacancies received applications in either period.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/Infinity|NaN/)).not.toBeInTheDocument()
+  })
 
-    expect(screen.getByText('No applications in either period.')).toBeInTheDocument()
-    expect(screen.getByText(/No applications were received during these 30 completed days/)).toBeInTheDocument()
-    expect(screen.getByText('No vacancies received applications in this period.')).toBeInTheDocument()
+  it('labels incomplete current periods and keeps email health independent', () => {
+    useAnalytics.mockReturnValue({
+      data: {
+        ...report,
+        recruitment: {
+          ...report.recruitment,
+          period: { ...report.recruitment.period, incomplete: true },
+        },
+      },
+      isLoading: false,
+      isError: false,
+    })
+    render(<ApplicationAnalyticsSummary />)
+    expect(screen.getByText(/Includes today and is incomplete/)).toBeInTheDocument()
+    fireEvent.click(screen.getByText('Application confirmation emails'))
+    expect(screen.getByText(/Sent means accepted by SMTP/)).toBeInTheDocument()
+  })
+
+  it('disables exports during loading, refresh and report errors', () => {
+    useAnalytics.mockReturnValue({ isLoading: true, isFetching: true })
+    const view = render(<ApplicationAnalyticsSummary />)
+    expect(
+      screen.getByRole('status', { name: 'Loading application analytics' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Download PDF' })).toBeDisabled()
+    useAnalytics.mockReturnValue({ isLoading: false, isError: true, refetch: vi.fn() })
+    view.rerender(<ApplicationAnalyticsSummary />)
+    expect(screen.getByRole('alert')).toHaveTextContent('Application analytics could not be loaded')
+    expect(screen.getByRole('button', { name: 'Export CSV' })).toBeDisabled()
   })
 })

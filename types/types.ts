@@ -505,6 +505,20 @@ export type ApplicationOverview = {
   recentApplications: AdminApplication[]
 }
 
+export type AnalyticsPeriodSelection = {
+  preset?: 'last7' | 'last30' | 'last90' | 'this-reporting-week' | 'last-reporting-week' | 'custom'
+  from?: string
+  to?: string
+}
+export type AnalyticsComparison = { current: number; previous: number; change: number; percentageChange: number | null }
+export type AnalyticsDaily = Array<{ date: string; count: number }>
+export type VacancyAnalyticsRow = {
+  jobId: string; title: string; company: string | null; available: boolean; archived: boolean
+  status: JobStatus | null; applications: number; previous: number
+  comparison: AnalyticsComparison; currentStages: ApplicationStageTotals
+}
+export type VacancyAnalyticsResponse = { status: 'success'; data: VacancyAnalyticsRow[]; pagination: { page: number; limit: number; total: number; totalPages: number; hasPreviousPage: boolean; hasNextPage: boolean } }
+
 export type ApplicationAnalyticsSummary = {
   applications: {
     today: number
@@ -518,6 +532,9 @@ export type ApplicationAnalyticsSummary = {
       throughDate: string
       previousFromDate: string
       previousThroughDate: string
+      preset: NonNullable<AnalyticsPeriodSelection['preset']>
+      dayCount: number
+      incomplete: boolean
     }
     applications: {
       current: number
@@ -525,7 +542,11 @@ export type ApplicationAnalyticsSummary = {
       distinctApplicants: number
       daily: Array<{ date: string; count: number }>
       currentStages: ApplicationStageTotals
+      previousDaily: AnalyticsDaily
+      comparison: AnalyticsComparison
+      applicantComparison: AnalyticsComparison
     }
+    registrations: AnalyticsComparison & { daily: AnalyticsDaily; previousDaily: AnalyticsDaily }
     workload: {
       pendingOlderThanSevenDays: number
       openVacanciesWithoutApplications: number

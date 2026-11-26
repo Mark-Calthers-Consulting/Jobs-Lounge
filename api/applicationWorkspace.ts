@@ -14,6 +14,8 @@ import type {
   ApplicationAnalyticsSummary,
   ApplicationOverview,
   ApplicationWorkspaceFilters,
+  AnalyticsPeriodSelection,
+  VacancyAnalyticsResponse,
 } from '@/types/types'
 import type { ApplicationStatus } from '@/constants/enums'
 import { apiPath } from './base'
@@ -182,13 +184,30 @@ export const fetchApplicationsOverview = async () => {
   return result.data
 }
 
-export const fetchApplicationAnalyticsSummary = async () => {
+export const analyticsParams = (selection: AnalyticsPeriodSelection = {}) => new URLSearchParams(
+  Object.entries(selection).filter(([, value]) => value !== undefined && value !== '') as Array<[string, string]>,
+)
+
+export const fetchApplicationAnalyticsSummary = async (selection: AnalyticsPeriodSelection = {}) => {
   const result = await get<ApiSuccess<ApplicationAnalyticsSummary>>(
-    '/admin/applications/analytics/summary',
+    `/admin/applications/analytics/summary?${analyticsParams(selection)}`,
     'Unable to load application analytics',
   )
   return result.data
 }
+
+export const fetchVacancyAnalytics = (selection: AnalyticsPeriodSelection, page: number) => {
+  const params = analyticsParams(selection)
+  params.set('page', String(page))
+  params.set('limit', '20')
+  return get<VacancyAnalyticsResponse>(`/admin/applications/analytics/vacancies?${params}`, 'Unable to load vacancy analytics')
+}
+
+export const downloadRecruitmentAnalytics = async (selection: AnalyticsPeriodSelection) => downloadResponse(
+  await csrfFetch(apiPath('/admin/applications/analytics/exports'), {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(selection),
+  }), 'Unable to export recruitment analytics',
+)
 
 export const fetchWorkspaceApplications = async (
   filters: ApplicationWorkspaceFilters = {},

@@ -1,328 +1,595 @@
 'use client'
 
 import Link from 'next/link'
+import { useState } from 'react'
+import { PiArrowsClockwise, PiDownloadSimple, PiFilePdf } from 'react-icons/pi'
 import {
-  PiArrowsClockwise,
-  PiCheckCircle,
-  PiClock,
-  PiWarningCircle,
-} from 'react-icons/pi'
-import { useApplicationAnalyticsSummary } from '@/hooks/useApplicationWorkspace'
-import { formatDateInTimeZone } from '@/utils/dateTime'
+  useApplicationAnalyticsSummary,
+  useVacancyAnalytics,
+} from '@/hooks/useApplicationWorkspace'
+import { downloadRecruitmentAnalytics, saveDownloadedFile } from '@/api/applicationWorkspace'
+import type {
+  AnalyticsComparison,
+  AnalyticsPeriodSelection,
+  ApplicationAnalyticsSummary as Summary,
+} from '@/types/types'
 import { STAGES } from './workspaceUi'
-import type { ApplicationAnalyticsSummary as AnalyticsSummary } from '@/types/types'
+import ActivityTrend from './analytics/ActivityTrend'
+import { calendarDate, changeLabel, count } from './analytics/reporting'
+import { formatDateInTimeZone } from '@/utils/dateTime'
 
-const number = (value: number) => value.toLocaleString('en-NG')
-const calendarDate = (value: string) => new Intl.DateTimeFormat('en-NG', {
-  day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC',
-}).format(new Date(`${value}T12:00:00.000Z`))
+const control =
+  'rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus-visible:outline-2 focus-visible:outline-blue-700 disabled:cursor-not-allowed disabled:opacity-50'
+const action = `${control} font-semibold hover:bg-slate-50 active:translate-y-px`
+const link =
+  'text-sm font-semibold text-blue-800 hover:underline focus-visible:outline-2 focus-visible:outline-blue-700'
+const presets = [
+  ['last7', 'Last 7 days'],
+  ['last30', 'Last 30 days'],
+  ['last90', 'Last 90 days'],
+  ['this-reporting-week', 'This reporting week'],
+  ['last-reporting-week', 'Last reporting week'],
+  ['custom', 'Custom dates'],
+] as const
 
-const comparison = (current: number, previous: number) => {
-  if (previous === 0) return current === 0
-    ? 'No applications in either period'
-    : 'No applications in the previous period'
-  const difference = current - previous
-  if (difference === 0) return 'The same as the previous period'
-  return `${number(Math.abs(difference))} ${difference > 0 ? 'more' : 'fewer'} than the previous period`
+function Metric({ label, comparison }: { label: string; comparison: AnalyticsComparison }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-6">
+      <dt className="text-sm font-medium text-slate-600">{label}</dt>
+      <dd className="mt-2 text-3xl font-semibold tabular-nums text-slate-950">
+        {count(comparison.current)}
+      </dd>
+      <p className="mt-3 text-sm font-semibold text-blue-900">{changeLabel(comparison)}</p>
+      <p className="mt-1 text-xs text-slate-500">
+        {count(comparison.previous)} in the previous period
+        {comparison.previous === 0
+          ? ` · change ${comparison.change >= 0 ? '+' : ''}${count(comparison.change)}`
+          : ''}
+      </p>
+    </div>
+  )
 }
 
-const DailyTrend = ({ recruitment }: { recruitment: AnalyticsSummary['recruitment'] }) => {
-  const { daily, current, previous, distinctApplicants } = recruitment.applications
-  const highest = Math.max(1, ...daily.map((day) => day.count))
-  const { fromDate, throughDate, previousFromDate, previousThroughDate } = recruitment.period
-
+function Snapshot({ items }: { items: Array<[string, number]> }) {
   return (
-    <section aria-labelledby="application-trend-heading" className="rounded-xl border border-slate-200 bg-white p-6">
-      <div className="flex flex-wrap items-start justify-between gap-6">
+    <dl
+      className={`mt-4 grid gap-4 ${items.length === 3 ? 'sm:grid-cols-3' : 'grid-cols-2 xl:grid-cols-4'}`}
+    >
+      {items.map(([label, value]) => (
+        <div key={label} className="rounded-xl border border-slate-200 bg-white p-4">
+          <dt className="text-sm text-slate-600">{label}</dt>
+          <dd className="mt-2 text-2xl font-semibold tabular-nums">{count(value)}</dd>
+        </div>
+      ))}
+    </dl>
+  )
+}
+
+function VacancyBreakdown({
+  selection,
+  report,
+}: {
+  selection: AnalyticsPeriodSelection
+  report: Summary
+}) {
+  const [page, setPage] = useState(1)
+  const query = useVacancyAnalytics(selection, page)
+  return (
+    <section
+      aria-labelledby="vacancy-demand-heading"
+      aria-busy={query.isFetching}
+      className="space-y-4"
+    >
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 id="application-trend-heading" className="text-xl font-semibold text-slate-950 text-balance">Application trend</h2>
-          <p className="mt-1 text-sm text-slate-600 text-pretty">
-            {calendarDate(fromDate)} to {calendarDate(throughDate)} · 30 completed calendar days
+          <h2 id="vacancy-demand-heading" className="text-xl font-semibold text-slate-950">
+            Vacancy demand
+          </h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Applications in either comparison period, ranked by selected period volume.
           </p>
         </div>
-        <Link href="/admin-center/applications/inbox" className="text-sm font-semibold text-blue-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2">
-          Open application inbox
+        <Link className={link} href="/admin-center/applications/by-vacancy">
+          View vacancy inbox
         </Link>
       </div>
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        <div><p className="text-sm text-slate-600">Applications</p><p className="mt-1 text-3xl font-semibold tabular-nums text-slate-950">{number(current)}</p></div>
-        <div><p className="text-sm text-slate-600">Previous 30 days</p><p className="mt-1 text-3xl font-semibold tabular-nums text-slate-950">{number(previous)}</p></div>
-        <div><p className="text-sm text-slate-600">Distinct applicants</p><p className="mt-1 text-3xl font-semibold tabular-nums text-slate-950">{number(distinctApplicants)}</p></div>
-      </div>
-      <p className="mt-4 text-sm font-medium text-slate-700">{comparison(current, previous)}.</p>
-      <p className="mt-1 text-xs text-slate-500">Previous period: {calendarDate(previousFromDate)} to {calendarDate(previousThroughDate)}.</p>
-      <p className="mt-1 text-xs text-slate-500">Distinct applicants counts each candidate once, even if they applied to multiple vacancies.</p>
-      {current === 0 ? (
-        <p className="mt-6 rounded-lg bg-slate-50 p-4 text-sm text-slate-600">No applications were received during these 30 completed days.</p>
+      {query.isPending ? (
+        <div
+          role="status"
+          aria-label="Loading vacancy analytics"
+          className="h-48 animate-pulse rounded-xl bg-slate-200"
+        />
+      ) : query.isError ? (
+        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4">
+          <p>Vacancy analytics could not be loaded.</p>
+          <button className={`${action} mt-3`} onClick={() => void query.refetch()}>
+            Retry vacancy analytics
+          </button>
+        </div>
       ) : (
-        <div className="mt-6 overflow-x-auto rounded-lg bg-slate-50 p-4" aria-hidden="true">
-          <ol className="flex h-40 min-w-max items-end gap-2">
-            {daily.map((day) => (
-              <li key={day.date} className="flex h-full w-3 shrink-0 items-end" title={`${calendarDate(day.date)}: ${number(day.count)} applications`}>
-                <span className="block w-full rounded-t bg-blue-700" style={{ height: day.count ? `${Math.max(4, day.count / highest * 100)}%` : '0%' }} />
-              </li>
-            ))}
-          </ol>
-          <div className="mt-2 flex justify-between gap-4 text-xs text-slate-600"><span>{calendarDate(fromDate)}</span><span>{calendarDate(throughDate)}</span></div>
-        </div>
+        query.data && (
+          <>
+            <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+              <table className="w-full text-left text-sm">
+                <caption className="sr-only">
+                  Vacancy application comparison and current review stages
+                </caption>
+                <thead className="bg-slate-50 text-slate-600">
+                  <tr>
+                    {[
+                      'Vacancy',
+                      'Applications',
+                      'Previous',
+                      'Change',
+                      ...STAGES.map((stage) => stage.label),
+                    ].map((title) => (
+                      <th
+                        className="whitespace-nowrap px-4 py-3 font-medium"
+                        scope="col"
+                        key={title}
+                      >
+                        {title}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {query.data.data.map((vacancy) => (
+                    <tr key={vacancy.jobId}>
+                      <th scope="row" className="min-w-48 px-4 py-4 font-normal">
+                        {vacancy.available ? (
+                          <Link
+                            className={`${link} text-slate-950`}
+                            href={`/admin-center/applications/jobs/${vacancy.jobId}`}
+                          >
+                            {vacancy.title}
+                          </Link>
+                        ) : (
+                          <span className="font-semibold text-slate-600">{vacancy.title}</span>
+                        )}
+                        <p className="mt-1 text-xs text-slate-500">
+                          {vacancy.company || 'Company unavailable'}
+                          {vacancy.archived ? ' · Archived' : ''}
+                        </p>
+                      </th>
+                      <td className="px-4 py-4 font-semibold tabular-nums">
+                        {count(vacancy.applications)}
+                      </td>
+                      <td className="px-4 py-4 tabular-nums">{count(vacancy.previous)}</td>
+                      <td className="whitespace-nowrap px-4 py-4 text-xs">
+                        {changeLabel(vacancy.comparison)}
+                      </td>
+                      {STAGES.map((stage) => (
+                        <td className="px-4 py-4 tabular-nums" key={stage.value}>
+                          {count(vacancy.currentStages[stage.value])}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                  {!query.data.data.length && (
+                    <tr>
+                      <td colSpan={8} className="p-6 text-slate-600">
+                        No vacancies received applications in either period.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-slate-600">
+              <p>
+                {count(query.data.pagination.total)} vacancies
+                {query.data.pagination.totalPages
+                  ? ` · Page ${page} of ${query.data.pagination.totalPages}`
+                  : ''}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  className={action}
+                  disabled={!query.data.pagination.hasPreviousPage || query.isFetching}
+                  onClick={() => setPage(page - 1)}
+                >
+                  Previous vacancies
+                </button>
+                <button
+                  className={action}
+                  disabled={!query.data.pagination.hasNextPage || query.isFetching}
+                  onClick={() => setPage(page + 1)}
+                >
+                  Next vacancies
+                </button>
+              </div>
+            </div>
+          </>
+        )
       )}
-      <details className="mt-4 rounded-lg border border-slate-200">
-        <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-700">View daily application counts</summary>
-        <div className="max-h-72 overflow-auto border-t border-slate-200">
-          <table className="w-full text-left text-sm">
-            <caption className="sr-only">Applications received on each completed calendar day</caption>
-            <thead className="bg-slate-50"><tr><th scope="col" className="px-4 py-2">Date</th><th scope="col" className="px-4 py-2 text-right">Applications</th></tr></thead>
-            <tbody className="divide-y divide-slate-100">{daily.map((day) => (
-              <tr key={day.date}><th scope="row" className="px-4 py-2 font-normal"><time dateTime={day.date}>{calendarDate(day.date)}</time></th><td className="px-4 py-2 text-right tabular-nums">{number(day.count)}</td></tr>
-            ))}</tbody>
-          </table>
-        </div>
-      </details>
+      <p className="text-xs text-slate-500">
+        Stage counts describe the current stage of applications received from{' '}
+        {calendarDate(report.recruitment.period.fromDate)} to{' '}
+        {calendarDate(report.recruitment.period.throughDate)}.
+      </p>
+      {query.isFetching && !query.isPending && (
+        <p role="status" className="sr-only">
+          Updating vacancy analytics…
+        </p>
+      )}
     </section>
   )
 }
 
-const LoadingState = () => (
-  <div className="space-y-8" role="status" aria-label="Loading application analytics">
-    {[4, 4].map((count, section) => (
-      <div key={section} className="animate-pulse">
-        <div className="h-5 w-52 rounded bg-slate-200" />
-        <div className="mt-2 h-4 w-80 max-w-full rounded bg-slate-100" />
-        <div className="mt-4 grid overflow-hidden rounded-xl border border-slate-200 bg-white sm:grid-cols-2 xl:grid-cols-4">
-          {Array.from({ length: count }).map((_, index) => (
-            <div key={index} className="border-slate-200 p-5 sm:border-r sm:last:border-r-0">
-              <div className="h-4 w-20 rounded bg-slate-100" />
-              <div className="mt-4 h-8 w-16 rounded bg-slate-200" />
-            </div>
-          ))}
-        </div>
-      </div>
-    ))}
-    <span className="sr-only">Loading application analytics…</span>
-  </div>
-)
-
-const StatGrid = ({
-  items,
-}: {
-  items: Array<{ label: string; value: number; detail: string }>
-}) => (
-  <dl className="grid overflow-hidden rounded-xl border border-slate-200 bg-white sm:grid-cols-2 xl:grid-cols-4">
-    {items.map((item, index) => (
-      <div
-        key={item.label}
-        className={`p-5 ${index % 2 === 0 ? 'sm:border-r' : ''} ${index < 2 ? 'border-b xl:border-b-0' : ''} xl:border-r xl:last:border-r-0 border-slate-200`}
-      >
-        <dt className="text-sm font-medium text-slate-600">{item.label}</dt>
-        <dd className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">{number(item.value)}</dd>
-        <p className="mt-1 text-xs text-slate-500">{item.detail}</p>
-      </div>
-    ))}
-  </dl>
-)
-
-const emailStates = [
-  {
-    key: 'queued' as const,
-    label: 'Queued',
-    detail: 'Waiting or currently processing',
-    icon: PiClock,
-    tone: 'bg-slate-100 text-slate-700',
-  },
-  {
-    key: 'sent' as const,
-    label: 'Sent',
-    detail: 'Accepted by the mail service',
-    icon: PiCheckCircle,
-    tone: 'bg-emerald-50 text-emerald-700',
-  },
-  {
-    key: 'retrying' as const,
-    label: 'Retrying',
-    detail: 'Another delivery attempt is due',
-    icon: PiArrowsClockwise,
-    tone: 'bg-amber-50 text-amber-800',
-  },
-  {
-    key: 'failed' as const,
-    label: 'Failed',
-    detail: 'Delivery attempts were exhausted',
-    icon: PiWarningCircle,
-    tone: 'bg-red-50 text-red-700',
-  },
-]
-
 export default function ApplicationAnalyticsSummary() {
-  const analytics = useApplicationAnalyticsSummary()
-
-  if (analytics.isLoading) return <LoadingState />
-
-  if (analytics.isError || !analytics.data) {
-    return (
-      <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-6 text-red-950">
-        <p className="font-semibold">Application analytics could not be loaded.</p>
-        <p className="mt-1 text-sm text-red-800">Try again. If this continues, check the API and email worker health.</p>
-        <button
-          type="button"
-          onClick={() => void analytics.refetch()}
-          className="mt-4 rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700 focus-visible:ring-offset-2"
-        >
-          Try again
-        </button>
-      </div>
-    )
+  const [draft, setDraft] = useState<AnalyticsPeriodSelection>({ preset: 'last30' })
+  const [applied, setApplied] = useState<AnalyticsPeriodSelection>({ preset: 'last30' })
+  const [validation, setValidation] = useState('')
+  const [exportError, setExportError] = useState('')
+  const [exporting, setExporting] = useState<'pdf' | 'csv' | null>(null)
+  const analytics = useApplicationAnalyticsSummary(applied)
+  const report = analytics.data
+  const dirty = JSON.stringify(draft) !== JSON.stringify(applied)
+  const unavailable =
+    dirty ||
+    analytics.isFetching ||
+    analytics.isLoading ||
+    analytics.isError ||
+    !report ||
+    Boolean(exporting)
+  const fixedSelection: AnalyticsPeriodSelection | undefined = report
+    ? {
+        preset: 'custom',
+        from: report.recruitment.period.fromDate,
+        to: report.recruitment.period.throughDate,
+      }
+    : undefined
+  const apply = (event: React.FormEvent) => {
+    event.preventDefault()
+    if (draft.preset === 'custom') {
+      const days = (Date.parse(draft.to || '') - Date.parse(draft.from || '')) / 86400000 + 1
+      const today = report
+        ? new Intl.DateTimeFormat('en-CA', { timeZone: report.timeZone }).format(new Date())
+        : ''
+      if (
+        !draft.from ||
+        !draft.to ||
+        !Number.isFinite(days) ||
+        days < 1 ||
+        days > 366 ||
+        (today && draft.to > today)
+      ) {
+        setValidation('Choose a valid date range of up to 366 days, ending no later than today.')
+        return
+      }
+    }
+    setValidation('')
+    setExportError('')
+    setApplied({ ...draft })
+  }
+  const exportReport = async (format: 'pdf' | 'csv') => {
+    if (unavailable || !report || !fixedSelection) return
+    setExporting(format)
+    setExportError('')
+    try {
+      if (format === 'pdf') {
+        const { downloadRecruitmentPdf } = await import('./analytics/RecruitmentPdf')
+        await downloadRecruitmentPdf(report)
+      } else saveDownloadedFile(await downloadRecruitmentAnalytics(fixedSelection))
+    } catch (error) {
+      setExportError(
+        error instanceof Error
+          ? error.message
+          : 'The report could not be downloaded. Please try again.',
+      )
+    } finally {
+      setExporting(null)
+    }
   }
 
-  const { applications, recruitment, confirmations, generatedAt, timeZone } = analytics.data
-  const updatedAt = formatDateInTimeZone(generatedAt, timeZone, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  })
-
   return (
-    <div className="space-y-9">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-slate-500">Updated {updatedAt}</p>
-        <button
-          type="button"
-          onClick={() => void analytics.refetch()}
-          disabled={analytics.isFetching}
-          className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
-        >
-          <PiArrowsClockwise aria-hidden="true" className={analytics.isFetching ? 'animate-spin' : ''} />
-          {analytics.isFetching ? 'Refreshing' : 'Refresh'}
-        </button>
-      </div>
-
-      <section aria-labelledby="application-volume-heading">
-        <h2 id="application-volume-heading" className="text-xl font-semibold text-slate-950">Applications received</h2>
-        <p className="mt-1 text-sm text-slate-500">Calendar periods follow the organization time zone: {timeZone}.</p>
-        <div className="mt-4">
-          <StatGrid items={[
-            { label: 'Today', value: applications.today, detail: 'Since local midnight' },
-            { label: 'This week', value: applications.week, detail: 'Since Monday' },
-            { label: 'This month', value: applications.month, detail: 'Current calendar month' },
-            { label: 'All time', value: applications.allTime, detail: 'All application records' },
-          ]} />
-        </div>
-      </section>
-
-      <DailyTrend recruitment={recruitment} />
-
-      <section aria-labelledby="review-workload-heading">
-        <h2 id="review-workload-heading" className="text-xl font-semibold text-slate-950 text-balance">Review workload</h2>
-        <p className="mt-1 text-sm text-slate-600 text-pretty">
-          Current stages of applications received in the 30-day period. These are not historical stage transitions.
-        </p>
-        <dl className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {STAGES.map((stage) => (
-            <div key={stage.value} className="rounded-xl border border-slate-200 bg-white p-5">
-              <dt className="text-sm font-medium text-slate-600">{stage.label}</dt>
-              <dd className="mt-2 text-2xl font-semibold tabular-nums text-slate-950">{number(recruitment.applications.currentStages[stage.value])}</dd>
-            </div>
-          ))}
-        </dl>
-        <div className="mt-4 rounded-xl border border-slate-200 bg-white p-5 sm:flex sm:items-center sm:justify-between sm:gap-6">
-          <div>
-            <p className="text-sm font-medium text-slate-600">Pending for more than seven days</p>
-            <p className="mt-2 text-2xl font-semibold tabular-nums text-slate-950">{number(recruitment.workload.pendingOlderThanSevenDays)}</p>
-            <p className="mt-1 text-xs text-slate-500">Current backlog across all applications, not limited to the trend period.</p>
-          </div>
-          <Link href="/admin-center/applications/inbox?status=pending" className="mt-4 inline-block text-sm font-semibold text-blue-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 sm:mt-0">
-            Review pending applications
-          </Link>
-        </div>
-      </section>
-
-      <section aria-labelledby="vacancy-demand-heading">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h2 id="vacancy-demand-heading" className="text-xl font-semibold text-slate-950 text-balance">Vacancy demand</h2>
-            <p className="mt-1 text-sm text-slate-600 text-pretty">Most applications received during the 30 completed days.</p>
-          </div>
-          <Link href="/admin-center/applications/by-vacancy" className="text-sm font-semibold text-blue-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2">
-            View vacancy inbox
-          </Link>
-        </div>
-        <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-            {recruitment.topVacancies.length ? (
-              <ol className="divide-y divide-slate-100">
-                {recruitment.topVacancies.map((vacancy, index) => (
-                  <li key={vacancy.jobId} className="flex items-center gap-4 p-4">
-                    <span aria-hidden="true" className="w-6 shrink-0 text-sm font-semibold tabular-nums text-slate-500">{index + 1}.</span>
-                    <div className="min-w-0 flex-1">
-                      {vacancy.available ? (
-                        <Link href={`/admin-center/applications/jobs/${vacancy.jobId}`} className="block truncate font-semibold text-slate-950 hover:text-blue-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2">
-                          {vacancy.title}
-                        </Link>
-                      ) : <p className="font-semibold text-slate-700">{vacancy.title}</p>}
-                      <p className="mt-1 truncate text-xs text-slate-500">{vacancy.company || 'Company unavailable'}{vacancy.archived ? ' · Archived' : ''}</p>
-                    </div>
-                    <span className="shrink-0 text-right"><strong className="block text-xl tabular-nums text-slate-950">{number(vacancy.applications)}</strong><span className="text-xs text-slate-500">applications</span></span>
-                  </li>
-                ))}
-              </ol>
-            ) : <p className="p-6 text-sm text-slate-600">No vacancies received applications in this period.</p>}
-          </div>
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <p className="text-sm font-medium text-slate-600">Open vacancies with no applications</p>
-            <p className="mt-3 text-3xl font-semibold tabular-nums text-slate-950">{number(recruitment.workload.openVacanciesWithoutApplications)}</p>
-            <p className="mt-2 text-xs text-slate-500 text-pretty">Current open vacancies with zero applications over their lifetime.</p>
-            <Link href="/admin-center/applications/by-vacancy?view=open" className="mt-5 inline-block text-sm font-semibold text-blue-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2">
-              Review open vacancies
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <section aria-labelledby="candidate-snapshot-heading">
-        <h2 id="candidate-snapshot-heading" className="text-xl font-semibold text-slate-950 text-balance">Candidate snapshot</h2>
-        <p className="mt-1 text-sm text-slate-600 text-pretty">Current registered accounts and profile state, plus candidates who have ever applied.</p>
-        <dl className="mt-4 grid gap-3 sm:grid-cols-3">
-          {[
-            { label: 'Registered candidates', value: recruitment.candidates.registered },
-            { label: 'Profiles complete now', value: recruitment.candidates.profilesComplete },
-            { label: 'Have applied at least once', value: recruitment.candidates.everApplied },
-          ].map((item) => (
-            <div key={item.label} className="rounded-xl border border-slate-200 bg-white p-5">
-              <dt className="text-sm font-medium text-slate-600">{item.label}</dt>
-              <dd className="mt-2 text-2xl font-semibold tabular-nums text-slate-950">{number(item.value)}</dd>
-            </div>
-          ))}
-        </dl>
-        <Link href="/admin-center/candidates" className="mt-4 inline-block text-sm font-semibold text-blue-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2">
-          Open candidates
-        </Link>
-      </section>
-
-      <section aria-labelledby="confirmation-health-heading">
-        <h2 id="confirmation-health-heading" className="text-xl font-semibold text-slate-950">Application confirmation emails</h2>
-        <p className="mt-1 text-sm text-slate-500">Delivery health for the automatic email candidates receive after applying.</p>
-        <dl className="mt-4 grid overflow-hidden rounded-xl border border-slate-200 bg-white sm:grid-cols-2 xl:grid-cols-4">
-          {emailStates.map((state, index) => {
-            const Icon = state.icon
-            return (
-              <div
-                key={state.key}
-                className={`p-5 ${index % 2 === 0 ? 'sm:border-r' : ''} ${index < 2 ? 'border-b xl:border-b-0' : ''} xl:border-r xl:last:border-r-0 border-slate-200`}
+    <div className="space-y-8 font-sans">
+      <section
+        aria-label="Reporting controls"
+        className="rounded-xl border border-slate-200 bg-white p-6"
+      >
+        <div className="flex flex-wrap items-end justify-between gap-6">
+          <form onSubmit={apply} className="flex flex-wrap items-end gap-4">
+            <label className="grid gap-2 text-sm font-medium text-slate-700">
+              Reporting period
+              <select
+                className={control}
+                value={draft.preset}
+                onChange={(event) => {
+                  setDraft({ preset: event.target.value as AnalyticsPeriodSelection['preset'] })
+                  setValidation('')
+                }}
               >
-                <div className="flex items-center justify-between gap-3">
-                  <dt className="text-sm font-medium text-slate-700">{state.label}</dt>
-                  <span className={`grid size-9 place-items-center rounded-lg ${state.tone}`}>
-                    <Icon aria-hidden="true" className="size-5" />
-                  </span>
-                </div>
-                <dd className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">{number(confirmations[state.key])}</dd>
-                <p className="mt-1 text-xs text-slate-500">{state.detail}</p>
-              </div>
-            )
-          })}
-        </dl>
-        <p className="mt-3 text-xs leading-5 text-slate-500">
-          Sent and failed records remain visible for {confirmations.retentionDays} days. Queued and retrying records remain until resolved.
+                {presets.map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {draft.preset === 'custom' && (
+              <>
+                <label className="grid gap-2 text-sm font-medium text-slate-700">
+                  From
+                  <input
+                    className={control}
+                    type="date"
+                    required
+                    value={draft.from || ''}
+                    onChange={(event) => setDraft({ ...draft, from: event.target.value })}
+                  />
+                </label>
+                <label className="grid gap-2 text-sm font-medium text-slate-700">
+                  Through
+                  <input
+                    className={control}
+                    type="date"
+                    required
+                    value={draft.to || ''}
+                    onChange={(event) => setDraft({ ...draft, to: event.target.value })}
+                  />
+                </label>
+              </>
+            )}
+            <button
+              className={action}
+              type="submit"
+              disabled={analytics.isFetching || Boolean(exporting)}
+            >
+              Apply period
+            </button>
+          </form>
+          <div className="flex flex-wrap gap-2">
+            <button
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-950 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-900 active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={unavailable}
+              onClick={() => void exportReport('pdf')}
+            >
+              <PiFilePdf aria-hidden="true" />
+              {exporting === 'pdf' ? 'Preparing PDF…' : 'Download PDF'}
+            </button>
+            <button
+              className={`inline-flex items-center gap-2 ${action}`}
+              disabled={unavailable}
+              onClick={() => void exportReport('csv')}
+            >
+              <PiDownloadSimple aria-hidden="true" />
+              {exporting === 'csv' ? 'Exporting…' : 'Export CSV'}
+            </button>
+          </div>
+        </div>
+        <p className="mt-4 text-xs text-slate-500">
+          Reporting weeks run Friday to Thursday. Last 7, 30 and 90 days exclude today. Dates follow{' '}
+          {report?.timeZone || 'the organization time zone'}.
         </p>
+        {dirty && (
+          <p role="status" className="mt-2 text-sm text-amber-800">
+            Apply your chosen period to update the report and enable exports.
+          </p>
+        )}
+        {validation && (
+          <p role="alert" className="mt-2 text-sm text-red-700">
+            {validation}
+          </p>
+        )}
+        {exportError && (
+          <p role="alert" className="mt-2 text-sm text-red-700">
+            {exportError}
+          </p>
+        )}
+        {exporting && (
+          <p role="status" className="sr-only">
+            Preparing your {exporting.toUpperCase()} report.
+          </p>
+        )}
       </section>
+
+      {analytics.isLoading ? (
+        <div role="status" aria-label="Loading application analytics" className="space-y-4">
+          <div className="h-32 animate-pulse rounded-xl bg-slate-200" />
+          <div className="h-64 animate-pulse rounded-xl bg-slate-100" />
+          <span className="sr-only">Loading application analytics…</span>
+        </div>
+      ) : analytics.isError || !report ? (
+        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-6">
+          <p className="font-semibold">Application analytics could not be loaded.</p>
+          <p className="mt-2 text-sm">
+            {analytics.error?.message || 'Try again to load this reporting period.'}
+          </p>
+          <button className={`${action} mt-4`} onClick={() => void analytics.refetch()}>
+            Try again
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-950">
+                {calendarDate(report.recruitment.period.fromDate)} to{' '}
+                {calendarDate(report.recruitment.period.throughDate)}
+              </h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Compared with {calendarDate(report.recruitment.period.previousFromDate)} to{' '}
+                {calendarDate(report.recruitment.period.previousThroughDate)} ·{' '}
+                {report.recruitment.period.dayCount} days
+              </p>
+              {report.recruitment.period.incomplete && (
+                <p className="mt-2 text-sm font-medium text-amber-800">
+                  Includes today and is incomplete. The previous period contains complete days.
+                </p>
+              )}
+              <p className="mt-2 text-xs text-slate-500">
+                Updated{' '}
+                {formatDateInTimeZone(report.generatedAt, report.timeZone, {
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
+                })}
+              </p>
+            </div>
+            <button
+              className={`inline-flex items-center gap-2 ${action}`}
+              disabled={analytics.isFetching || Boolean(exporting)}
+              onClick={() => void analytics.refetch()}
+            >
+              <PiArrowsClockwise aria-hidden="true" />
+              {analytics.isFetching ? 'Refreshing…' : 'Refresh'}
+            </button>
+          </div>
+          <dl className="grid gap-4 md:grid-cols-3">
+            <Metric
+              label="Applications received"
+              comparison={report.recruitment.applications.comparison}
+            />
+            <Metric
+              label="Distinct applicants"
+              comparison={report.recruitment.applications.applicantComparison}
+            />
+            <Metric label="New registrations" comparison={report.recruitment.registrations} />
+          </dl>
+          <p className="text-xs text-slate-500">
+            Distinct applicants counts each candidate once per period. Registration figures count
+            accounts created in each period that still exist; deleted accounts cannot be
+            reconstructed.
+          </p>
+          <ActivityTrend
+            title="Application trend"
+            id="applications"
+            daily={report.recruitment.applications.daily}
+            previousDaily={report.recruitment.applications.previousDaily}
+            current={report.recruitment.applications.current}
+            previous={report.recruitment.applications.previous}
+          />
+          <ActivityTrend
+            title="Registration trend"
+            id="registrations"
+            daily={report.recruitment.registrations.daily}
+            previousDaily={report.recruitment.registrations.previousDaily}
+            current={report.recruitment.registrations.current}
+            previous={report.recruitment.registrations.previous}
+            colour="#bd2435"
+          />
+          <section aria-labelledby="review-workload-heading">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <h2 id="review-workload-heading" className="text-xl font-semibold text-slate-950">
+                Current review stages
+              </h2>
+              <Link className={link} href="/admin-center/applications/inbox">
+                Open application inbox
+              </Link>
+            </div>
+            <p className="mt-1 text-sm text-slate-600">
+              Current stages of applications received in the selected period, not historical stage
+              transitions or hiring outcomes.
+            </p>
+            <Snapshot
+              items={STAGES.map((stage) => [
+                stage.label,
+                report.recruitment.applications.currentStages[stage.value],
+              ])}
+            />
+          </section>
+          <VacancyBreakdown
+            key={`${report.recruitment.period.fromDate}:${report.recruitment.period.throughDate}`}
+            selection={fixedSelection!}
+            report={report}
+          />
+          <section aria-labelledby="candidate-snapshot-heading">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <h2 id="candidate-snapshot-heading" className="text-xl font-semibold text-slate-950">
+                Candidate snapshot
+              </h2>
+              <Link className={link} href="/admin-center/candidates">
+                Open candidates
+              </Link>
+            </div>
+            <p className="mt-1 text-sm text-slate-600">
+              Current accounts and profile state, independent of the selected period.
+            </p>
+            <Snapshot
+              items={[
+                ['Registered candidates', report.recruitment.candidates.registered],
+                ['Profiles complete now', report.recruitment.candidates.profilesComplete],
+                ['Have applied at least once', report.recruitment.candidates.everApplied],
+              ]}
+            />
+          </section>
+          <section aria-labelledby="current-workload-heading">
+            <h2 id="current-workload-heading" className="text-xl font-semibold text-slate-950">
+              Current workload
+            </h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Across all records, not limited to the selected period.
+            </p>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <div className="rounded-xl border border-slate-200 bg-white p-6">
+                <p className="text-sm text-slate-600">
+                  Applications awaiting first review over seven days
+                </p>
+                <p className="mt-2 text-2xl font-semibold">
+                  {count(report.recruitment.workload.pendingOlderThanSevenDays)}
+                </p>
+                <Link
+                  href="/admin-center/applications/inbox?status=pending"
+                  className={`mt-4 inline-block ${link}`}
+                >
+                  Review pending applications
+                </Link>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white p-6">
+                <p className="text-sm text-slate-600">Open vacancies with no applications</p>
+                <p className="mt-2 text-2xl font-semibold">
+                  {count(report.recruitment.workload.openVacanciesWithoutApplications)}
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  No applications over the vacancy’s lifetime.
+                </p>
+                <Link
+                  href="/admin-center/applications/by-vacancy?view=open"
+                  className={`mt-4 inline-block ${link}`}
+                >
+                  Review open vacancies
+                </Link>
+              </div>
+            </div>
+          </section>
+          <section aria-labelledby="application-volume-heading">
+            <h2 id="application-volume-heading" className="text-xl font-semibold text-slate-950">
+              Calendar application totals
+            </h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Independent of the selected period. This week starts Monday.
+            </p>
+            <Snapshot
+              items={[
+                ['Today', report.applications.today],
+                ['This week', report.applications.week],
+                ['This month', report.applications.month],
+                ['All time', report.applications.allTime],
+              ]}
+            />
+          </section>
+          <details className="rounded-xl border border-slate-200 bg-white p-6">
+            <summary className="cursor-pointer text-lg font-semibold focus-visible:outline-2 focus-visible:outline-blue-700">
+              Application confirmation emails
+            </summary>
+            <p className="mt-2 text-sm text-slate-600">
+              Current retained email records, not filtered by the reporting period. Sent means
+              accepted by SMTP, not confirmed inbox delivery.
+            </p>
+            <Snapshot
+              items={(['queued', 'sent', 'retrying', 'failed'] as const).map((state) => [
+                state,
+                report.confirmations[state],
+              ])}
+            />
+            <p className="mt-4 text-xs text-slate-500">
+              Terminal records are retained for {report.confirmations.retentionDays} days. Queued
+              and retrying records remain until resolved.
+            </p>
+          </details>
+        </>
+      )}
     </div>
   )
 }
