@@ -39,8 +39,45 @@ beforeEach(() => {
   })
 })
 describe('Candidate email centre', () => {
+  it('shows precise automatic-filter notices on restricted template cards only', () => {
+    mount()
+    for (const [title, requirement] of [
+      ['Add your CV', 'no CV on profile'],
+      ['Complete your profile', 'incomplete profiles'],
+      ['Vacancy roundup', 'New vacancy alerts enabled'],
+    ]) {
+      const card = screen.getByRole('button', { name: new RegExp(`^${title}`) })
+      expect(within(card).getByText(`Automatically filters: ${requirement}`)).toBeInTheDocument()
+    }
+    for (const title of ['Custom message', 'Activity check-in', 'CV needs attention']) {
+      expect(within(screen.getByRole('button', { name: new RegExp(`^${title}`) })).queryByText(/Automatically filters/)).not.toBeInTheDocument()
+    }
+  })
+  it('makes newsletter subscription requirements visible before recipient selection', () => {
+    mount(true)
+    const notice = screen.getByRole('note', { name: 'Email audience rules' })
+    expect(notice).toHaveTextContent('Automatically filters: Career newsletter subscribers')
+    expect(notice).toHaveTextContent('Included team members must also be eligible for staff newsletters.')
+  })
+  it('prefills an editable CV attention message with file replacement steps', () => {
+    mount()
+    const card = screen.getByRole('button', { name: /^CV needs attention/ })
+    card.focus()
+    expect(card).toHaveFocus()
+    fireEvent.click(card)
+    expect(card).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByLabelText('Subject')).toHaveValue('Please check your CV on Jobs Lounge')
+    const message = screen.getByLabelText(/^Message/) as HTMLTextAreaElement
+    expect(message.value).toContain('There may be a problem with its link, access permissions or the file itself.')
+    expect(message.value).toContain('1. Sign in and open My Profile.')
+    expect(message.value).toContain('PDF or DOCX file of 3 MB or less')
+    expect(message.value).toContain('If you already uploaded a file, use Replace.')
+    expect(message.value).toContain('without creating a publicly shared link.')
+    fireEvent.change(message, { target: { value: 'Please replace the unreadable file.' } })
+    expect(message).toHaveValue('Please replace the unreadable file.')
+  })
   it.each([
-    { title: 'Add your CV', field: 'CV', value: 'missing', key: 'cv', explanation: 'Only candidates without a CV are shown.' },
+    { title: 'Add your CV', field: 'CV', value: 'missing', key: 'cv', explanation: 'Only candidates without a CV on their profile are shown.' },
     { title: 'Complete your profile', field: 'Profile', value: 'incomplete', key: 'profile', explanation: 'Only candidates with an incomplete profile are shown.' },
   ])('makes the $title requirement visible and keeps it after clearing filters', async ({ title, field, value, key, explanation }) => {
     mount()
@@ -48,6 +85,7 @@ describe('Candidate email centre', () => {
     compose()
     const notice = screen.getByRole('note', { name: 'Email audience rules' })
     expect(notice).toHaveTextContent(explanation)
+    expect(notice).toHaveTextContent('Automatically filters:')
     expect(notice).toHaveTextContent('Custom message')
     expect(screen.getByLabelText(field)).toHaveValue(value)
     expect(screen.getByLabelText(field)).toBeDisabled()
@@ -64,6 +102,46 @@ describe('Candidate email centre', () => {
     await screen.findByTitle('Server-rendered email preview')
     const savedBody = vi.mocked(dispatchData).mock.calls.find(([, , body]) => (body as { selection?: unknown })?.selection)?.[2]
     expect(savedBody).toMatchObject({ filters: { [key]: value } })
+  })
+  it.each(['Add your CV', 'Complete your profile'])('removes the %s restriction when switching to CV needs attention', async (title) => {
+    mount()
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${title}`) }))
+    compose()
+    fireEvent.click(screen.getByRole('button', { name: 'Change email type' }))
+    fireEvent.click(screen.getByRole('button', { name: /^CV needs attention/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Select recipients →' }))
+    const notice = screen.getByRole('note', { name: 'Email audience rules' })
+    expect(notice).toHaveTextContent('No automatic CV or profile filter.')
+    expect(notice).not.toHaveTextContent('Automatically filters:')
+    expect(screen.getByLabelText('CV')).toBeEnabled()
+    expect(screen.getByLabelText('Profile')).toBeEnabled()
+    expect(screen.getByLabelText('CV')).toHaveValue('')
+    expect(screen.getByLabelText('Profile')).toHaveValue('')
+    fireEvent.change(screen.getByLabelText('CV'), { target: { value: 'available' } })
+    fireEvent.change(screen.getByLabelText('Profile'), { target: { value: 'complete' } })
+    await waitFor(() => expect(vi.mocked(dispatchRequest).mock.calls.some(([path, , body]) =>
+      path === '/recipients' && (body as { template: string }).template === 'candidate-cv-attention'
+        && (body as { filters: { cv?: string; profile?: string } }).filters.cv === 'available'
+        && (body as { filters: { profile?: string } }).filters.profile === 'complete',
+    )).toBe(true))
+    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }))
+    expect(screen.getByLabelText('CV')).toHaveValue('')
+    expect(screen.getByLabelText('Profile')).toHaveValue('')
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Select Ada Candidate' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Preview email →' })).toBeEnabled())
+    fireEvent.click(screen.getByRole('button', { name: 'Preview email →' }))
+    await screen.findByTitle('Server-rendered email preview')
+    expect(draft).toMatchObject({ template: 'candidate-cv-attention', filters: {}, selection: { ids: ['person-one'] } })
+  })
+  it('describes recorded CV presence without promising the document is accessible', async () => {
+    mount(); compose()
+    await screen.findByRole('checkbox', { name: 'Select Ada Candidate' })
+    expect(within(screen.getByRole('table')).getByText('No CV on profile')).toBeInTheDocument()
+    fireEvent.click(screen.getAllByRole('button', { name: 'Next' }).find((button) => !button.hasAttribute('disabled'))!)
+    await screen.findByRole('checkbox', { name: 'Select Second Candidate' })
+    expect(within(screen.getByRole('table')).getByText('CV on profile')).toBeInTheDocument()
+    expect(screen.queryByText('CV available')).not.toBeInTheDocument()
+    expect(screen.queryByText('No CV link')).not.toBeInTheDocument()
   })
   it('allows unrestricted profile and CV filters after changing to a custom message', async () => {
     mount()
@@ -108,8 +186,9 @@ describe('Candidate email centre', () => {
     expect(screen.getByRole('button', { name: 'Select recipients →' })).toBeDisabled()
     expect(vi.mocked(dispatchData).mock.calls.some(([path]) => path?.endsWith('/preview'))).toBe(false)
   })
-  it('saves an optional image and offers the rendered HTML and plain text previews', async () => {
+  it.each(['Custom message', 'CV needs attention'])('saves an optional image and offers HTML and text previews for %s', async (title) => {
     mount()
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${title}`) }))
     expect(screen.getByRole('radio', { name: 'No image' })).toBeChecked()
     fireEvent.click(await screen.findByRole('radio', { name: 'Jobs Lounge welcome' }))
     compose()
@@ -153,8 +232,10 @@ describe('Candidate email centre', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'Previous' }).find((button) => !button.hasAttribute('disabled'))!)
     expect(await screen.findByRole('checkbox', { name: 'Select Ada Candidate' })).toBeChecked()
   })
-  it('keeps named selections across searches and reviews every selected recipient', async () => {
-    mount(); compose()
+  it.each(['Custom message', 'CV needs attention'])('keeps named selections across searches for %s and reviews every selected recipient', async (title) => {
+    mount()
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${title}`) }))
+    compose()
     fireEvent.change(screen.getByLabelText('Search name or email'), { target: { value: 'ada' } })
     fireEvent.click(await screen.findByRole('checkbox', { name: 'Select Ada Candidate' }))
     const selected = screen.getByRole('region', { name: 'Selected recipients' })
@@ -179,8 +260,10 @@ describe('Candidate email centre', () => {
     fireEvent.click(within(selected).getByRole('button', { name: 'Remove Ada Candidate from selected recipients' }))
     expect(screen.queryByRole('region', { name: 'Selected recipients' })).not.toBeInTheDocument()
   })
-  it('keeps search as a filter when selecting all matching recipients', async () => {
-    mount(); compose()
+  it.each(['Custom message', 'CV needs attention'])('keeps search as a filter for all matching %s recipients', async (title) => {
+    mount()
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${title}`) }))
+    compose()
     fireEvent.change(screen.getByLabelText('Search name or email'), { target: { value: 'ada' } })
     await screen.findByRole('checkbox', { name: 'Select Ada Candidate' })
     fireEvent.click(screen.getByRole('button', { name: 'Select all matching' }))

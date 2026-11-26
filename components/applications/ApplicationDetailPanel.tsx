@@ -193,18 +193,21 @@ export default function ApplicationDetailPanel({
 
         <section>
           <h3 className="font-semibold text-slate-950">Submitted with this application</h3>
+          <p className="mt-2 text-sm text-slate-600">Saved when this application was submitted. Uploading a new profile CV does not replace this document. Check the candidate profile for newer CVs.</p>
           <div className="mt-3 flex flex-wrap gap-2">
-            {cv ? <a href={cv} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white">Open submitted CV</a> : <span className="text-sm text-slate-500">No CV available</span>}
+            {cv ? <a href={cv} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700">{application.cvDocumentId ? 'Open uploaded CV' : 'Open external CV link'}</a> : <span className="text-sm text-slate-500">{application.cvLink ? 'External CV link unavailable' : 'No submitted CV'}</span>}
             {coverLetter ? <a href={coverLetter} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold">Open submitted cover letter</a> : null}
           </div>
+          {!application.cvDocumentId && application.cvLink && <p className="mt-2 text-xs text-slate-500">External link access is not checked automatically.</p>}
           {application.note ? <div className="mt-4 rounded-lg bg-slate-50 p-4 text-sm whitespace-pre-wrap text-slate-700">{application.note}</div> : null}
           {(liveCv && liveCv !== cv) || (liveCoverLetter && liveCoverLetter !== coverLetter) ? (
             <details className="mt-4 rounded-lg border border-slate-200 p-3">
               <summary className="cursor-pointer text-sm font-semibold">Current profile documents</summary>
               <div className="mt-3 flex gap-3 text-sm">
-                {liveCv ? <a href={liveCv} target="_blank" rel="noopener noreferrer" className="text-blue-800 hover:underline">Current CV</a> : null}
+                {liveCv ? <a href={liveCv} target="_blank" rel="noopener noreferrer" className="text-blue-800 hover:underline">Current external CV link</a> : null}
                 {liveCoverLetter ? <a href={liveCoverLetter} target="_blank" rel="noopener noreferrer" className="text-blue-800 hover:underline">Current cover letter</a> : null}
               </div>
+              {liveCv && <p className="mt-2 text-xs text-slate-500">External link access is not checked automatically.</p>}
             </details>
           ) : null}
         </section>

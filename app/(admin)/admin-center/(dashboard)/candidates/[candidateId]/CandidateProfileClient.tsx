@@ -58,13 +58,14 @@ const Detail = ({ label, value }: { label: string; value: unknown }) => (
     </div>
 )
 
-const DocumentLink = ({ href, children }: { href?: string; children: string }) => {
-    const safeHref = safeHttpUrl(href)
+const DocumentLink = ({ href, children, uploaded = false }: { href?: string; children: string; uploaded?: boolean }) => {
+    // Only app-built file routes may be relative. Candidate-provided links still require HTTP(S).
+    const safeHref = uploaded && href?.startsWith('/') && !href.startsWith('//') ? href : safeHttpUrl(href)
     return safeHref ? (
-        <a href={safeHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm font-semibold text-[#184aa2] hover:underline">
-            {children}<FiExternalLink aria-hidden="true" />
+        <a href={safeHref} target="_blank" rel="noopener noreferrer" className="inline-flex max-w-full items-center gap-1 break-words text-sm font-semibold text-[#184aa2] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#184aa2]">
+            <span className="min-w-0 break-words">{children}</span><FiExternalLink aria-hidden="true" className="shrink-0" />
         </a>
-    ) : <span className="text-sm text-gray-500">{children} not provided</span>
+    ) : <span className="text-sm text-gray-500">{children} {href ? 'unavailable' : 'not provided'}</span>
 }
 
 const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
@@ -222,7 +223,7 @@ const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
 
                     {!isRegisteredUser && <section className="overflow-hidden rounded-xl border border-gray-200 bg-white">
                         <div className="flex flex-col gap-3 border-b border-gray-200 p-5 sm:flex-row sm:items-center sm:justify-between">
-                            <div><h2 className="text-lg font-semibold text-gray-950">Application history</h2><p className="mt-1 text-sm text-gray-600">Read-only history for this candidate.</p></div>
+                            <div><h2 className="text-lg font-semibold text-gray-950">Application history</h2><p className="mt-1 text-sm text-gray-600">CVs are saved when each application is submitted. Updating a profile CV does not replace these documents.</p></div>
                             <label className="text-sm font-medium text-gray-700">
                                 <span className="sr-only">Filter application history by status</span>
                                 <select
@@ -254,9 +255,12 @@ const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
                                             </div>
                                             {application.note && <div className="mt-4 rounded-md bg-gray-50 p-3"><p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Candidate note</p><p className="mt-1 whitespace-pre-wrap text-sm text-gray-700">{application.note}</p></div>}
                                             <div className="mt-4 flex flex-wrap gap-4">
-                                                <DocumentLink href={application.cvDocumentId ? applicationCvUrl(application._id) : application.cvLink}>Submitted CV</DocumentLink>
+                                                {application.cvDocumentId || application.cvLink
+                                                    ? <DocumentLink uploaded={Boolean(application.cvDocumentId)} href={application.cvDocumentId ? applicationCvUrl(application._id) : application.cvLink}>{application.cvDocumentId ? 'Submitted CV (uploaded file)' : 'Submitted CV (external link)'}</DocumentLink>
+                                                    : <span className="text-sm text-gray-500">No submitted CV</span>}
                                                 {application.coverLetterLink && <DocumentLink href={application.coverLetterLink}>Submitted cover letter</DocumentLink>}
                                             </div>
+                                            {!application.cvDocumentId && application.cvLink && <p className="mt-2 text-xs text-gray-500">External link access is not checked automatically.</p>}
                                         </article>
                                     ))}
                                     {!applicationsQuery.data?.data.length && <p className="p-8 text-center text-gray-500">No applications found.</p>}
@@ -290,12 +294,12 @@ const CandidateProfileClient = ({ candidateId }: { candidateId: string }) => {
                         </dl>
                     </section>
                     <section className="rounded-xl border border-gray-200 bg-white p-5">
-                        <h2 className="font-semibold text-gray-950">Documents</h2>
+                        <h2 className="font-semibold text-gray-950">Current profile documents</h2>
                         <div className="mt-4 flex flex-col items-start gap-3">
                             {uploadedCvs.isLoading && <p role="status" className="text-sm text-gray-500">Loading CVs…</p>}
                             {uploadedCvs.isError && <p role="alert" className="text-sm text-red-700">Could not load uploaded CVs. <button type="button" onClick={() => void uploadedCvs.refetch()} className="font-semibold underline">Try again</button></p>}
-                            {uploadedCvs.data?.map((cv) => <DocumentLink key={cv.id} href={candidateCvUrl(candidateId, cv.id)}>{cv.name}</DocumentLink>)}
-                            {candidate.cvLink && <DocumentLink href={candidate.cvLink}>Legacy CV link</DocumentLink>}
+                            {uploadedCvs.data?.map((cv) => <div key={cv.id} className="min-w-0 max-w-full"><DocumentLink uploaded href={candidateCvUrl(candidateId, cv.id)}>{cv.name}</DocumentLink><p className="mt-1 break-words text-xs text-gray-500">Uploaded file{cv.originalName && cv.originalName !== cv.name ? ` · ${cv.originalName}` : ''}</p></div>)}
+                            {candidate.cvLink && <div><DocumentLink href={candidate.cvLink}>External CV link</DocumentLink><p className="mt-1 text-xs text-gray-500">External link access is not checked automatically.</p></div>}
                             {uploadedCvs.data?.length === 0 && !candidate.cvLink && <p className="text-sm text-gray-500">No CV on profile</p>}
                             <DocumentLink href={candidate.coverLetterLink}>Profile cover letter</DocumentLink>
                         </div>

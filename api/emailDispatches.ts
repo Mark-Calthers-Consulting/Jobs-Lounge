@@ -3,7 +3,7 @@ import { csrfFetch } from './csrf'
 import { readApiResponse } from './errors'
 
 export type EmailChannel = 'candidate' | 'newsletter'
-export type BroadcastTemplate = 'candidate-message' | 'candidate-profile' | 'candidate-cv' | 'candidate-activity' | 'candidate-roundup' | 'candidate-newsletter'
+export type BroadcastTemplate = 'candidate-message' | 'candidate-profile' | 'candidate-cv' | 'candidate-cv-attention' | 'candidate-activity' | 'candidate-roundup' | 'candidate-newsletter'
 export type AudienceFilters = {
   search?: string; joinedDays?: number; joinedFrom?: string; joinedTo?: string
   activity?: string; activityDays?: number; group?: string; profile?: string; cv?: string
