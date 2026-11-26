@@ -1,6 +1,6 @@
 'use client'
 
-import { useDeferredValue, useState } from 'react'
+import { useDeferredValue, useId, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import Modal from '@/components/Modal'
@@ -16,6 +16,12 @@ const templates: { key: BroadcastTemplate; title: string; description: string; s
   { key: 'candidate-roundup', title: 'Vacancy roundup', description: 'Share up to six opportunities with people who enabled vacancy alerts.', subject: 'Opportunities worth a look', message: 'Here are a few opportunities you might like to explore. Follow each link to learn more about the role and its available locations.' },
   { key: 'candidate-newsletter', title: 'Career newsletter', description: 'Career Insights and opportunities for newsletter subscribers.', subject: 'Your Jobs Lounge career update', message: 'Explore fresh perspectives and opportunities for your next career step.' },
 ]
+const templateAudienceRules: Partial<Record<BroadcastTemplate, string>> = {
+  'candidate-cv': 'Only candidates without a CV are shown. To contact someone who already has a CV, choose Custom message. Clearing filters keeps this requirement.',
+  'candidate-profile': 'Only candidates with an incomplete profile are shown. To contact someone with a complete profile, choose Custom message. Clearing filters keeps this requirement.',
+  'candidate-roundup': 'Only candidates who have enabled New vacancy alerts are shown. Clearing filters keeps this requirement.',
+  'candidate-newsletter': 'Only candidates subscribed to Career newsletter are shown. Included team members must also be eligible for staff newsletters. Clearing filters keeps these requirements.',
+}
 const control = 'mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700'
 const button = 'rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-blue-700 disabled:cursor-not-allowed disabled:opacity-50'
 const initialDraft = (channel: EmailChannel): BroadcastDraft => {
@@ -26,6 +32,15 @@ export const selectedCount = (selection: EmailSelection, total: number) => selec
 
 export default function BroadcastEmailCenter({ channel, superAdmin }: { channel: EmailChannel; superAdmin: boolean }) {
   const [draft, setDraft] = useState(() => initialDraft(channel))
+  const audienceRuleId = useId()
+  const requiresIncompleteProfile = draft.template === 'candidate-profile'
+  const requiresMissingCv = draft.template === 'candidate-cv'
+  const audienceFilters: AudienceFilters = {
+    ...draft.filters,
+    ...(requiresIncompleteProfile ? { profile: 'incomplete' } : {}),
+    ...(requiresMissingCv ? { cv: 'missing' } : {}),
+  }
+  const audienceRule = templateAudienceRules[draft.template]
   const [selectedPeople, setSelectedPeople] = useState<Record<string, Pick<Recipient, 'name' | 'email'>>>({})
   const [saved, setSaved] = useState<Dispatch | null>(null)
   const [step, setStep] = useState(0)
@@ -46,7 +61,7 @@ export default function BroadcastEmailCenter({ channel, superAdmin }: { channel:
   const contentSearch = { articleSearch: useDeferredValue(articleSearch), vacancySearch: useDeferredValue(vacancySearch) }
   const settings = usePlatformSettings()
   const client = useQueryClient()
-  const audience = useQuery({ queryKey: ['broadcast-recipients', draft.template, draft.filters, draft.includeTeam, page], queryFn: () => dispatchRequest<RecipientResult>('/recipients', 'POST', { template: draft.template, filters: draft.filters, includeTeam: draft.includeTeam, page, limit: 20 }), enabled: step > 0 })
+  const audience = useQuery({ queryKey: ['broadcast-recipients', draft.template, audienceFilters, draft.includeTeam, page], queryFn: () => dispatchRequest<RecipientResult>('/recipients', 'POST', { template: draft.template, filters: audienceFilters, includeTeam: draft.includeTeam, page, limit: 20 }), enabled: step > 0 })
   const options = useQuery({ queryKey: ['broadcast-content-options', contentSearch.articleSearch, contentSearch.vacancySearch], queryFn: () => dispatchData<ContentOptions>(`/options?${new URLSearchParams(contentSearch)}`) })
   const history = useQuery({ queryKey: ['broadcast-history', channel, historyPage], queryFn: () => dispatchRequest<{ data: Dispatch[]; pagination: Paging }>(`?channel=${channel}&page=${historyPage}`), refetchInterval: (query) => query.state.data?.data.some((item) => ['queued', 'scheduled'].includes(item.state)) ? 10000 : false })
   const deliveries = useQuery({ queryKey: ['broadcast-deliveries', detail, detailPage], queryFn: () => dispatchRequest<{ data: Delivery[]; pagination: Paging }>(`/${detail}/deliveries?page=${detailPage}`), enabled: Boolean(detail), refetchInterval: (query) => query.state.data?.data.some((item) => ['pending', 'processing', 'retry'].includes(item.status)) ? 10000 : false })
@@ -107,7 +122,7 @@ export default function BroadcastEmailCenter({ channel, superAdmin }: { channel:
   }
   const isSelected = (id: string) => draft.selection.mode === 'all' ? !draft.selection.excludeIds.includes(id) : draft.selection.ids.includes(id)
   const save = async () => {
-    const filters = { ...draft.filters }
+    const filters = { ...audienceFilters }
     if (draft.selection.mode === 'explicit') delete filters.search
     const result = await dispatchData<Dispatch>(saved ? `/${saved._id}` : '', saved ? 'PATCH' : 'POST', { ...draft, filters, ...(saved ? { revision: saved.revision } : {}) })
     setSaved(result); await client.invalidateQueries({ queryKey: ['broadcast-history'] }); return result
@@ -141,7 +156,8 @@ export default function BroadcastEmailCenter({ channel, superAdmin }: { channel:
     const template = templates.find((item) => item.key === key)!
     change({ ...initialDraft(channel), template: key, content: { ...initialDraft(channel).content, subject: template.subject, message: template.message } }); setSelectedPeople({}); setSaved(null)
   }
-  const activeFilters = Object.entries(draft.filters).filter(([, value]) => value !== '' && value !== undefined)
+  const activeFilters = Object.entries(draft.filters).filter(([key, value]) => value !== '' && value !== undefined
+    && !(requiresIncompleteProfile && key === 'profile') && !(requiresMissingCv && key === 'cv'))
   const roundupNeedsOpportunity = draft.template === 'candidate-roundup' && !draft.content.vacancyIds.length
   return <div className="space-y-8">
     <fieldset disabled={busy} className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 sm:p-7">
@@ -181,13 +197,18 @@ export default function BroadcastEmailCenter({ channel, superAdmin }: { channel:
       </div>}
       {step === 1 && <div className="space-y-5">
         <p className="text-sm text-slate-600">{superAdmin ? 'Find candidate accounts, including registered users without applications.' : 'Only applicants to your own non-archived vacancies are available.'} Different filters combine with AND. Opted-out recipients are excluded.</p>
+        {audienceRule && <div role="note" aria-label="Email audience rules" className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-slate-700">
+          <p className="font-semibold text-slate-950">{templates.find((item) => item.key === draft.template)?.title} recipients</p>
+          <p id={audienceRuleId} className="mt-2">{audienceRule}</p>
+          {channel === 'candidate' && <button type="button" className="mt-3 font-semibold text-blue-800 underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700" onClick={() => setStep(0)}>Change email type</button>}
+        </div>}
         <div className="grid gap-4 rounded-lg bg-slate-50 p-4 sm:grid-cols-2 xl:grid-cols-4">
           <label className="text-sm font-semibold">Search name or email<input aria-label="Search name or email" className={control} maxLength={100} value={draft.filters.search || ''} onChange={(event) => filter('search', event.target.value)} /><span className="mt-1 block font-normal text-slate-500">Searching keeps individually selected recipients.</span></label>
           <label className="text-sm font-semibold">Joined<select className={control} value={draft.filters.joinedFrom || draft.filters.joinedTo ? 'custom' : draft.filters.joinedDays || ''} onChange={(event) => { const value = event.target.value; change({ ...draft, filters: { ...draft.filters, joinedDays: value && value !== 'custom' ? Number(value) : undefined, joinedFrom: value === 'custom' ? new Date().toISOString().slice(0, 10) : undefined, joinedTo: undefined }, selection: { mode: 'explicit', ids: [], excludeIds: [] } }); setSelectedPeople({}); setPage(1) }}><option value="">Any time</option>{[7, 30, 60, 90].map((days) => <option value={days} key={days}>Within {days} days</option>)}<option value="custom">Custom date range</option></select></label>
           <label className="text-sm font-semibold">Last active<select className={control} value={draft.filters.activity === 'unknown' ? 'unknown' : draft.filters.activityDays ? `${draft.filters.activity}:${draft.filters.activityDays}` : ''} onChange={(event) => { const [activity, days] = event.target.value.split(':'); change({ ...draft, filters: { ...draft.filters, activity: activity || undefined, activityDays: days ? Number(days) : undefined }, selection: { mode: 'explicit', ids: [], excludeIds: [] } }); setSelectedPeople({}); setPage(1) }}><option value="">Any time</option>{['active', 'inactive'].flatMap((type) => [7, 30, 60, 90].map((days) => <option value={`${type}:${days}`} key={`${type}:${days}`}>{type === 'active' ? `Active within ${days} days` : `Inactive for at least ${days} days`}</option>))}<option value="unknown">No recorded activity</option></select></label>
           {superAdmin && <FilterSelect label="Account group" value={draft.filters.group} onChange={(value) => filter('group', value)} choices={[['', 'All accounts'], ['applicants', 'Applicants'], ['registered', 'Registered users without applications']]} />}
-          <FilterSelect label="Profile" value={draft.filters.profile} onChange={(value) => filter('profile', value)} choices={[['', 'Any'], ['complete', 'Complete'], ['incomplete', 'Incomplete']]} />
-          <FilterSelect label="CV" value={draft.filters.cv} onChange={(value) => filter('cv', value)} choices={[['', 'Any'], ['available', 'Available'], ['missing', 'Missing']]} />
+          <FilterSelect label="Profile" value={audienceFilters.profile} disabled={requiresIncompleteProfile} describedBy={requiresIncompleteProfile ? audienceRuleId : undefined} onChange={(value) => filter('profile', value)} choices={[['', 'Any'], ['complete', 'Complete'], ['incomplete', 'Incomplete']]} />
+          <FilterSelect label="CV" value={audienceFilters.cv} disabled={requiresMissingCv} describedBy={requiresMissingCv ? audienceRuleId : undefined} onChange={(value) => filter('cv', value)} choices={[['', 'Any'], ['available', 'Available'], ['missing', 'Missing']]} />
           <FilterSelect label="Email verification" value={draft.filters.verified} onChange={(value) => filter('verified', value)} choices={[['', 'Any'], ['verified', 'Verified accounts only'], ['unverified', 'Unverified accounts only']]} />
           <FilterSelect label="Application vacancy" value={draft.filters.vacancyId} onChange={(value) => filter('vacancyId', value)} choices={[['', 'Any vacancy'], ...(audience.data?.vacancies || []).map((job) => [job.id, `${job.title} · ${job.location}`])]} />
           <FilterSelect label="Application stage" value={draft.filters.stage} onChange={(value) => filter('stage', value)} choices={[['', 'Any stage'], ['pending', 'New'], ['reviewed', 'In review'], ['shortlisted', 'Shortlisted'], ['rejected', 'Rejected']]} />
@@ -240,8 +261,8 @@ export default function BroadcastEmailCenter({ channel, superAdmin }: { channel:
   </div>
 }
 
-function FilterSelect({ label, value, choices, onChange }: { label: string; value?: string; choices: string[][]; onChange: (value: string) => void }) {
-  return <label className="text-sm font-semibold">{label}<select className={control} value={value || ''} onChange={(event) => onChange(event.target.value)}>{choices.map(([key, text]) => <option key={key} value={key}>{text}</option>)}</select></label>
+function FilterSelect({ label, value, choices, onChange, disabled = false, describedBy }: { label: string; value?: string; choices: string[][]; onChange: (value: string) => void; disabled?: boolean; describedBy?: string }) {
+  return <label className="text-sm font-semibold">{label}<select className={`${control} disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-600`} value={value || ''} disabled={disabled} aria-describedby={describedBy} onChange={(event) => onChange(event.target.value)}>{choices.map(([key, text]) => <option key={key} value={key}>{text}</option>)}</select></label>
 }
 function Pages({ paging, setPage }: { paging: Paging; setPage: (page: number) => void }) {
   return <nav aria-label="Pagination" className="mt-4 flex items-center justify-between gap-4 text-sm"><button className={button} disabled={!paging.hasPreviousPage} onClick={() => setPage(paging.page - 1)}>Previous</button><span>Page {paging.page} of {paging.totalPages}</span><button className={button} disabled={!paging.hasNextPage} onClick={() => setPage(paging.page + 1)}>Next</button></nav>

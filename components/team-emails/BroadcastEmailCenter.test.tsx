@@ -39,6 +39,49 @@ beforeEach(() => {
   })
 })
 describe('Candidate email centre', () => {
+  it.each([
+    { title: 'Add your CV', field: 'CV', value: 'missing', key: 'cv', explanation: 'Only candidates without a CV are shown.' },
+    { title: 'Complete your profile', field: 'Profile', value: 'incomplete', key: 'profile', explanation: 'Only candidates with an incomplete profile are shown.' },
+  ])('makes the $title requirement visible and keeps it after clearing filters', async ({ title, field, value, key, explanation }) => {
+    mount()
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${title}`) }))
+    compose()
+    const notice = screen.getByRole('note', { name: 'Email audience rules' })
+    expect(notice).toHaveTextContent(explanation)
+    expect(notice).toHaveTextContent('Custom message')
+    expect(screen.getByLabelText(field)).toHaveValue(value)
+    expect(screen.getByLabelText(field)).toBeDisabled()
+    expect(screen.getByLabelText(field)).toHaveAccessibleDescription(expect.stringContaining(explanation))
+    fireEvent.change(screen.getByLabelText('Search name or email'), { target: { value: 'ada' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }))
+    expect(screen.getByLabelText('Search name or email')).toHaveValue('')
+    expect(screen.getByLabelText(field)).toHaveValue(value)
+    await waitFor(() => expect(vi.mocked(dispatchRequest).mock.calls.some(([path, , body]) =>
+      path === '/recipients' && (body as { filters: Record<string, string> }).filters[key] === value,
+    )).toBe(true))
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Select Ada Candidate' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Preview email →' }))
+    await screen.findByTitle('Server-rendered email preview')
+    const savedBody = vi.mocked(dispatchData).mock.calls.find(([, , body]) => (body as { selection?: unknown })?.selection)?.[2]
+    expect(savedBody).toMatchObject({ filters: { [key]: value } })
+  })
+  it('allows unrestricted profile and CV filters after changing to a custom message', async () => {
+    mount()
+    fireEvent.click(screen.getByRole('button', { name: /^Add your CV/ }))
+    compose()
+    fireEvent.click(screen.getByRole('button', { name: 'Change email type' }))
+    fireEvent.click(screen.getByRole('button', { name: /^Custom message/ }))
+    compose()
+    expect(screen.queryByRole('note', { name: 'Email audience rules' })).not.toBeInTheDocument()
+    expect(screen.getByLabelText('CV')).toBeEnabled()
+    expect(screen.getByLabelText('Profile')).toBeEnabled()
+    expect(screen.getByLabelText('CV')).toHaveValue('')
+    fireEvent.change(screen.getByLabelText('CV'), { target: { value: 'available' } })
+    await waitFor(() => expect(vi.mocked(dispatchRequest).mock.calls.some(([path, , body]) =>
+      path === '/recipients' && (body as { template: string; filters: { cv?: string } }).template === 'candidate-message'
+        && (body as { filters: { cv?: string } }).filters.cv === 'available',
+    )).toBe(true))
+  })
   it('requires a public opportunity before moving a vacancy roundup to recipients', async () => {
     mount()
     fireEvent.click(screen.getByRole('button', { name: /Vacancy roundup/ }))
@@ -48,6 +91,7 @@ describe('Candidate email centre', () => {
     fireEvent.click(screen.getByRole('checkbox', { name: /Sales Manager/ }))
     expect(screen.getByRole('button', { name: 'Select recipients →' })).toBeEnabled()
     fireEvent.click(screen.getByRole('button', { name: 'Select recipients →' }))
+    expect(screen.getByRole('note', { name: 'Email audience rules' })).toHaveTextContent('Only candidates who have enabled New vacancy alerts are shown.')
     fireEvent.click(await screen.findByRole('checkbox', { name: 'Select Ada Candidate' }))
     fireEvent.click(screen.getByRole('button', { name: 'Preview email →' }))
     await screen.findByTitle('Server-rendered email preview')
@@ -183,6 +227,7 @@ describe('Candidate email centre', () => {
   it('team newsletter inclusion is unchecked and Super-admin-only', async () => {
     const view = mount(true)
     fireEvent.click(screen.getByRole('button', { name: 'Select recipients →' }))
+    expect(screen.getByRole('note', { name: 'Email audience rules' })).toHaveTextContent('Only candidates subscribed to Career newsletter are shown.')
     expect(screen.getByRole('checkbox', { name: /Include active team members/ })).not.toBeChecked()
     view.unmount(); mount(true, false)
     fireEvent.click(screen.getByRole('button', { name: 'Select recipients →' }))

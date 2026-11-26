@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { FiMail, FiMapPin, FiPhone } from 'react-icons/fi'
 
 import ContactForm from '@/components/ContactForm'
@@ -14,16 +15,20 @@ const Contact = (): React.JSX.Element => {
                 aria-labelledby="contact-page-title"
                 className="relative isolate min-h-[300px] overflow-hidden bg-[#101A35] text-white lg:min-h-[340px]"
             >
-                <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-                    <div className="absolute -right-28 -top-44 size-[430px] rounded-full border border-white/10" />
-                    <div className="absolute -right-5 -top-20 size-[310px] rounded-full border border-white/10" />
-                    <div className="absolute right-24 top-12 size-[190px] rounded-full border border-white/10" />
-                    <div className="absolute -bottom-28 left-[42%] size-[230px] rounded-full border border-blue-300/10" />
-                    <div className="absolute inset-y-0 right-[18%] w-px bg-white/10" />
+                <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+                    <Image
+                        src="/contact-hero.webp"
+                        alt=""
+                        fill
+                        priority
+                        sizes="100vw"
+                        className="object-cover object-left-top lg:object-top"
+                    />
+                    <div className="absolute inset-0 bg-[#071a3d]/25" />
                 </div>
 
                 <div className="relative mx-auto flex min-h-[300px] max-w-7xl items-center px-5 py-14 sm:px-6 sm:py-16 lg:min-h-[340px] lg:px-8">
-                    <div className="relative max-w-2xl">
+                    <div className="relative max-w-2xl lg:max-w-[44%]">
                         <h1
                             id="contact-page-title"
                             className="text-4xl font-semibold tracking-[-0.035em] sm:text-5xl lg:text-6xl"

@@ -48,6 +48,13 @@ Status: manual candidate messages and newsletter delivery implemented; automatic
 - Keep recurring campaigns, automatic vacancy-alert delivery, automatic staff reminders and engagement tracking deferred.
 - Before rollout, confirm actual SMTP quotas and DKIM coverage of unsubscribe headers, reconcile indexes and verify a small controlled audience. Delivery continues to reuse the durable outbox without a cron or external campaign service.
 
+## Contact form delivery destination
+
+Status: deferred
+
+- Check the live `CONTACT_EMAIL_TO` setting and its `EMAIL_FROM` fallback to confirm the actual recipient of contact form submissions.
+- Compare the configured recipient with the public support email and verify delivery with a controlled test message.
+
 ## Staff security centre
 
 Status: partially implemented
