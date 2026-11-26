@@ -4,6 +4,9 @@ import { readApiResponse } from './errors'
 
 export type EmailChannel = 'candidate' | 'newsletter'
 export type BroadcastTemplate = 'candidate-message' | 'candidate-profile' | 'candidate-cv' | 'candidate-cv-attention' | 'candidate-activity' | 'candidate-roundup' | 'candidate-newsletter'
+export type DelegatedTemplate = 'candidate-profile' | 'candidate-cv' | 'candidate-cv-attention'
+export type TemplateDefinition = { key: BroadcastTemplate; version: number; title: string; description: string; subject: string; message: string; automaticFilter?: string }
+export type CandidateEmailAccess = { enabled: boolean; templates: BroadcastTemplate[]; audienceScope: 'all-applicants' | 'own-applicants' | 'all-accounts'; revision: number; approvalRequired: boolean }
 export type AudienceFilters = {
   search?: string; joinedDays?: number; joinedFrom?: string; joinedTo?: string
   activity?: string; activityDays?: number; group?: string; profile?: string; cv?: string
@@ -13,15 +16,18 @@ export type EmailContent = { subject: string; message: string; preheader: string
 export type EmailSelection = { mode: 'explicit' | 'all'; ids: string[]; excludeIds: string[] }
 export type BroadcastDraft = { channel: EmailChannel; template: BroadcastTemplate; content: EmailContent; filters: AudienceFilters; selection: EmailSelection; includeTeam: boolean }
 export type Dispatch = BroadcastDraft & {
-  _id: string; revision: number; ownerName?: string; state: string; recipientCount: number
+  _id: string; revision: number; owner?: string; ownerName?: string; state: string; recipientCount: number
   candidateCount: number; teamCount: number; scheduledFor?: string; queuedAt?: string; createdAt: string
   outcomes: { sent: number; dead: number; skipped: number; cancelled: number }; live?: Record<string, number>
+  approval?: { required: boolean; note?: string; submittedAt?: string; expiresAt?: string; reviewedAt?: string; decision?: string; rejectionReason?: string }
 }
 export type Recipient = { id: string; name: string; email: string; audience: 'candidate' | 'team'; profileComplete?: boolean; hasCv?: boolean; emailVerified?: boolean; lastActiveAt?: string | null }
 export type Paging = { page: number; total: number; totalPages: number; hasNextPage: boolean; hasPreviousPage: boolean }
 export type RecipientResult = { data: Recipient[]; pagination: Paging; vacancies: { id: string; title: string; location: string }[] }
 export type Review = { fingerprint: string; recipientCount: number; candidateCount: number; teamCount: number; recipients: Pick<Recipient, 'id' | 'name' | 'audience'>[]; subject: string; html: string; text: string }
-export type ContentOptions = { articles: { _id: string; title: string }[]; vacancies: { _id: string; title: string; locations: string[] }[]; images: { key: string; label: string; alt: string; url: string }[] }
+export type ContentOptions = { articles: { _id: string; title: string }[]; vacancies: { _id: string; title: string; locations: string[] }[]; images: { key: string; label: string; alt: string; url: string }[]; templates?: TemplateDefinition[] }
+export type ApprovalRequest = { _id: string; ownerName: string; template: BroadcastTemplate; state: string; recipientCount: number; submittedAt: string; expiresAt: string; note?: string; rejectionReason?: string }
+export type ApprovalReview = { fingerprint: string; recipientCount: number; originalCount: number; removedCount: number; requesterName: string; template: BroadcastTemplate; note?: string; expiresAt: string; recipients: { id: string; name: string; email: string }[]; subject: string; html: string; text: string }
 export type Delivery = { _id: string; recipient: string; recipientLabel?: string; status: string; attempts: number; sentAt?: string; lastFailure?: { code: string } }
 export type EmailTotals = { accepted: number; sent: number; failed: number; skipped: number; cancelled: number; retryAttempts: number }
 export type EmailAnalytics = { from: string; to: string; timeZone: string; reportingStartedAt: string | null; totals: Record<string, EmailTotals>; daily: (EmailTotals & { day: string; source: string; template: string; audience: string })[]; backlog: { _id: { status: string; scheduled: boolean; template: string }; count: number }[]; definition: string }

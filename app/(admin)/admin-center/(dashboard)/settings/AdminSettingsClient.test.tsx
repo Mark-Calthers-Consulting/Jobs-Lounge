@@ -7,6 +7,7 @@ let currentRole: 'admin' | 'recruiter' | 'super-admin' = 'admin'
 let currentSection = ''
 const signOutAll = vi.hoisted(() => vi.fn())
 const updateOrganization = vi.hoisted(() => vi.fn())
+vi.mock('@/components/team-emails/CandidateEmailAccessSettings', () => ({ default: () => <div>Individual candidate email access controls</div> }))
 
 vi.mock('next/navigation', () => ({
     usePathname: () => '/admin-center/settings',
@@ -143,20 +144,14 @@ describe('role-aware admin settings', () => {
         }))
     })
 
-    it('toggles recruiter candidate email access', async () => {
+    it('uses individual access controls instead of the legacy recruiter toggle', () => {
         currentRole = 'super-admin'
         currentSection = 'section=organization'
         updateOrganization.mockResolvedValue({})
         render(<AdminSettingsClient />)
 
-        const accessSwitch = screen.getByRole('switch', { name: 'Recruiter candidate email access' })
-        expect(accessSwitch).toHaveAttribute('aria-checked', 'false')
-        fireEvent.click(accessSwitch)
-
-        await waitFor(() => expect(updateOrganization).toHaveBeenCalledWith({
-            recruiterCandidateEmailsEnabled: true,
-            revision: 1,
-        }))
+        expect(screen.getByText('Individual candidate email access controls')).toBeInTheDocument()
+        expect(screen.queryByRole('switch', { name: 'Recruiter candidate email access' })).not.toBeInTheDocument()
     })
 
     it('requires confirmation before enabling academic qualification enforcement', async () => {

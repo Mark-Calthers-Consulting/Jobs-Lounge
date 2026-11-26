@@ -27,7 +27,7 @@ const AdminSidebar = () => {
     const pathname = usePathname()
     const router = useRouter()
     const { data: user } = useUser()
-    const featureSettings = useStaffFeatureSettings(user?.role === 'recruiter')
+    const featureSettings = useStaffFeatureSettings(user?.role === 'recruiter' || user?.role === 'admin', user?._id)
 
     const logoutMutation = useLogout()
 
@@ -129,10 +129,9 @@ const AdminSidebar = () => {
             {/* 2. Navigation */}
             <nav aria-label="Administration navigation" className="flex flex-1 gap-2 overflow-x-auto px-4 py-3 md:flex-col md:space-y-2 md:overflow-y-auto md:py-6">
                 {menuItems.filter((item) => (
-                    hasStaffPermission(user?.role, item.permission)
-                    && (item.href !== '/admin-center/emails'
-                        || user?.role === 'super-admin'
-                        || featureSettings.data?.recruiterCandidateEmailsEnabled === true)
+                    item.href === '/admin-center/emails'
+                        ? user?.role === 'super-admin' || (['admin', 'recruiter'].includes(user?.role || '') && featureSettings.data?.candidateEmail?.enabled === true)
+                        : hasStaffPermission(user?.role, item.permission)
                 )).map((item) => {
                     const isActive = item.href === '/admin-center'
                         ? pathname === item.href

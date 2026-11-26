@@ -11,7 +11,8 @@ const pagination = { page: 1, total: 2, totalPages: 2, hasNextPage: true, hasPre
 const people = [{ id: 'person-one', name: 'Ada Candidate', email: 'ada@example.com', audience: 'candidate', profileComplete: false, hasCv: false }, { id: 'person-two', name: 'Second Candidate', email: 'second@example.com', audience: 'candidate', profileComplete: true, hasCv: true }]
 let draft: Record<string, unknown>
 const review = { fingerprint: 'a'.repeat(64), recipientCount: 1, candidateCount: 1, teamCount: 0, recipients: [people[0]], subject: 'A helpful update', html: '<p>Hello Ada</p>', text: 'Hello Ada' }
-const mount = (newsletter = false, superAdmin = true) => render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><BroadcastEmailCenter channel={newsletter ? 'newsletter' : 'candidate'} superAdmin={superAdmin} /></QueryClientProvider>)
+const delegatedTemplates = [{ key: 'candidate-cv-attention' as const, version: 1, title: 'CV needs attention', description: 'Check a CV link or file.', subject: 'Server supplied subject', message: 'Server supplied locked message.' }]
+const mount = (newsletter = false, superAdmin = true) => render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><BroadcastEmailCenter channel={newsletter ? 'newsletter' : 'candidate'} superAdmin={superAdmin} delegatedTemplates={superAdmin ? undefined : delegatedTemplates} /></QueryClientProvider>)
 const compose = () => {
   fireEvent.change(screen.getByLabelText('Subject'), { target: { value: 'A helpful update' } })
   fireEvent.change(screen.getByLabelText(/^Message/), { target: { value: 'A useful message' } })
@@ -302,7 +303,7 @@ describe('Candidate email centre', () => {
     expect(screen.getByLabelText('Subject')).toHaveValue('Keep this subject')
   })
   it('does not expose account group or exact activity timestamps to recruiters', async () => {
-    mount(false, false); compose(); await screen.findByRole('checkbox', { name: 'Select Ada Candidate' })
+    mount(false, false); fireEvent.click(screen.getByRole('button', { name: 'Select recipients →' })); await screen.findByRole('checkbox', { name: 'Select Ada Candidate' })
     expect(screen.queryByLabelText('Account group')).not.toBeInTheDocument()
     expect(screen.queryByRole('columnheader', { name: 'Last active' })).not.toBeInTheDocument()
     expect(screen.getByLabelText('Last active')).toBeInTheDocument()
@@ -313,11 +314,50 @@ describe('Candidate email centre', () => {
     expect(screen.getByRole('note', { name: 'Email audience rules' })).toHaveTextContent('Only candidates subscribed to Career newsletter are shown.')
     expect(screen.getByRole('checkbox', { name: /Include active team members/ })).not.toBeChecked()
     view.unmount(); mount(true, false)
-    fireEvent.click(screen.getByRole('button', { name: 'Select recipients →' }))
+    expect(screen.getByRole('alert')).toHaveTextContent('No email templates are assigned for this channel')
     expect(screen.queryByRole('checkbox', { name: /Include active team members/ })).not.toBeInTheDocument()
   })
   it('counts all matching selections after exclusions', () => {
     expect(selectedCount({ mode: 'all', ids: [], excludeIds: ['one', 'two'] }, 1001)).toBe(999)
     expect(selectedCount({ mode: 'explicit', ids: ['one'], excludeIds: [] }, 1001)).toBe(1)
+  })
+  it('uses server-owned locked wording and exposes only assigned templates to delegated staff', () => {
+    mount(false, false)
+    expect(screen.getByLabelText('Subject')).toHaveValue('Server supplied subject')
+    expect(screen.getByLabelText('Subject')).toHaveAttribute('readonly')
+    expect(screen.getByLabelText(/^Message/)).toHaveValue('Server supplied locked message.')
+    expect(screen.getByLabelText(/^Message/)).toHaveAttribute('readonly')
+    expect(screen.queryByRole('button', { name: /^Custom message/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('group', { name: /Email image/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Vacancy roundup/ })).not.toBeInTheDocument()
+  })
+  it('uses server preset defaults for Super-admins while keeping their wording editable', async () => {
+    const original = vi.mocked(dispatchData).getMockImplementation()!
+    vi.mocked(dispatchData).mockImplementation(async (path, method, body) => path?.startsWith('/options')
+      ? { articles: [], vacancies: [], images: [], templates: [{ key: 'candidate-profile', version: 2, title: 'Complete your profile', description: 'Profile followup', subject: 'Current server subject', message: 'Current server wording.' }] } as never
+      : original(path, method, body))
+    mount()
+    await waitFor(() => expect(screen.queryByText('Loading images…')).not.toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: /^Complete your profile/ }))
+    expect(screen.getByLabelText('Subject')).toHaveValue('Current server subject')
+    expect(screen.getByLabelText(/^Message/)).toHaveValue('Current server wording.')
+    expect(screen.getByLabelText('Subject')).not.toHaveAttribute('readonly')
+  })
+  it('requests batch approval without exposing scheduling or calling direct send', async () => {
+    mount(false, false)
+    fireEvent.click(screen.getByRole('button', { name: 'Select recipients →' }))
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Select Ada Candidate' }))
+    fireEvent.change(screen.getByLabelText('Search name or email'), { target: { value: 'second' } })
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Select Second Candidate' }))
+    expect(screen.getByRole('region', { name: 'Selected recipients' })).toHaveTextContent('Ada Candidate')
+    fireEvent.click(screen.getByRole('button', { name: 'Preview email →' }))
+    await screen.findByTitle('Server-rendered email preview')
+    expect(screen.queryByLabelText('Delivery')).not.toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Internal request note (optional)'), { target: { value: 'CV link requests access.' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Request approval' }))
+    expect(screen.getByRole('dialog')).toHaveTextContent('No candidate emails will be queued')
+    fireEvent.click(screen.getByRole('button', { name: 'Submit approval request' }))
+    await waitFor(() => expect(vi.mocked(dispatchData).mock.calls.some(([path, , body]) => path === '/draft-id/request-approval' && (body as { note: string }).note === 'CV link requests access.')).toBe(true))
+    expect(vi.mocked(dispatchData).mock.calls.some(([path]) => path?.endsWith('/send'))).toBe(false)
   })
 })

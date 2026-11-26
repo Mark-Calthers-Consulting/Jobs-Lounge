@@ -15,16 +15,15 @@ const AdminAccessGuard = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname()
   const router = useRouter()
   const { data: user, isPending } = useUser()
-  const featureSettings = useStaffFeatureSettings(user?.role === 'recruiter')
+  const featureSettings = useStaffFeatureSettings(user?.role === 'recruiter' || user?.role === 'admin', user?._id)
   const permission = permissionForAdminPath(pathname)
   const emailRoute = pathname === '/admin-center/emails' || pathname.startsWith('/admin-center/emails/')
-  const waitingForFeature = emailRoute && user?.role === 'recruiter' && featureSettings.isPending
+  const waitingForFeature = emailRoute && user?.role !== 'super-admin' && featureSettings.isPending
   const allowed = Boolean(
     user
-    && hasStaffPermission(user.role, permission)
-    && (!emailRoute
-      || user.role === 'super-admin'
-      || featureSettings.data?.recruiterCandidateEmailsEnabled === true),
+    && (emailRoute
+      ? user.role === 'super-admin' || (['admin', 'recruiter'].includes(user.role) && featureSettings.data?.candidateEmail?.enabled === true)
+      : hasStaffPermission(user.role, permission)),
   )
 
   useEffect(() => {

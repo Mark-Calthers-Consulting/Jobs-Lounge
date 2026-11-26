@@ -330,6 +330,7 @@ export type TeamAnnouncementPriority = 'Normal' | 'Important'
 export type TeamAnnouncementStatus = 'Draft' | 'Published' | 'Archived'
 
 export type TeamAnnouncement = {
+  kind?: 'announcement' | 'email-approval-request' | 'email-approval-decision'
   _id: string
   title: string
   message: string
@@ -980,6 +981,7 @@ export type OrganizationSettingsUpdate = Partial<Pick<
 
 export type StaffFeatureSettings = {
   recruiterCandidateEmailsEnabled: boolean
+  candidateEmail?: import('@/api/emailDispatches').CandidateEmailAccess
 }
 
 export type StaffProfilePayload = {

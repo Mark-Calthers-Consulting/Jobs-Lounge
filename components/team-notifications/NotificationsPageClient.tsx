@@ -77,7 +77,7 @@ export default function NotificationsPageClient() {
           <div className="px-5 py-16 text-center">
             <LuBell aria-hidden="true" className="mx-auto text-slate-300" size={32} />
             <h2 className="mt-3 font-semibold text-slate-950">No notifications yet</h2>
-            <p className="mt-1 text-sm text-slate-500">Team announcements will appear here when they are published.</p>
+            <p className="mt-1 text-sm text-slate-500">Team announcements and updates for your account will appear here.</p>
           </div>
         )}
       </section>

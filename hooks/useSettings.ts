@@ -28,12 +28,14 @@ export const useOrganizationSettings = (enabled = true) => useQuery({
     enabled,
 })
 
-export const useStaffFeatureSettings = (enabled = true) => useQuery({
-    queryKey: ['platformSettings', 'staffFeatures'],
+export const useStaffFeatureSettings = (enabled = true, staffId?: string) => useQuery({
+    queryKey: ['platformSettings', 'staffFeatures', staffId],
     queryFn: fetchStaffFeatureSettings,
     enabled,
     staleTime: 60_000,
     retry: 1,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
 })
 
 export const useUpdateOrganizationSettings = () => {
@@ -52,10 +54,7 @@ export const useUpdateOrganizationSettings = () => {
                         settings.academicQualificationEnforcementEnabled,
                 },
             )
-            queryClient.setQueryData(
-                ['platformSettings', 'staffFeatures'],
-                { recruiterCandidateEmailsEnabled: settings.recruiterCandidateEmailsEnabled },
-            )
+            queryClient.invalidateQueries({ queryKey: ['platformSettings', 'staffFeatures'] })
         },
     })
 }
